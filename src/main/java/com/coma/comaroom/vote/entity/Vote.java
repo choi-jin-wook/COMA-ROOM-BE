@@ -1,0 +1,40 @@
+package com.coma.comaroom.vote.entity;
+
+import com.coma.comaroom.utils.BaseEntity;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(
+    name = "vote",
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "uk_voter_option", // 제약 조건 이름
+            columnNames = {"voter_id", "vote_option_id"} // 중복을 막을 컬럼 조합
+        )
+    }
+)
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@Getter
+public class Vote extends BaseEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long voteId;
+
+    @Column(name = "title", nullable = false)
+    private String title;
+
+    @OneToMany(mappedBy = "vote")
+    private List<VoteOption> voteOptions = new ArrayList<>();
+
+    @Column(name = "is_multi_vote", nullable = false)
+    private boolean isMultiVote; // true: 중복 선택 가능, false: 1인 1표
+}
