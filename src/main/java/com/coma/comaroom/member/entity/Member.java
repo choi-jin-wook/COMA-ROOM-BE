@@ -28,8 +28,12 @@ import java.util.List;
 @Getter
 public class Member extends BaseEntity {
     @Id
-    @Column(name = "member_id", nullable = false,  updatable = false, columnDefinition = "BIGINT")
+    @Column(name = "member_id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long memberId;
+
+    @Column(name = "student_id", nullable = false)
+    private String studentId;
 
     @Column(name = "name", nullable = false)
     private String name;
