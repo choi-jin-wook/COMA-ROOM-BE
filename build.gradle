@@ -35,8 +35,8 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 
 	// 3. Database (요청하신 대로 유지)
-	runtimeOnly 'com.mysql:mysql-connector-j'
-	// runtimeOnly 'org.postgresql:postgresql' // 주석 유지
+//	runtimeOnly 'com.mysql:mysql-connector-j'
+	runtimeOnly 'org.postgresql:postgresql'
 
 	// 4. JWT & Jackson (JJWT와 Jackson의 버전 정합성 유지)
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.5'

@@ -8,6 +8,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -42,7 +43,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         String token = resolveToken(request);
 
         // 검증 로직을 필터가 직접 수행 (Provider 호출 안 함)
-        if (token != null) {
+        if (token != null && token.contains(".")) {
             try {
                 Claims claims = Jwts.parser()
                         .verifyWith(key)
@@ -50,20 +51,18 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                         .parseSignedClaims(token)
                         .getPayload();
 
-                // DB 조회 없이 토큰 정보만으로 인증 객체 생성 (Stateful 방지)
                 String memberId = claims.getSubject();
                 String role = claims.get("role", String.class);
                 List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(role));
 
                 UserDetails principal = new User(memberId, "", authorities);
-                Authentication auth = new UsernamePasswordAuthenticationToken(principal, token, authorities);
+                Authentication auth = new UsernamePasswordAuthenticationToken(principal, null, authorities);
 
                 SecurityContextHolder.getContext().setAuthentication(auth);
             } catch (Exception e) {
-                // 유효하지 않은 토큰 처리 (무시하고 다음 필터로)
+                SecurityContextHolder.clearContext();
             }
         }
-
         filterChain.doFilter(request, response);
     }
 
