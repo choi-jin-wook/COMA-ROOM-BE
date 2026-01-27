@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RequestRegisterMemberDto {
+public class RegisterMemberRequestDto {
     private String studentId;
     private String name;
     private String password;
