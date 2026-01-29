@@ -23,14 +23,14 @@ public class Event extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long eventId;
 
-    @Column(name = "description", nullable = false)
-    private String description;
+    @Column(name = "title", nullable = false)
+    private String title;
 
     @Column(name = "event_date", nullable = false)
     private LocalDateTime eventDate;
 
-    @Column(name = "reward_xp", nullable = false)
-    private Integer rewardXp;
+//    @Column(name = "reward_xp", nullable = false)
+//    private Integer rewardXp;
 
     @Column(name = "location", nullable = false)
     private String location;

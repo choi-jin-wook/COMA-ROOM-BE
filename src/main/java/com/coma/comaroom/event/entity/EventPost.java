@@ -1,6 +1,6 @@
 package com.coma.comaroom.event.entity;
 
-import com.coma.comaroom.activity.entity.ApprovalStatus;
+
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.utils.BaseEntity;
 import jakarta.persistence.*;
