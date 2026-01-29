@@ -1,9 +1,8 @@
 package com.coma.comaroom.member.entity;
 
-import com.coma.comaroom.activity.entity.Activity;
 import com.coma.comaroom.activity.entity.ActivityApproval;
-import com.coma.comaroom.activity.entity.ActivityParticipant;
 import com.coma.comaroom.event.entity.Event;
+import com.coma.comaroom.event.entity.EventApproval;
 import com.coma.comaroom.event.entity.EventPost;
 import com.coma.comaroom.notice.entity.Notice;
 import com.coma.comaroom.utils.BaseEntity;
@@ -51,8 +50,6 @@ public class Member extends BaseEntity {
     @OneToMany(mappedBy = "author",  fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Notice> notices = new ArrayList<>();
 
-    @OneToMany(mappedBy = "participantMember",  fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<ActivityParticipant> activities = new ArrayList<>();
 
     // Member 입장에서 “승인한 ActivityApproval 목록”
     @OneToMany(mappedBy = "approver", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
@@ -70,4 +67,7 @@ public class Member extends BaseEntity {
 
     @OneToMany(mappedBy = "author", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<EventPost> eventPosts = new ArrayList<>();
+
+    @OneToMany(mappedBy = "requester", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<EventApproval> eventApprovals = new ArrayList<>();
 }
