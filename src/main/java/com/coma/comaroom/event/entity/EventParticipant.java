@@ -24,6 +24,6 @@ public class EventParticipant extends BaseEntity {
     private Event event;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "host_id", nullable = false)
-    private Member host;
+    @JoinColumn(name = "participant_member_id", nullable = false)
+    private Member participantMember;
 }

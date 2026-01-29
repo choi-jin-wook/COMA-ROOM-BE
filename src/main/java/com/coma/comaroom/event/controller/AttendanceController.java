@@ -9,10 +9,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @AllArgsConstructor
+@RequestMapping("/api/attendances")
 public class AttendanceController {
     private final AttendanceService attendanceService;
 
@@ -24,8 +26,8 @@ public class AttendanceController {
     }
 
     // 출석처리
-    @PostMapping()
-    public ResponseEntity<?> createAttendance(@RequestBody CreateAttendanceRequestDto createAttendanceRequestDto) {
+    @PostMapping("/checks")
+    public ResponseEntity<?> recordAttendanceCheck(@RequestBody CreateAttendanceRequestDto createAttendanceRequestDto) {
         attendanceService.createAttendance(createAttendanceRequestDto);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }

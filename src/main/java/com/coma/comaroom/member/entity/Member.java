@@ -1,8 +1,8 @@
 package com.coma.comaroom.member.entity;
 
-import com.coma.comaroom.activity.entity.ActivityApproval;
 import com.coma.comaroom.event.entity.Event;
 import com.coma.comaroom.event.entity.EventApproval;
+import com.coma.comaroom.event.entity.EventParticipant;
 import com.coma.comaroom.event.entity.EventPost;
 import com.coma.comaroom.notice.entity.Notice;
 import com.coma.comaroom.utils.BaseEntity;
@@ -51,13 +51,13 @@ public class Member extends BaseEntity {
     private List<Notice> notices = new ArrayList<>();
 
 
-    // Member 입장에서 “승인한 ActivityApproval 목록”
-    @OneToMany(mappedBy = "approver", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<ActivityApproval> approvedActivities = new ArrayList<>();
-
-    // Member 입장에서 “참여한 ActivityApproval 목록”
-    @OneToMany(mappedBy = "participantMember", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ActivityApproval> participatedActivities = new ArrayList<>();
+//    // Member 입장에서 “승인한 ActivityApproval 목록”
+//    @OneToMany(mappedBy = "approver", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+//    private List<ActivityApproval> approvedActivities = new ArrayList<>();
+//
+//    // Member 입장에서 “참여한 ActivityApproval 목록”
+//    @OneToMany(mappedBy = "participantMember", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+//    private List<ActivityApproval> participatedActivities = new ArrayList<>();
 
     @OneToMany(mappedBy = "voter", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<VoteResult> voteResults = new ArrayList<>();
@@ -70,4 +70,7 @@ public class Member extends BaseEntity {
 
     @OneToMany(mappedBy = "requester", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<EventApproval> eventApprovals = new ArrayList<>();
+
+    @OneToMany(mappedBy = "participantMember", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<EventParticipant> eventParticipants = new ArrayList<>();
 }
