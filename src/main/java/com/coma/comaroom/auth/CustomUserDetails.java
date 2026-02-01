@@ -1,9 +1,8 @@
-package com.coma.comaroom.security;
+package com.coma.comaroom.auth;
 
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.member.entity.Role;
 import lombok.Getter;
-import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

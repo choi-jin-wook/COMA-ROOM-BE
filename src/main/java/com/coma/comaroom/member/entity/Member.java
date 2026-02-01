@@ -8,10 +8,7 @@ import com.coma.comaroom.notice.entity.Notice;
 import com.coma.comaroom.utils.BaseEntity;
 import com.coma.comaroom.vote.entity.VoteResult;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -25,6 +22,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @Getter
+@Setter
 public class Member extends BaseEntity {
     @Id
     @Column(name = "member_id")

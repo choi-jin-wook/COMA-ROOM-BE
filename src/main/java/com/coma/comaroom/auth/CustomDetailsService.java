@@ -1,4 +1,4 @@
-package com.coma.comaroom.security;
+package com.coma.comaroom.auth;
 
 
 import com.coma.comaroom.member.entity.Member;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class MyUserDetailsService implements UserDetailsService {
+public class CustomDetailsService implements UserDetailsService {
     private final MemberRepository memberRepository;
 
     @Override

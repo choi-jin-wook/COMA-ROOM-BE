@@ -13,6 +13,7 @@ import com.coma.comaroom.utils.SecurityUtils;
 import lombok.AllArgsConstructor;
 
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -27,7 +28,7 @@ import java.util.Optional;
 public class AttendanceService {
     private final SecurityUtils securityUtils;
     private final EventRepository eventRepository;
-    private final RedisTemplate<String, String> redisTemplate;
+    private StringRedisTemplate redisTemplate;
     private final EventParticipateRepository eventParticipateRepository;
 
 
@@ -61,13 +62,15 @@ public class AttendanceService {
 
     public void createAttendance(CreateAttendanceRequestDto createAttendanceRequestDto) {
         Long eventId = Long.valueOf(redisTemplate.opsForValue().get(createAttendanceRequestDto.getQrCodeId()));
+        System.out.println(eventId);
 
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new IllegalStateException("이벤트 없음"));
 
-        Optional<Event> event = eventRepository.findById(eventId);
         Member currentUser = securityUtils.getCurrentMember();
 
         EventParticipant participant = EventParticipant.builder()
-                .event(event.get())
+                .event(event)
                 .participantMember(currentUser)
                 .build();
 

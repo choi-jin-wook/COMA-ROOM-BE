@@ -1,4 +1,4 @@
-package com.coma.comaroom.security;
+package com.coma.comaroom.auth;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

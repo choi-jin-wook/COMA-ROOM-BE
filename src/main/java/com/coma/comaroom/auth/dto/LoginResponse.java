@@ -1,4 +1,4 @@
-package com.coma.comaroom.security.dto;
+package com.coma.comaroom.auth.dto;
 
 import lombok.*;
 

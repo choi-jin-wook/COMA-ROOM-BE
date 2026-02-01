@@ -1,4 +1,4 @@
-package com.coma.comaroom.security.jwt;
+package com.coma.comaroom.auth.jwt;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
