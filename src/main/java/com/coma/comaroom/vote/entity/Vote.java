@@ -32,13 +32,16 @@ public class Vote extends BaseEntity {
     @Column(name = "title", nullable = false)
     private String title;
 
-    @OneToMany(mappedBy = "vote")
-    private List<VoteOption> voteOptions = new ArrayList<>();
-
     @Column(name = "is_multi_vote", nullable = false)
     private boolean isMultiVote; // true: 중복 선택 가능, false: 1인 1표
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "vote_status", nullable = false)
+    private VoteStatus voteStatus; // PROGRESS, CLOSED
 
+
+    @OneToMany(mappedBy = "vote")
+    private List<VoteOption> voteOptions = new ArrayList<>();
 
 
 }
