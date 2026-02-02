@@ -1,13 +1,13 @@
 package com.coma.comaroom.vote.controller;
 
+import com.coma.comaroom.vote.dto.AddVoteOptionRequestDto;
 import com.coma.comaroom.vote.dto.request.CreateNewVoteRequestDto;
-import com.coma.comaroom.vote.dto.response.CreateNewVoteResponseDto;
+import com.coma.comaroom.vote.dto.response.VoteDetailResponseDto;
 import com.coma.comaroom.vote.service.VoteService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @AllArgsConstructor
@@ -23,14 +23,38 @@ public class VoteController {
 
     // - 관리자
     // 1. 투표 생성
-    public ResponseEntity<?> CreateNewVote(@RequestBody CreateNewVoteRequestDto createNewVoteRequestDto) {
-        CreateNewVoteResponseDto createNewVoteResponseDto = voteService.createNewVote(createNewVoteRequestDto);
-        return new ResponseEntity<>(createNewVoteResponseDto, HttpStatus.CREATED);
+    @PostMapping()
+    public ResponseEntity<VoteDetailResponseDto> CreateNewVote(@RequestBody CreateNewVoteRequestDto createNewVoteRequestDto) {
+        VoteDetailResponseDto voteDetailResponseDto = voteService.createNewVote(createNewVoteRequestDto);
+        return new ResponseEntity<>(voteDetailResponseDto, HttpStatus.CREATED);
 
     }
 
     // 2. 투표 수정
+
+
     // 3. 옵션 추가
-    // 4. 투표 삭제
-    // 5. 투표 종료
+    @PostMapping("/test")
+    public ResponseEntity<?> addVoteOption(@RequestBody AddVoteOptionRequestDto addVoteOptionRequestDto) {
+        VoteDetailResponseDto voteDetailResponseDto = voteService.addVoteOption(addVoteOptionRequestDto);
+        return new ResponseEntity<>(voteDetailResponseDto, HttpStatus.OK);
+    }
+
+    // 4. 옵션 삭제
+    @DeleteMapping()
+    public ResponseEntity<?> deleteVoteOption(@RequestParam Long voteOptionId) {
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+    }
+
+    // 5. 투표 삭제
+    @DeleteMapping("test")
+    public ResponseEntity<?> deleteVote(@RequestParam Long voteId) {
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+    }
+
+    // 6. 투표 종료
+    @PatchMapping()
+    public ResponseEntity<?> closeVote(@RequestParam Long voteId) {
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+    }
 }

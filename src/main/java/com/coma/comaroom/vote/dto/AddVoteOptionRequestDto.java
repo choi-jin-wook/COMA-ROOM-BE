@@ -1,4 +1,4 @@
-package com.coma.comaroom.vote.dto.response;
+package com.coma.comaroom.vote.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CreateVoteOptionResponseDto {
-    private Long voteOptionId;
+public class AddVoteOptionRequestDto {
+    private Long voteId;
     private String content;
 }

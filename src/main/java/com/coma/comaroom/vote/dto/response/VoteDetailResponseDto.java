@@ -14,10 +14,10 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CreateNewVoteResponseDto {
+public class VoteDetailResponseDto {
     private Long voteId;
     private String title;
     private VoteStatus status;
     private Boolean isMultiple;
-    private List<CreateVoteOptionResponseDto> options;
+    private List<VoteOptionDetailResponseDto> options;
 }
