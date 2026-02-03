@@ -2,6 +2,7 @@ package com.coma.comaroom.vote.controller;
 
 import com.coma.comaroom.vote.dto.AddVoteOptionRequestDto;
 import com.coma.comaroom.vote.dto.request.CreateNewVoteRequestDto;
+import com.coma.comaroom.vote.dto.request.UpdateVoteRequestDto;
 import com.coma.comaroom.vote.dto.response.VoteDetailResponseDto;
 import com.coma.comaroom.vote.service.VoteService;
 import lombok.AllArgsConstructor;
@@ -17,6 +18,7 @@ public class VoteController {
     // - 사용자
     // 1. 전체 투표 조회
     // 2. 투표 상세 조회
+
     // 3. 진행중인 투표 목록
     // 4. 종료된 투표 목록
     // 5. 투표 참여
@@ -30,7 +32,12 @@ public class VoteController {
 
     }
 
-    // 2. 투표 수정
+    // 2. 투표 수정 (제목, 마감일, 중복여부)
+    @PatchMapping()
+    public ResponseEntity<?> updateVote(@RequestBody UpdateVoteRequestDto updateVoteRequestDto) {
+        VoteDetailResponseDto voteDetailResponseDto = voteService.updateVote(updateVoteRequestDto);
+        return new ResponseEntity<>(voteDetailResponseDto, HttpStatus.OK);
+    }
 
 
     // 3. 옵션 추가
@@ -43,18 +50,22 @@ public class VoteController {
     // 4. 옵션 삭제
     @DeleteMapping()
     public ResponseEntity<?> deleteVoteOption(@RequestParam Long voteOptionId) {
+        voteService.deleteVoteOption(voteOptionId);
         return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
     }
 
     // 5. 투표 삭제
-    @DeleteMapping("test")
+    @DeleteMapping("/test")
     public ResponseEntity<?> deleteVote(@RequestParam Long voteId) {
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+        voteService.deleteVote(voteId);
+        return new ResponseEntity<>(HttpStatus.OK);
+//        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
     }
 
     // 6. 투표 종료
     @PatchMapping()
     public ResponseEntity<?> closeVote(@RequestParam Long voteId) {
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+        VoteDetailResponseDto voteDetailResponseDto = voteService.closeVote(voteId);
+        return new ResponseEntity<>(voteDetailResponseDto, HttpStatus.OK);
     }
 }

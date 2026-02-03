@@ -1,12 +1,11 @@
 package com.coma.comaroom.vote.entity;
 
 import com.coma.comaroom.utils.BaseEntity;
+import com.coma.comaroom.vote.dto.request.UpdateVoteRequestDto;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +22,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Getter
+@Data
 public class Vote extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,9 +38,21 @@ public class Vote extends BaseEntity {
     @Column(name = "vote_status", nullable = false)
     private VoteStatus voteStatus; // PROGRESS, CLOSED
 
+    @Column(name = "deadline", nullable = false)
+    private LocalDateTime deadline;
 
-    @OneToMany(mappedBy = "vote")
+
+    @OneToMany(mappedBy = "vote", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<VoteOption> voteOptions = new ArrayList<>();
 
+    public void addOption(VoteOption option) {
+        voteOptions.add(option);
+        option.setVote(this);
+    }
+    public void update(UpdateVoteRequestDto dto) {
+        if (dto.getTitle() != null) this.title = dto.getTitle();
+        if (dto.getIsMultiple() != null) this.isMultiVote = dto.getIsMultiple();
+        if (dto.getDeadline() != null) this.deadline = dto.getDeadline();
+    }
 
 }

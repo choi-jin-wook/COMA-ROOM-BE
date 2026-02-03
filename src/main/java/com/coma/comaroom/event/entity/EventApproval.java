@@ -21,7 +21,7 @@ public class EventApproval extends BaseEntity {
     @Column(name = "approval_id")
     private Long id;
 
-    @Column(name = "qpproval_status")
+    @Column(name = "approval_status")
     @Enumerated(EnumType.STRING)
     private ApprovalStatus approvalStatus;
 
@@ -40,4 +40,14 @@ public class EventApproval extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requester_id")
     private Member requester;
+
+    public static EventApproval requestXpApproval(Member requester, String reason, Long grantedXp) {
+        return EventApproval.builder()
+                .requester(requester)
+                .reason(reason)
+                .grantedXp(grantedXp)
+                .approvalStatus(ApprovalStatus.PENDING)
+                .approvalAt(null)
+                .build();
+    }
 }

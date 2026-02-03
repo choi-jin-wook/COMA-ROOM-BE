@@ -1,9 +1,6 @@
 package com.coma.comaroom.member.entity;
 
-import com.coma.comaroom.event.entity.Event;
-import com.coma.comaroom.event.entity.EventApproval;
-import com.coma.comaroom.event.entity.EventParticipant;
-import com.coma.comaroom.event.entity.EventPost;
+import com.coma.comaroom.event.entity.*;
 import com.coma.comaroom.notice.entity.Notice;
 import com.coma.comaroom.utils.BaseEntity;
 import com.coma.comaroom.vote.entity.VoteResult;
@@ -71,4 +68,16 @@ public class Member extends BaseEntity {
 
     @OneToMany(mappedBy = "participantMember", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<EventParticipant> eventParticipants = new ArrayList<>();
+
+
+    public static EventApproval requestXpApproval(Member requester, String reason, Long grantedXp) {
+        return EventApproval.builder()
+                .requester(requester)
+                .reason(reason)
+                .grantedXp(grantedXp)
+                .approvalStatus(ApprovalStatus.PENDING)
+                .approvalAt(null)
+                .build();
+    }
+
 }

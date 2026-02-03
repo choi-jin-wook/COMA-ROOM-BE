@@ -3,6 +3,7 @@ package com.coma.comaroom.vote.service;
 import com.coma.comaroom.vote.dto.AddVoteOptionRequestDto;
 import com.coma.comaroom.vote.dto.request.CreateNewVoteRequestDto;
 import com.coma.comaroom.vote.dto.request.CreateVoteOptionRequestDto;
+import com.coma.comaroom.vote.dto.request.UpdateVoteRequestDto;
 import com.coma.comaroom.vote.dto.response.VoteDetailResponseDto;
 import com.coma.comaroom.vote.dto.response.VoteOptionDetailResponseDto;
 import com.coma.comaroom.vote.entity.Vote;
@@ -10,6 +11,7 @@ import com.coma.comaroom.vote.entity.VoteOption;
 import com.coma.comaroom.vote.entity.VoteStatus;
 import com.coma.comaroom.vote.repository.VoteOptionRepository;
 import com.coma.comaroom.vote.repository.VoteRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -33,74 +36,97 @@ public class VoteService {
 
 
     // - 관리자
-    // 1. 투표 생성
-    public VoteDetailResponseDto createNewVote(CreateNewVoteRequestDto createNewVoteRequestDto) {
-        Vote newVote = Vote.builder()
-                .title(createNewVoteRequestDto.getTitle())
-                .isMultiVote(createNewVoteRequestDto.getIsMulti())
+    // 1. 투표 생성 (커밋 완료)
+    public VoteDetailResponseDto createNewVote(CreateNewVoteRequestDto dto) {
+
+        Vote vote = Vote.builder()
+                .title(dto.getTitle())
+                .isMultiVote(dto.getIsMultiple())
                 .voteStatus(VoteStatus.IN_PROGRESS)
+                .deadline(dto.getDeadline())
                 .build();
 
-        voteRepository.save(newVote);
-
-        List<VoteOption> options = new ArrayList<>();
-
-        List<VoteOptionDetailResponseDto> voteOptionDetailResponseDtos = new ArrayList<>();
-
-        for (CreateVoteOptionRequestDto createVoteOptionRequest : createNewVoteRequestDto.getOptions()) {
-            VoteOption voteOption = VoteOption.builder()
-                    .content(createVoteOptionRequest.getContent())
-                    .vote(newVote)
-                    .build();
-
-            voteOptionRepository.save(voteOption);
-
-            VoteOptionDetailResponseDto createVoteOptionResponseDto = VoteOptionDetailResponseDto.builder()
-                    .voteOptionId(voteOption.getVoteOptionId())
-                    .content(createVoteOptionRequest.getContent())
-                    .build();
-
-            voteOptionDetailResponseDtos.add(createVoteOptionResponseDto);
+        for (CreateVoteOptionRequestDto optionDto : dto.getOptions()) {
+            vote.addOption(
+                    VoteOption.builder()
+                            .content(optionDto.getContent())
+                            .build()
+            );
         }
 
-        VoteDetailResponseDto createNewVoteResponseDto = VoteDetailResponseDto.builder()
-                .voteId(newVote.getVoteId())
-                .title(newVote.getTitle())
-                .isMultiple(newVote.isMultiVote())
-                .options(voteOptionDetailResponseDtos)
-                .status(newVote.getVoteStatus())
-                .build();
+        voteRepository.save(vote);
 
-        return createNewVoteResponseDto;
+        List<VoteOptionDetailResponseDto> optionResponses = vote.getVoteOptions().stream()
+                        .map(o -> VoteOptionDetailResponseDto.builder()
+                                .voteOptionId(o.getVoteOptionId())
+                                .content(o.getContent())
+                                .build())
+                        .toList();
+
+        return VoteDetailResponseDto.builder()
+                .voteId(vote.getVoteId())
+                .title(vote.getTitle())
+                .isMultiple(vote.isMultiVote())
+                .status(vote.getVoteStatus())
+                .options(optionResponses)
+                .build();
     }
 
 
+    // 2. 투표 수정 (구현 완료)
+    public VoteDetailResponseDto updateVote(UpdateVoteRequestDto updateVoteRequestDto) {
+        Vote vote = voteRepository.findById(updateVoteRequestDto.getVoteId()).orElseThrow(() -> new EntityNotFoundException());
+        vote.update(updateVoteRequestDto);
 
-    // 2. 투표 수정
+        List<VoteOptionDetailResponseDto> voteOptionDetailResponseDtos =
+                vote.getVoteOptions().stream()
+                        .map(voteOption ->
+                                VoteOptionDetailResponseDto.builder()
+                                        .voteOptionId(voteOption.getVoteOptionId())
+                                        .content(voteOption.getContent())
+                                        .build()
+                        )
+                        .collect(Collectors.toList());
 
-    // 3. 옵션 추가
-    public VoteDetailResponseDto addVoteOption(AddVoteOptionRequestDto addVoteOptionRequestDto) {
-        Vote vote = voteRepository.findById(addVoteOptionRequestDto.getVoteId()).orElse(null);
 
-        VoteOption newVoteOption = VoteOption.builder()
-                .content(addVoteOptionRequestDto.getContent())
-                .vote(vote)
+        VoteDetailResponseDto voteDetailResponseDto = VoteDetailResponseDto.builder()
+                .voteId(vote.getVoteId())
+                .title(vote.getTitle())
+                .isMultiple(vote.isMultiVote())
+                .status(vote.getVoteStatus())
+                .options(voteOptionDetailResponseDtos)
                 .build();
 
-        voteOptionRepository.save(newVoteOption);
+        return voteDetailResponseDto;
+
+
+    }
+
+    // 3. 옵션 추가 (커밋 완료)
+    public VoteDetailResponseDto addVoteOption(AddVoteOptionRequestDto addVoteOptionRequestDto) {
+        Vote vote = voteRepository.findById(addVoteOptionRequestDto.getVoteId())
+                .orElseThrow(EntityNotFoundException::new);
+
+        vote.addOption(
+                VoteOption.builder()
+                        .content(addVoteOptionRequestDto.getContent())
+                        .build()
+        );
+
 
         List<VoteOption> options = voteOptionRepository.findByVote(vote);
 
-        List<VoteOptionDetailResponseDto>  voteOptionDetailResponseDtos = new ArrayList<>();
 
-        for (VoteOption voteOption : options) {
-            VoteOptionDetailResponseDto voteOptionDetailResponseDto = VoteOptionDetailResponseDto.builder()
-                    .voteOptionId(voteOption.getVoteOptionId())
-                    .content(addVoteOptionRequestDto.getContent())
-                    .build();
+        List<VoteOptionDetailResponseDto> voteOptionDetailResponseDtos =
+                options.stream()
+                        .map(voteOption ->
+                                VoteOptionDetailResponseDto.builder()
+                                        .voteOptionId(voteOption.getVoteOptionId())
+                                        .content(voteOption.getContent())
+                                        .build()
+                        )
+                        .collect(Collectors.toList());
 
-            voteOptionDetailResponseDtos.add(voteOptionDetailResponseDto);
-        }
 
         VoteDetailResponseDto voteDetailResponseDto = VoteDetailResponseDto.builder()
                 .voteId(vote.getVoteId())
@@ -113,6 +139,42 @@ public class VoteService {
         return voteDetailResponseDto;
     }
 
-    // 4. 투표 삭제
-    // 5. 투표 종료
+
+    // 4. 옵션 삭제 (구현완료)
+    public void deleteVoteOption(Long voteOptionId) {
+        voteOptionRepository.deleteById(voteOptionId);
+    }
+
+    // 5. 투표  삭제 (구현 완료)
+    public void deleteVote(Long voteId) {
+        voteRepository.deleteById(voteId);
+    }
+
+    // 5. 투표 종료 (구현 완료)
+    public VoteDetailResponseDto closeVote(Long voteId) {
+        Vote vote = voteRepository.findById(voteId).orElse(null);
+        vote.setVoteStatus(VoteStatus.CLOSED);
+
+        List<VoteOption> voteOptions = vote.getVoteOptions();
+        List<VoteOptionDetailResponseDto> voteOptionDetailResponseDtos =
+                vote.getVoteOptions().stream()
+                        .map(voteOption ->
+                                VoteOptionDetailResponseDto.builder()
+                                        .voteOptionId(voteOption.getVoteOptionId())
+                                        .content(voteOption.getContent())
+                                        .build()
+                        )
+                        .toList();
+
+
+        VoteDetailResponseDto voteDetailResponseDto = VoteDetailResponseDto.builder()
+                .voteId(vote.getVoteId())
+                .title(vote.getTitle())
+                .isMultiple(vote.isMultiVote())
+                .status(vote.getVoteStatus())
+                .options(voteOptionDetailResponseDtos)
+                .build();
+
+        return voteDetailResponseDto;
+    }
 }

@@ -38,21 +38,12 @@ public class XpService {
         EventApproval eventApproval = eventApprovalRepository.findById(requestId).orElseThrow(() -> new EntityNotFoundException("나중에 처리하지 뭐"));
         eventApproval.setApprovalStatus(provisionApprovalRequestDto.getApprovalStatus());
         Member currentUser = securityUtils.getCurrentMember();
-        currentUser.getCreatedAt();
         currentUser.setXp(currentUser.getXp() + eventApproval.getGrantedXp());
     }
 
     public void requestProvisionXp(RequestProvisionXpDto requestProvisionXpDto) {
         Member currentUser = securityUtils.getCurrentMember();
-        EventApproval eventApproval = EventApproval.builder()
-                .requester(currentUser)
-                .reason(requestProvisionXpDto.getProvisionReason())
-                .approvalAt(null)
-                .grantedXp(requestProvisionXpDto.getProvisionAmount())
-                .approvalStatus(ApprovalStatus.PENDING)
-                .build();
-
-        eventApprovalRepository.save(eventApproval);
+        EventApproval eventApproval = EventApproval.requestXpApproval(currentUser, requestProvisionXpDto.getProvisionReason(), requestProvisionXpDto.getProvisionAmount());
     }
 
     public XpManagementMainResponseDto getXpManagementMainData(ApprovalStatus status, Long page) {
@@ -67,18 +58,20 @@ public class XpService {
         // 3. 여기서 실제 객체 5개가 최근 순서대로 담김
         List<EventApproval> eventApprovals = resultPage.getContent();
 
-        List<RecentActivityLogDto> recentActivityLogDtoList = new ArrayList<>();
-        for (EventApproval approval : resultPage.getContent()) {
-            recentActivityLogDtoList.add(RecentActivityLogDto.builder()
-                    .id(approval.getId().longValue())
-                    .userName(approval.getRequester().getName())
-                    .studentId(approval.getRequester().getStudentId())
-                    .description(approval.getReason())
-                    .dateTime(approval.getCreatedAt())
-                    .grantedXp(approval.getGrantedXp())
-                    .status(approval.getApprovalStatus())
-                    .build());
-        }
+        List<RecentActivityLogDto> recentActivityLogDtoList =
+                resultPage.getContent().stream()
+                        .map(approval ->
+                                RecentActivityLogDto.builder()
+                                        .id(approval.getId().longValue())
+                                        .userName(approval.getRequester().getName())
+                                        .studentId(approval.getRequester().getStudentId())
+                                        .description(approval.getReason())
+                                        .dateTime(approval.getCreatedAt())
+                                        .grantedXp(approval.getGrantedXp())
+                                        .status(approval.getApprovalStatus())
+                                        .build()
+                        )
+                        .toList();
 
         XpManagementMainResponseDto responseDto = XpManagementMainResponseDto.builder()
                 .approvedCount(eventApprovalRepository.countByApprovalStatus(ApprovalStatus.APPROVED))
