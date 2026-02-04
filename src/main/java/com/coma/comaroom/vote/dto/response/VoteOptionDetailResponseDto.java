@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class VoteOptionDetailResponseDto {
     private Long voteOptionId;
     private String content;
+    private Long count;
 }

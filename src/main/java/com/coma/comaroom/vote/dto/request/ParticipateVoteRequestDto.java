@@ -5,15 +5,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UpdateVoteRequestDto {
-//    private Long voteId;
-    private String title;
-    private Boolean isMultiple;
-    private LocalDateTime deadline;
+public class ParticipateVoteRequestDto {
+    private List<Long> voteOptionId;
 }

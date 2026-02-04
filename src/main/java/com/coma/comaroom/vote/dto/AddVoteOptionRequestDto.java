@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class AddVoteOptionRequestDto {
-    private Long voteId;
+//    private Long voteId;
     private String content;
 }

@@ -1,5 +1,6 @@
 package com.coma.comaroom.vote.entity;
 
+import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.utils.BaseEntity;
 import com.coma.comaroom.vote.dto.request.UpdateVoteRequestDto;
 import jakarta.persistence.*;
@@ -22,7 +23,8 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Data
+@Getter
+@Setter
 public class Vote extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,6 +44,7 @@ public class Vote extends BaseEntity {
     private LocalDateTime deadline;
 
 
+    @Builder.Default
     @OneToMany(mappedBy = "vote", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<VoteOption> voteOptions = new ArrayList<>();
 
@@ -55,4 +58,19 @@ public class Vote extends BaseEntity {
         if (dto.getDeadline() != null) this.deadline = dto.getDeadline();
     }
 
+    public void close() {
+        this.voteStatus = VoteStatus.CLOSED;
+    }
+
+    public void participate(List<Long> voteOptionIds, Member member) {
+        voteOptions.stream()
+                .filter(option -> voteOptionIds.contains(option.getVoteOptionId()))
+                .forEach(option -> {
+                    VoteResult result = VoteResult.builder()
+                            .voteOption(option)
+                            .voter(member)
+                            .build();
+                    option.getVoteResults().add(result);
+                });
+    }
 }
