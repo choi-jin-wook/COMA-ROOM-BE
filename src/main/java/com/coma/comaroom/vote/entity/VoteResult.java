@@ -9,7 +9,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "vote_result")
+@Table(
+        name = "vote_result",
+        uniqueConstraints = {
+        @UniqueConstraint(
+                name = "uk_voter_option", // 제약 조건 이름
+                columnNames = {"voter_id", "vote_option_id"} // 중복을 막을 컬럼 조합
+            )
+        }
+)
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder

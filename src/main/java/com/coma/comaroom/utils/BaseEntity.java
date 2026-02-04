@@ -12,15 +12,14 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 public abstract class BaseEntity {
 
     @CreatedDate
     @Column(updatable = false)
-    LocalDateTime createdAt;
+    LocalDateTime createdAt; // private은 안 되고, protected가 정석
 
     @LastModifiedDate
-    LocalDateTime updatedAt;
+    LocalDateTime updatedAt; // 이것도 protected로 변경
 }
