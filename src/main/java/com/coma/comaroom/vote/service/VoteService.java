@@ -38,8 +38,7 @@ public class VoteService {
     // - 사용자
     // 1. 전체 투표 조회
     public List<VoteDetailResponseDto> voteDashboard(Integer page, VoteStatus status) {
-        int pageNumber = (page != null && page > 0) ? page - 1 : 0;
-        Pageable pageable = PageRequest.of(pageNumber, 5);
+        Pageable pageable = PageRequest.of(page, 5);
         List<Vote> votes = voteRepository.findAllByVoteStatusOrderByCreatedAtDesc(status, pageable);
 
         return votes.stream()
@@ -99,6 +98,7 @@ public class VoteService {
                         .content(addVoteOptionRequestDto.getContent())
                         .build()
         );
+        voteRepository.saveAndFlush(vote);
 
         return voteMapper.toDetailDto(vote);
     }

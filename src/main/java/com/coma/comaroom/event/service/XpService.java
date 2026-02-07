@@ -3,6 +3,8 @@ package com.coma.comaroom.event.service;
 import com.coma.comaroom.event.dto.*;
 import com.coma.comaroom.event.entity.ApprovalStatus;
 import com.coma.comaroom.event.entity.EventApproval;
+import com.coma.comaroom.event.mapper.EventApprovalMapper;
+import com.coma.comaroom.event.mapper.XpManagementMapper;
 import com.coma.comaroom.event.repository.EventApprovalRepository;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.member.repository.MemberRepository;
@@ -26,6 +28,8 @@ public class XpService {
     private final MemberRepository memberRepository;
     private final EventApprovalRepository eventApprovalRepository;
     private final SecurityUtils securityUtils;
+    private final EventApprovalMapper eventApprovalMapper;
+    private final XpManagementMapper xpManagementMapper;
 
     public void provisionXp(XpProvisionRequestDto xpProvisionRequestDto) {
         Member member = memberRepository.findByStudentId(xpProvisionRequestDto.getStudentId())
@@ -37,13 +41,14 @@ public class XpService {
     public void decideProvision(ProvisionApprovalRequestDto provisionApprovalRequestDto, Long requestId) {
         EventApproval eventApproval = eventApprovalRepository.findById(requestId).orElseThrow(() -> new EntityNotFoundException("나중에 처리하지 뭐"));
         eventApproval.setApprovalStatus(provisionApprovalRequestDto.getApprovalStatus());
-        Member currentUser = securityUtils.getCurrentMember();
-        currentUser.setXp(currentUser.getXp() + eventApproval.getGrantedXp());
+        Member requester = eventApproval.getRequester();
+        requester.setXp(requester.getXp() + eventApproval.getGrantedXp());
     }
 
     public void requestProvisionXp(RequestProvisionXpDto requestProvisionXpDto) {
         Member currentUser = securityUtils.getCurrentMember();
         EventApproval eventApproval = EventApproval.requestXpApproval(currentUser, requestProvisionXpDto.getProvisionReason(), requestProvisionXpDto.getProvisionAmount());
+        eventApprovalRepository.save(eventApproval);
     }
 
     public XpManagementMainResponseDto getXpManagementMainData(ApprovalStatus status, Long page) {
@@ -56,29 +61,18 @@ public class XpService {
                 : eventApprovalRepository.findByApprovalStatusOrderByCreatedAtDesc(status, pageable);
 
         // 3. 여기서 실제 객체 5개가 최근 순서대로 담김
+        // 여기서 꺼내고
         List<EventApproval> eventApprovals = resultPage.getContent();
 
-        List<RecentActivityLogDto> recentActivityLogDtoList =
-                resultPage.getContent().stream()
-                        .map(approval ->
-                                RecentActivityLogDto.builder()
-                                        .id(approval.getId().longValue())
-                                        .userName(approval.getRequester().getName())
-                                        .studentId(approval.getRequester().getStudentId())
-                                        .description(approval.getReason())
-                                        .dateTime(approval.getCreatedAt())
-                                        .grantedXp(approval.getGrantedXp())
-                                        .status(approval.getApprovalStatus())
-                                        .build()
-                        )
-                        .toList();
+        // 여기다 쓴다
+        List<RecentActivityLogDto> recentActivityLogs =
+                eventApprovalMapper.toRecentActivityLogDtos(eventApprovals);
 
-        XpManagementMainResponseDto responseDto = XpManagementMainResponseDto.builder()
-                .approvedCount(eventApprovalRepository.countByApprovalStatus(ApprovalStatus.APPROVED))
-                .rejectedCount(eventApprovalRepository.countByApprovalStatus(ApprovalStatus.REJECTED))
-                .pendingCount(eventApprovalRepository.countByApprovalStatus(ApprovalStatus.PENDING))
-                .recentActivityLogs(recentActivityLogDtoList)
-                .build();
-        return responseDto;
+        return xpManagementMapper.toMainDto(
+                eventApprovalRepository.countByApprovalStatus(ApprovalStatus.APPROVED),
+                eventApprovalRepository.countByApprovalStatus(ApprovalStatus.REJECTED),
+                eventApprovalRepository.countByApprovalStatus(ApprovalStatus.PENDING),
+                recentActivityLogs
+        );
     }
 }
