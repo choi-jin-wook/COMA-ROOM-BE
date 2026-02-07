@@ -19,14 +19,14 @@ public class AttendanceController {
     private final AttendanceService attendanceService;
 
     // 출석 생성
-    @PostMapping()
+    @PostMapping()// (포스트맨 테스트 완료)
     public ResponseEntity<?> createAttendanceCheck(@RequestBody CreateAttendanceCheckRequestDto createAttendanceCheckRequestDto) {
         CreateAttendanceCheckResponseDto createAttendanceCheckResponseDto = attendanceService.createAttendanceCheck(createAttendanceCheckRequestDto);
         return ResponseEntity.ok(createAttendanceCheckResponseDto);
     }
 
     // 출석처리
-    @PostMapping("/checks")
+    @PostMapping("/checks") // (포스트맨 테스트 완료)
     public ResponseEntity<?> recordAttendanceCheck(@RequestBody CreateAttendanceRequestDto createAttendanceRequestDto) {
         attendanceService.createAttendance(createAttendanceRequestDto);
         return ResponseEntity.status(HttpStatus.CREATED).build();

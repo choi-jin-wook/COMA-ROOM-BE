@@ -1,5 +1,8 @@
 package com.coma.comaroom.auth.jwt;
 
+import com.coma.comaroom.auth.CustomUserDetails;
+import com.coma.comaroom.member.entity.Member;
+import com.coma.comaroom.member.entity.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -41,7 +44,6 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
         String token = resolveToken(request);
 
-        // 검증 로직을 필터가 직접 수행 (Provider 호출 안 함)
         if (token != null && token.contains(".")) {
             try {
                 Claims claims = Jwts.parser()
@@ -50,12 +52,35 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                         .parseSignedClaims(token)
                         .getPayload();
 
-                String memberId = claims.getSubject();
-                String role = claims.get("role", String.class);
-                List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(role));
+                // 1. 토큰에서 정보 추출
+                String studentId = claims.getSubject();
+                String roleStr = claims.get("role", String.class);
+                String subject = claims.getSubject();
+                Long memberId = Long.valueOf(subject);
 
-                UserDetails principal = new User(memberId, "", authorities);
-                Authentication auth = new UsernamePasswordAuthenticationToken(principal, null, authorities);
+                // 토큰에 xp 정보가 포함되어 있다고 가정하거나, 없으면 0으로 세팅
+                // 만약 토큰에 "xp" 클레임이 없다면 null 방지를 위해 0L 사용
+                Long xp = claims.get("xp") != null ? Long.valueOf(claims.get("xp").toString()) : 0L;
+
+                // 2. 쿼리 없이 Member 객체 생성 (Stub 객체)
+                // @Builder가 있으므로 빌더를 사용합니다.
+                Member member = Member.builder()
+                        .memberId(memberId)
+                        .studentId(studentId)
+                        .role(Role.valueOf(roleStr))
+                        .xp(xp) // 서비스 45번 라인 getXp() 대응
+                        .build();
+
+                // 3. CustomUserDetails를 사용하여 Principal 생성
+                // 서비스 계층에서 CustomUserDetails 혹은 Member를 꺼낼 수 있게 함
+                CustomUserDetails customUserDetails = new CustomUserDetails(member);
+
+                // 4. 인증 객체 생성 시 principal에 customUserDetails 주입
+                Authentication auth = new UsernamePasswordAuthenticationToken(
+                        customUserDetails,
+                        null,
+                        customUserDetails.getAuthorities()
+                );
 
                 SecurityContextHolder.getContext().setAuthentication(auth);
             } catch (Exception e) {
