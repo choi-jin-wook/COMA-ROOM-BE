@@ -28,19 +28,19 @@ public class Response<T> {
     private T data;
 
     // 성공 응답 (Data 없음)
-    public static Response<Void> ok() {
+    public static Response<Void> ok(HttpStatus status) {
         return Response.<Void>builder()
                 .code("GEN-000")
-                .status(HttpStatus.OK.value())
+                .status(status.value())
                 .message("Success")
                 .build();
     }
 
     // 성공 응답 (Data 포함)
-    public static <T> Response<T> ok(T data) {
+    public static <T> Response<T> ok(T data,  HttpStatus status) {
         return Response.<T>builder()
                 .code("GEN-000")
-                .status(HttpStatus.OK.value())
+                .status(status.value())
                 .message("Success")
                 .data(data)
                 .build();
