@@ -4,6 +4,7 @@ package com.coma.comaroom.notice;
 import com.coma.comaroom.notice.dto.request.CreateNoticeRequestDto;
 import com.coma.comaroom.notice.dto.request.UpdateNoticeRequestDto;
 import com.coma.comaroom.notice.dto.response.CreateNoticeResponseDto;
+import com.coma.comaroom.notice.dto.response.UpdateNoticeResponseDto;
 import com.coma.comaroom.utils.Response;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,9 +26,9 @@ public class NoticeController {
 
     // 2. 공지 수정
     @PatchMapping("/{noticeId}")
-    public ResponseEntity<?> updateNotice(@PathVariable Long noticeId, @RequestBody UpdateNoticeRequestDto requestDto) {
-        // TODO: service.updateNotice(noticeId, requestDto);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Response<UpdateNoticeResponseDto>> updateNotice(@PathVariable Long noticeId, @RequestBody UpdateNoticeRequestDto updateNoticeRequestDto) {
+        UpdateNoticeResponseDto updateNoticeResponseDto = noticeService.updateNotice(noticeId, updateNoticeRequestDto);
+        return Response.ok(updateNoticeResponseDto, HttpStatus.OK).toResponseEntity();
     }
 
     // 3. 공지 삭제

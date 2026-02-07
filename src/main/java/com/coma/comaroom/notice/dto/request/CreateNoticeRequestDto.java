@@ -1,5 +1,6 @@
 package com.coma.comaroom.notice.dto.request;
 
+import com.coma.comaroom.notice.entity.NoticePriority;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,8 +16,10 @@ public class CreateNoticeRequestDto {
     private String content;
 
     // 고정 여부 (선택)
-    private boolean pinned;
+    private Boolean pinned;
 
     // 숨김 여부 (선택)
-    private boolean hidden;
+    private Boolean hidden;
+
+    private NoticePriority  noticePriority;
 }
