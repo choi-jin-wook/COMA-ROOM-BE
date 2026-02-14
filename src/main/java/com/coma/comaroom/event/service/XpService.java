@@ -45,10 +45,13 @@ public class XpService {
         requester.setXp(requester.getXp() + eventApproval.getGrantedXp());
     }
 
-    public void requestProvisionXp(RequestProvisionXpDto requestProvisionXpDto) {
+    public XpPetitionResponseDto requestProvisionXp(XpPetitionRequestDto xpPetitionRequestDto) {
         Member currentUser = securityUtils.getCurrentMember();
-        EventApproval eventApproval = EventApproval.requestXpApproval(currentUser, requestProvisionXpDto.getProvisionReason(), requestProvisionXpDto.getProvisionAmount());
+        EventApproval eventApproval = EventApproval.requestXpApproval(currentUser, xpPetitionRequestDto.getProvisionReason(), xpPetitionRequestDto.getProvisionAmount());
         eventApprovalRepository.save(eventApproval);
+        XpPetitionResponseDto xpPetitionResponseDto = new XpPetitionResponseDto();
+
+        return xpPetitionResponseDto;
     }
 
     public XpManagementMainResponseDto getXpManagementMainData(ApprovalStatus status, Long page) {

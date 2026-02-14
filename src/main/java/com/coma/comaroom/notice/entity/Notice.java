@@ -5,10 +5,7 @@ import com.coma.comaroom.notice.dto.request.CreateNoticeRequestDto;
 import com.coma.comaroom.notice.dto.request.UpdateNoticeRequestDto;
 import com.coma.comaroom.utils.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
+@Setter
 public class Notice extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,11 +31,11 @@ public class Notice extends BaseEntity {
 
     // 공지 고정 여부
     @Column(name = "is_pinned", nullable = false)
-    private Boolean pinned;
+    private boolean pinned;
 
     // 공지 숨김 여부
     @Column(name = "is_hidden", nullable = false)
-    private Boolean hidden;
+    private boolean hidden;
 
     // 긴급 일반 중요
     @Column(name = "notice_priority", nullable = false)
@@ -59,4 +57,11 @@ public class Notice extends BaseEntity {
         if (requestDto.getHidden() != null) this.hidden = requestDto.getHidden();
     }
 
+    public void updatePinned() {
+        this.pinned = !this.pinned;
+    }
+
+    public void updateHidden() {
+        this.hidden = !this.hidden;
+    }
 }

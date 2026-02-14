@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public enum NoticeErrorCode implements ErrorCode {
-    NOTICE_NOT_FOUND("NOTICE-001", HttpStatus.BAD_REQUEST, "존재하지 않는 공지입니다");
+    NOTICE_NOT_FOUND("NOTICE-001", HttpStatus.BAD_REQUEST, "존재하지 않는 공지입니다"), EXCEEDED_PINNED_LIMIT("NOTICE-002",HttpStatus.BAD_REQUEST , "고정 가능한 공지는 최대 3개입니다");
 
     private final String code;
     private final HttpStatus httpStatus;

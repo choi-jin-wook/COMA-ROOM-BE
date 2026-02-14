@@ -4,6 +4,7 @@ package com.coma.comaroom.notice;
 import com.coma.comaroom.notice.dto.request.CreateNoticeRequestDto;
 import com.coma.comaroom.notice.dto.request.UpdateNoticeRequestDto;
 import com.coma.comaroom.notice.dto.response.CreateNoticeResponseDto;
+import com.coma.comaroom.notice.dto.response.GetNoticeResponseDto;
 import com.coma.comaroom.notice.dto.response.UpdateNoticeResponseDto;
 import com.coma.comaroom.utils.Response;
 import lombok.AllArgsConstructor;
@@ -40,11 +41,24 @@ public class NoticeController {
 
     // 4. 공지 페이징 조회
     @GetMapping
-    public ResponseEntity<?> getNotices(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
-        // TODO: service.getNotices(page, size);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> getNotices(@RequestParam(defaultValue = "0") int page) {
+        GetNoticeResponseDto getNoticeResponseDto  = noticeService.getNotices(page);
+        return Response.ok(getNoticeResponseDto, HttpStatus.OK).toResponseEntity();
     }
 
     // 5. 고정 처리
+    @PatchMapping("/{noticeId}/pinned")
+    public ResponseEntity<Response<Void>> pinnedNotice(@PathVariable Long noticeId) {
+        noticeService.pinnedNotice(noticeId);
+        return Response.ok(HttpStatus.OK).toResponseEntity();
+    }
+
+    // 6. 숨김 처리
+    @PatchMapping("/{noticeId}/hidden")
+    public ResponseEntity<Response<Void>> hiddenNotice(@PathVariable Long noticeId) {
+        noticeService.hiddenNotice(noticeId);
+        return Response.ok(HttpStatus.OK).toResponseEntity();
+    }
+
 }
 

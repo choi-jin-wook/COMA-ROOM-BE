@@ -1,5 +1,7 @@
 package com.coma.comaroom.utils;
 
+import com.coma.comaroom.BusinessException;
+import com.coma.comaroom.auth.AuthError;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.auth.CustomUserDetails;
 import org.springframework.security.core.Authentication;
@@ -12,7 +14,7 @@ public class SecurityUtils {
     public Member getCurrentMember() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null) {
-            return null;
+            throw new BusinessException(AuthError.MEMBER_NOT_FOUND);
         }
 
         Object principal = auth.getPrincipal();

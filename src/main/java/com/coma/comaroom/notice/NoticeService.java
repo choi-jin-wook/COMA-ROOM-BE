@@ -5,6 +5,7 @@ import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.notice.dto.request.CreateNoticeRequestDto;
 import com.coma.comaroom.notice.dto.request.UpdateNoticeRequestDto;
 import com.coma.comaroom.notice.dto.response.CreateNoticeResponseDto;
+import com.coma.comaroom.notice.dto.response.GetNoticeResponseDto;
 import com.coma.comaroom.notice.dto.response.UpdateNoticeResponseDto;
 import com.coma.comaroom.notice.entity.Notice;
 import com.coma.comaroom.notice.exception.NoticeErrorCode;
@@ -12,7 +13,12 @@ import com.coma.comaroom.notice.repository.NoticeRepository;
 import com.coma.comaroom.utils.ErrorCode;
 import com.coma.comaroom.utils.SecurityUtils;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @AllArgsConstructor
@@ -38,5 +44,31 @@ public class NoticeService {
         notice.update(updateNoticeRequestDto);
         noticeRepository.saveAndFlush(notice);
         return noticeMapper.toUpdateResponseDto(notice);
+    }
+
+    public GetNoticeResponseDto getNotices(int page) {
+        final int PAGE_SIZE = 10;
+        Pageable pageable = PageRequest.of(page, PAGE_SIZE);
+        List<Notice> pinnedNotices = noticeRepository.findByPinnedTrueAndHiddenFalse();
+        Page<Notice> openedNoticePage = noticeRepository.findByPinnedFalseAndHiddenFalse(pageable);
+        
+        return noticeMapper.getNoticeResponseDtoMapper(pinnedNotices, openedNoticePage);
+    }
+
+    public void pinnedNotice(Long noticeId) {
+        Notice notice = noticeRepository.findById(noticeId).orElseThrow(() -> new BusinessException(NoticeErrorCode.NOTICE_NOT_FOUND));
+        if (!notice.isPinned()) {
+            long pinnedCount = noticeRepository.countByPinnedTrueAndHiddenFalse();
+            if (pinnedCount >= 3) {
+                throw new BusinessException(NoticeErrorCode.EXCEEDED_PINNED_LIMIT);
+            }
+        }
+
+        notice.updatePinned();
+    }
+
+    public void hiddenNotice(Long noticeId) {
+        Notice notice = noticeRepository.findById(noticeId).orElseThrow(() -> new BusinessException(NoticeErrorCode.NOTICE_NOT_FOUND));
+        notice.updateHidden();
     }
 }
