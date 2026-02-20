@@ -37,10 +37,10 @@ public class Response<T> {
     }
 
     // 성공 응답 (Data 포함)
-    public static <T> Response<T> ok(T data) {
+    public static <T> Response<T> ok(T data, HttpStatus status) {
         return Response.<T>builder()
                 .code("GEN-000")
-                .status(HttpStatus.OK.value())
+                .status(status.value())
                 .message("Success")
                 .data(data)
                 .build();
