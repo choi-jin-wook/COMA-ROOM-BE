@@ -42,6 +42,10 @@ public class Member extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    @Column(name = "major", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Major major;
+
     @OneToMany(mappedBy = "author",  fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Notice> notices = new ArrayList<>();
 

@@ -1,4 +1,4 @@
-package com.coma.comaroom.member.dto;
+package com.coma.comaroom.member.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
