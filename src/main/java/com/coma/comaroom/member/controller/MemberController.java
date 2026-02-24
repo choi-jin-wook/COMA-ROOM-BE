@@ -2,13 +2,12 @@ package com.coma.comaroom.member.controller;
 
 import com.coma.comaroom.member.dto.request.LeaderboardResponseDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
-import com.coma.comaroom.member.entity.Member;
+import com.coma.comaroom.member.dto.response.MainDashboardResponse;
 import com.coma.comaroom.member.service.MemberService;
 import com.coma.comaroom.utils.Response;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,6 +31,11 @@ public class MemberController {
 
 
     // 메인 페이지 1
+    @GetMapping
+    public ResponseEntity<Response<MainDashboardResponse>> getMainDashboard() {
+        MainDashboardResponse mainDashboardResponse = memberService.getMainDashboard();
+        return Response.ok(mainDashboardResponse, HttpStatus.OK).toResponseEntity();
+    }
 
     // 리더보드
     @GetMapping("/v1/leaderboard")
@@ -42,4 +46,6 @@ public class MemberController {
     }
 
     // 메인 페이지 출석
+
+
 }

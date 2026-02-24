@@ -1,12 +1,21 @@
 package com.coma.comaroom.member;
 
+import com.coma.comaroom.event.entity.Event;
 import com.coma.comaroom.member.dto.request.LeaderboardResponseDto;
 import com.coma.comaroom.member.dto.request.MyRankingDto;
 import com.coma.comaroom.member.dto.request.RankingItemDto;
+import com.coma.comaroom.member.dto.response.MainDashboardResponse;
+import com.coma.comaroom.member.dto.response.NoticeDto;
+import com.coma.comaroom.member.dto.response.UpcomingEventDto;
 import com.coma.comaroom.member.entity.Member;
+import com.coma.comaroom.notice.entity.Notice;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 @Component
@@ -52,5 +61,48 @@ public class MemberMapper {
                 .topThreeRankings(topThreeRankings)
                 .allRankings(allRankings)
                 .build();
+    }
+
+    public MainDashboardResponse createMainDashboardResponse(Member member, Event event, Notice notice) {
+        NoticeDto noticeDto = NoticeDto.builder()
+                .title(notice.getTitle())
+                .content(notice.getContent())
+                .date(notice.getCreatedAt().toLocalDate())
+                .build();
+
+        LocalDateTime eventDate = event.getEventDate();
+        String date = eventDate.format(DateTimeFormatter.ofPattern("M월 d일", Locale.KOREAN));
+        String dayOfWeek = eventDate.format(DateTimeFormatter.ofPattern("E", Locale.KOREAN));
+        String time = eventDate.format(DateTimeFormatter.ofPattern("a h시", Locale.KOREAN));
+
+        UpcomingEventDto upcomingEventDto = UpcomingEventDto.builder()
+                .title(event.getTitle())
+//                .rewardXp()
+                .location(event.getLocation())
+                .date(date)
+                .dayOfWeek(dayOfWeek)
+                .time(time)
+                .build();
+
+        Long remainingXp;
+        if (member.getXp() >= 50) {
+            remainingXp = 0L;
+        } else {
+            remainingXp = 50 - member.getXp();
+        }
+
+        MainDashboardResponse mainDashboardResponse = MainDashboardResponse.builder()
+                .userName(member.getName())
+                .currentXp(member.getXp())
+                .remainingXp(remainingXp)
+                .semester("2026년 1학기")
+//                .statAttendanceCount()
+//                .statEventCount()
+//                .myRank()
+                .upcomingEvent(upcomingEventDto)
+                .notice(noticeDto)
+                .build();
+
+        return mainDashboardResponse;
     }
 }

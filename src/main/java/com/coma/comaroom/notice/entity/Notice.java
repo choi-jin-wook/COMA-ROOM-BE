@@ -4,6 +4,7 @@ import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.utils.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "notice")
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 public class Notice extends BaseEntity {
