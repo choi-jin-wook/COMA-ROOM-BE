@@ -1,13 +1,18 @@
 package com.coma.comaroom.member.service;
 
 import com.coma.comaroom.BusinessException;
+import com.coma.comaroom.event.EventError;
 import com.coma.comaroom.event.entity.Event;
+import com.coma.comaroom.event.entity.EventCategory;
+import com.coma.comaroom.event.entity.EventParticipant;
+import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.event.repository.EventRepository;
 import com.coma.comaroom.member.MemberMapper;
 import com.coma.comaroom.member.dto.request.LeaderboardResponseDto;
 import com.coma.comaroom.member.dto.request.MyRankingDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
 import com.coma.comaroom.member.dto.response.MainDashboardResponse;
+import com.coma.comaroom.member.dto.response.ProfileResponseDto;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.member.entity.Role;
 import com.coma.comaroom.member.repository.MemberRepository;
@@ -33,6 +38,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final NoticeRepository noticeRepository;
     private final EventRepository eventRepository;
+    private final EventParticipateRepository eventParticipateRepository;
     private final PasswordEncoder passwordEncoder;
     private final MemberMapper memberMapper;
     private final SecurityUtils securityUtils;
@@ -65,10 +71,21 @@ public class MemberService {
     public MainDashboardResponse getMainDashboard() {
         Member member = securityUtils.getCurrentMember();
         Notice notice = noticeRepository.findFirstByOrderByCreatedAtDesc().orElseThrow(() -> new BusinessException(NoticeError.NOTICE_NOT_FOUND));
-        Optional<Event> event = eventRepository.findFirstByEventDateAfterOrderByEventDateAsc(LocalDateTime.now());
+        Event event = eventRepository.findFirstByEventDateAfterOrderByEventDateAsc(LocalDateTime.now()).orElseThrow(() -> new BusinessException(EventError.EVENT_NOT_FOUND));
 
 
         MainDashboardResponse mainDashboardResponse = memberMapper.createMainDashboardResponse(member, event, notice);
         return mainDashboardResponse;
+    }
+
+    public ProfileResponseDto getMemberProfile() {
+        Member member = securityUtils.getCurrentMember();
+        Long rank = memberRepository.findRankByMember(member);
+        Long attendanceCount = eventParticipateRepository.countByParticipantMemberAndEvent_EventCategoryNot(member, EventCategory.EVENT);
+        Long eventCount = eventParticipateRepository.countByParticipantMemberAndEvent_EventCategory(member, EventCategory.EVENT);
+
+        ProfileResponseDto profileResponseDto = memberMapper.createProfileResponseDto(member, rank, attendanceCount, eventCount);
+
+        return profileResponseDto;
     }
 }

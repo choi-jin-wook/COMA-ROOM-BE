@@ -6,6 +6,7 @@ import com.coma.comaroom.member.dto.request.MyRankingDto;
 import com.coma.comaroom.member.dto.request.RankingItemDto;
 import com.coma.comaroom.member.dto.response.MainDashboardResponse;
 import com.coma.comaroom.member.dto.response.NoticeDto;
+import com.coma.comaroom.member.dto.response.ProfileResponseDto;
 import com.coma.comaroom.member.dto.response.UpcomingEventDto;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.notice.entity.Notice;
@@ -104,5 +105,21 @@ public class MemberMapper {
                 .build();
 
         return mainDashboardResponse;
+    }
+
+    public ProfileResponseDto createProfileResponseDto(Member member, Long rank, Long attendanceCount, Long eventCount) {
+        ProfileResponseDto profileResponseDto = ProfileResponseDto.builder()
+                .name(member.getName())
+                .major(member.getMajor())
+                .studentId(member.getStudentId())
+                .ranking(rank)
+                .currentXp(member.getXp())
+                .joinedDate(member.getCreatedAt().toLocalDate())
+                .memberStatus(member.getRole())
+                .attendanceCount(attendanceCount)
+                .eventCount(eventCount)
+                .build();
+
+        return profileResponseDto;
     }
 }
