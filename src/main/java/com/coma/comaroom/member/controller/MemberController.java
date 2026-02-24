@@ -21,7 +21,36 @@ public class MemberController {
     @PostMapping("/api/auth/register")
     public ResponseEntity<?> joinMember(@RequestBody RegisterMemberRequestDto registerMemberRequestDto) {
         memberService.registerMember(registerMemberRequestDto);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        return Response.ok(registerMemberRequestDto, HttpStatus.CREATED).toResponseEntity();
+    }
+
+    @PostMapping("/api/auth/refrash")
+    public ResponseEntity<?> refreshMember(@RequestBody RegisterMemberRequestDto registerMemberRequestDto) {
+        return Response.ok(HttpStatus.NOT_IMPLEMENTED).toResponseEntity();
+    }
+
+    // 출석 메인 페이지
+    @GetMapping("/api/attendance")
+    public ResponseEntity<?> getAttendancePage() {
+        return Response.ok(HttpStatus.NOT_IMPLEMENTED).toResponseEntity();
+    }
+
+    // 리더보드
+    @GetMapping("/api/leaderboard")
+    public ResponseEntity<?> getLeaderboard() {
+        return Response.ok(HttpStatus.NOT_IMPLEMENTED).toResponseEntity();
+    }
+
+    // 프로필
+    @GetMapping("/api/member/profile")
+    public ResponseEntity<?> getMemberProfile() {
+        return Response.ok(HttpStatus.NOT_IMPLEMENTED).toResponseEntity();
+    }
+
+    // 사용자 xp 내역
+    @GetMapping("/api/member/xp-history")
+    public ResponseEntity<?> getMemberXpHistory() {
+        return Response.ok(HttpStatus.NOT_IMPLEMENTED).toResponseEntity();
     }
 
 //    @PostMapping("/api/auth/refrash")

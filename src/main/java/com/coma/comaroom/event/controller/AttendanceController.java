@@ -4,6 +4,7 @@ import com.coma.comaroom.event.dto.CreateAttendanceCheckRequestDto;
 import com.coma.comaroom.event.dto.CreateAttendanceCheckResponseDto;
 import com.coma.comaroom.event.dto.CreateAttendanceRequestDto;
 import com.coma.comaroom.event.service.AttendanceService;
+import com.coma.comaroom.utils.Response;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,21 +15,21 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/api/attendances")
+@RequestMapping("/api")
 public class AttendanceController {
     private final AttendanceService attendanceService;
 
     // 출석 생성
-    @PostMapping()// (포스트맨 테스트 완료)
-    public ResponseEntity<?> createAttendanceCheck(@RequestBody CreateAttendanceCheckRequestDto createAttendanceCheckRequestDto) {
+    @PostMapping("/admin/attendances")// (포스트맨 테스트 완료)
+    public ResponseEntity<Response<CreateAttendanceCheckResponseDto>> createAttendanceCheck(@RequestBody CreateAttendanceCheckRequestDto createAttendanceCheckRequestDto) {
         CreateAttendanceCheckResponseDto createAttendanceCheckResponseDto = attendanceService.createAttendanceCheck(createAttendanceCheckRequestDto);
-        return ResponseEntity.ok(createAttendanceCheckResponseDto);
+        return Response.ok(createAttendanceCheckResponseDto, HttpStatus.CREATED).toResponseEntity();
     }
 
     // 출석처리
-    @PostMapping("/checks") // (포스트맨 테스트 완료)
+    @PostMapping("/attendances/checks") // (포스트맨 테스트 완료)
     public ResponseEntity<?> recordAttendanceCheck(@RequestBody CreateAttendanceRequestDto createAttendanceRequestDto) {
         attendanceService.createAttendance(createAttendanceRequestDto);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return Response.ok(HttpStatus.OK).toResponseEntity();
     }
 }

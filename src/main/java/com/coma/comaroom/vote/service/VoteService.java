@@ -38,7 +38,8 @@ public class VoteService {
     // - 사용자
     // 1. 전체 투표 조회
     public List<VoteDetailResponseDto> voteDashboard(Integer page, VoteStatus status) {
-        Pageable pageable = PageRequest.of(page, 5);
+        final int PAGE_SIZE = 5;
+        Pageable pageable = PageRequest.of(page, PAGE_SIZE);
         List<Vote> votes = voteRepository.findAllByVoteStatusOrderByCreatedAtDesc(status, pageable);
 
         return votes.stream()
