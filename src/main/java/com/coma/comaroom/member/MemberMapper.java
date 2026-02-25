@@ -4,10 +4,7 @@ import com.coma.comaroom.event.entity.Event;
 import com.coma.comaroom.member.dto.request.LeaderboardResponseDto;
 import com.coma.comaroom.member.dto.request.MyRankingDto;
 import com.coma.comaroom.member.dto.request.RankingItemDto;
-import com.coma.comaroom.member.dto.response.MainDashboardResponse;
-import com.coma.comaroom.member.dto.response.NoticeDto;
-import com.coma.comaroom.member.dto.response.ProfileResponseDto;
-import com.coma.comaroom.member.dto.response.UpcomingEventDto;
+import com.coma.comaroom.member.dto.response.*;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.notice.entity.Notice;
 import org.springframework.stereotype.Component;
@@ -17,6 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.IntStream;
 
 @Component
@@ -121,5 +119,39 @@ public class MemberMapper {
                 .build();
 
         return profileResponseDto;
+    }
+
+    // 여기서 세 번째 인자인 attendedEventIds를 실제로 '사용'해야 경고가 사라짐
+    public AttendanceHistoryDto createAttendanceHistoryDto(Event event, Set<Long> attendedEventIds) {
+
+        // 이 로직이 반드시 들어가야 함!
+        boolean isAttended = attendedEventIds.contains(event.getEventId());
+
+        return AttendanceHistoryDto.builder()
+                .title(event.getTitle())
+                .status(isAttended ? "출석" : "결석") // 여기서 사용됨
+                .scheduledDate(event.getEventDate().toString())
+                .location(event.getLocation())
+                .rewardXp(isAttended ? event.getRewardXp() : 0L)     // 여기서 사용됨
+                .build();
+    }
+
+    public MainAttendanceResponseDto createMainAttendanceResponseDto(Member member, Long rank, Long eventCount, Long attendanceCount, List<AttendanceHistoryDto> history) {
+        Long attendanceRate = 0L;
+        if (eventCount > 0) {
+            // 2. 100을 먼저 곱해서 소수점 손실 없이 퍼센트 계산
+            attendanceRate = (attendanceCount * 100) / eventCount;
+        }
+
+        MainAttendanceResponseDto mainAttendanceResponseDto = MainAttendanceResponseDto.builder()
+                .totalEventCount(eventCount)
+                .attendanceCount(attendanceCount)
+                .absenceCount(eventCount - attendanceCount)
+                .attendanceRate(attendanceRate)
+                .totalEarnedXp(member.getXp())
+                .attendanceRank(rank)
+                .build();
+
+        return mainAttendanceResponseDto;
     }
 }

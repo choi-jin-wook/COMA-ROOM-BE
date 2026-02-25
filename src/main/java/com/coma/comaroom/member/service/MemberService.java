@@ -11,6 +11,8 @@ import com.coma.comaroom.member.MemberMapper;
 import com.coma.comaroom.member.dto.request.LeaderboardResponseDto;
 import com.coma.comaroom.member.dto.request.MyRankingDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
+import com.coma.comaroom.member.dto.response.AttendanceHistoryDto;
+import com.coma.comaroom.member.dto.response.MainAttendanceResponseDto;
 import com.coma.comaroom.member.dto.response.MainDashboardResponse;
 import com.coma.comaroom.member.dto.response.ProfileResponseDto;
 import com.coma.comaroom.member.entity.Member;
@@ -28,8 +30,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -87,5 +92,26 @@ public class MemberService {
         ProfileResponseDto profileResponseDto = memberMapper.createProfileResponseDto(member, rank, attendanceCount, eventCount);
 
         return profileResponseDto;
+    }
+
+    public MainAttendanceResponseDto getMainAttendance() {
+        Member member = securityUtils.getCurrentMember();
+        Long rank = memberRepository.findRankByMember(member);
+        Long eventCount = eventRepository.count();
+        Long attendanceCount = eventParticipateRepository.countByParticipantMember(member);
+
+        List<Event> eventList = eventRepository.findAllByOrderByEventDateDesc();
+
+
+        Set<Long> attendedEventIds = new HashSet<>(
+                eventParticipateRepository.findAllEventIdsByMember(member)
+        );
+
+        List<AttendanceHistoryDto> history = eventList.stream()
+                .map(event -> memberMapper.createAttendanceHistoryDto(event, attendedEventIds))
+                .collect(Collectors.toList());
+
+        MainAttendanceResponseDto mainAttendanceResponseDto = memberMapper.createMainAttendanceResponseDto(member, rank, eventCount, attendanceCount, history);
+        return mainAttendanceResponseDto;
     }
 }

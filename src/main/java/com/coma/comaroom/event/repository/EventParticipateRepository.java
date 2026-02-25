@@ -1,10 +1,15 @@
 package com.coma.comaroom.event.repository;
 
+import com.coma.comaroom.event.entity.Event;
 import com.coma.comaroom.event.entity.EventCategory;
 import com.coma.comaroom.event.entity.EventParticipant;
 import com.coma.comaroom.event.entity.EventPost;
 import com.coma.comaroom.member.entity.Member;
+import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import java.util.List;
 
 public interface EventParticipateRepository extends JpaRepository<EventParticipant, Long> {
     /**
@@ -19,4 +24,11 @@ public interface EventParticipateRepository extends JpaRepository<EventParticipa
      */
     Long countByParticipantMemberAndEvent_EventCategoryNot(Member member, EventCategory category);
 
+    Long countByParticipantMember(Member member);
+
+    boolean existsByParticipantMemberAndEvent(Member member, Event event);
+
+    // 특정 멤버가 참여한 이벤트들의 ID 리스트만 조회
+    @Query("SELECT ep.event.id FROM EventParticipant ep WHERE ep.participantMember = :member")
+    List<Long> findAllEventIdsByMember(@Param("member") Member member);
 }

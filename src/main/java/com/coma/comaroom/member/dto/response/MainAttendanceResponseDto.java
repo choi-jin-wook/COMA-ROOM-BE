@@ -8,14 +8,14 @@ import java.util.List;
 @Builder
 public class MainAttendanceResponseDto {
     // 1. 상단 출석 현황 카드
-    private int attendanceRate;      // 출석률 (75%)
-    private int attendanceCount;     // 출석 (6)
-    private int absenceCount;        // 결석 (1)
-    private int totalEventCount;     // 전체 (7)
+    private Long attendanceRate;      // 출석률 (75%)
+    private Long attendanceCount;     // 출석 (6)
+    private Long absenceCount;        // 결석 (1)
+    private Long totalEventCount;     // 전체 (7)
 
     // 2. 중간 요약 지표
-    private int totalEarnedXp;       // 획득 XP (18)
-    private String attendanceRank;   // 출석 순위 (#6)
+    private Long totalEarnedXp;       // 획득 XP (18)
+    private Long attendanceRank;   // 출석 순위 (#6)
 
     // 3. 하단 출석 내역 (리스트)
     private List<AttendanceHistoryDto> attendanceHistory;

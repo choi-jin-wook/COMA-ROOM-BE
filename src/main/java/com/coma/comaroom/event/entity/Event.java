@@ -29,8 +29,8 @@ public class Event extends BaseEntity {
     @Column(name = "event_date", nullable = false)
     private LocalDateTime eventDate;
 
-//    @Column(name = "reward_xp", nullable = false)
-//    private Integer rewardXp;
+    @Column(name = "reward_xp", nullable = false)
+    private Long rewardXp;
 
     @Column(name = "location", nullable = false)
     private String location;

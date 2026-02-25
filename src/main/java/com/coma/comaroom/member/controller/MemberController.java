@@ -2,6 +2,7 @@ package com.coma.comaroom.member.controller;
 
 import com.coma.comaroom.member.dto.request.LeaderboardResponseDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
+import com.coma.comaroom.member.dto.response.MainAttendanceResponseDto;
 import com.coma.comaroom.member.dto.response.MainDashboardResponse;
 import com.coma.comaroom.member.dto.response.ProfileResponseDto;
 import com.coma.comaroom.member.service.MemberService;
@@ -37,7 +38,7 @@ public class MemberController {
     @GetMapping("/api/member/profile")
     public ResponseEntity<?> getMemberProfile() {
         ProfileResponseDto profileResponseDto = memberService.getMemberProfile();
-        return Response.ok(profileResponseDto, HttpStatus.NOT_IMPLEMENTED).toResponseEntity();
+        return Response.ok(profileResponseDto, HttpStatus.OK).toResponseEntity();
     }
 
     // 사용자 xp 내역
@@ -56,10 +57,9 @@ public class MemberController {
     // 메인 페이지 출석
     @GetMapping("/api/main/attendance")
     public ResponseEntity<?> getMainAttendance() {
-        return Response.ok(HttpStatus.NOT_IMPLEMENTED).toResponseEntity();
+        MainAttendanceResponseDto mainAttendanceResponseDto = memberService.getMainAttendance();
+        return Response.ok(mainAttendanceResponseDto, HttpStatus.OK).toResponseEntity();
     }
-
-
 
 
     // 리더보드

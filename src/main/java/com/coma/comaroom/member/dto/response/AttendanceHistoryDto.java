@@ -12,5 +12,5 @@ public class AttendanceHistoryDto {
     private String actualArrivalTime; // 실제 출석 시간 (예: "오후 6:55") - 결석 시 "-" 혹은 null
 
     private String status;           // 출석 상태 (예: "출석", "결석")
-    private Integer rewardXp;        // 획득 XP (예: 3) - 결석 시 null 혹은 0
+    private Long rewardXp;        // 획득 XP (예: 3) - 결석 시 null 혹은 0
 }
