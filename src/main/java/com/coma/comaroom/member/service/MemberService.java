@@ -11,18 +11,17 @@ import com.coma.comaroom.member.MemberMapper;
 import com.coma.comaroom.member.dto.request.LeaderboardResponseDto;
 import com.coma.comaroom.member.dto.request.MyRankingDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
-import com.coma.comaroom.member.dto.response.AttendanceHistoryDto;
-import com.coma.comaroom.member.dto.response.MainAttendanceResponseDto;
-import com.coma.comaroom.member.dto.response.MainDashboardResponse;
-import com.coma.comaroom.member.dto.response.ProfileResponseDto;
+import com.coma.comaroom.member.dto.response.*;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.member.entity.Role;
 import com.coma.comaroom.member.repository.MemberRepository;
 import com.coma.comaroom.notice.entity.Notice;
 import com.coma.comaroom.notice.exception.NoticeError;
 import com.coma.comaroom.notice.repository.NoticeRepository;
-import com.coma.comaroom.utils.ErrorCode;
 import com.coma.comaroom.utils.SecurityUtils;
+import com.coma.comaroom.vote.entity.Vote;
+import com.coma.comaroom.vote.entity.VoteStatus;
+import com.coma.comaroom.vote.repository.VoteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,10 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -47,9 +43,9 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final MemberMapper memberMapper;
     private final SecurityUtils securityUtils;
+    private final VoteRepository voteRepository;
 
     public void registerMember(RegisterMemberRequestDto registerMemberRequestDto) {
-
         Member member = Member.builder()
                 .studentId(registerMemberRequestDto.getStudentId())
                 .name(registerMemberRequestDto.getName())
@@ -58,8 +54,7 @@ public class MemberService {
                 .xp(0L)
                 .build();
 
-
-        memberRepository.save(member);
+        memberRepository.saveAndFlush(member);
     }
 
     public LeaderboardResponseDto getLeaderboardData() {
@@ -74,23 +69,43 @@ public class MemberService {
     }
 
     public MainDashboardResponse getMainDashboard() {
+        // 현재 사용자
         Member member = securityUtils.getCurrentMember();
+
+        // 공지 찾기
         Notice notice = noticeRepository.findFirstByOrderByCreatedAtDesc().orElseThrow(() -> new BusinessException(NoticeError.NOTICE_NOT_FOUND));
-        Event event = eventRepository.findFirstByEventDateAfterOrderByEventDateAsc(LocalDateTime.now()).orElseThrow(() -> new BusinessException(EventError.EVENT_NOT_FOUND));
 
+        Optional<Event> event = eventRepository.findFirstByEventDateAfterOrderByEventDateAsc(LocalDateTime.now());
 
-        MainDashboardResponse mainDashboardResponse = memberMapper.createMainDashboardResponse(member, event, notice);
+        // 사용자 순위
+        Long rank = memberRepository.findRankByMember(member);
+
+        // 출석횟수, 행사 참여
+        Long statAttendanceCount = eventParticipateRepository.countByParticipantMemberAndEvent_EventCategoryNot(member, EventCategory.EVENT);
+        Long statEventCount = eventParticipateRepository.countByParticipantMemberAndEvent_EventCategory(member, EventCategory.EVENT);
+
+        // 진행중인 투표
+        Optional<Vote> vote = voteRepository.findFirstByVoteStatusOrderByCreatedAtDesc(VoteStatus.IN_PROGRESS);
+
+        MainDashboardResponse mainDashboardResponse = memberMapper.createMainDashboardResponse(member, event, notice, rank, statAttendanceCount, statEventCount, vote);
         return mainDashboardResponse;
     }
 
     public ProfileResponseDto getMemberProfile() {
+        // 현재 사용자
         Member member = securityUtils.getCurrentMember();
+
+        // 사용자의 순위, 행사 이외의 출석 수, 행사 참여 수,
         Long rank = memberRepository.findRankByMember(member);
         Long attendanceCount = eventParticipateRepository.countByParticipantMemberAndEvent_EventCategoryNot(member, EventCategory.EVENT);
         Long eventCount = eventParticipateRepository.countByParticipantMemberAndEvent_EventCategory(member, EventCategory.EVENT);
 
-        ProfileResponseDto profileResponseDto = memberMapper.createProfileResponseDto(member, rank, attendanceCount, eventCount);
+        // 참여한 행사의 목록
+        List<EventParticipant> eventParticipants = eventParticipateRepository.findTop5ByParticipantMemberOrderByEventParticipantIdDesc(member);
+        List<RecentActivityDto> recentActivityDtoList = memberMapper.createRecentActivityDto(eventParticipants);
 
+        // mapper을 통한 dto 생성
+        ProfileResponseDto profileResponseDto = memberMapper.createProfileResponseDto(member, rank, attendanceCount, eventCount, recentActivityDtoList);
         return profileResponseDto;
     }
 
@@ -109,9 +124,22 @@ public class MemberService {
 
         List<AttendanceHistoryDto> history = eventList.stream()
                 .map(event -> memberMapper.createAttendanceHistoryDto(event, attendedEventIds))
+                // 여기서 날짜 내림차순(최신순) 정렬 추가
+                .sorted(Comparator.comparing(AttendanceHistoryDto::getScheduledDate).reversed())
                 .collect(Collectors.toList());
 
         MainAttendanceResponseDto mainAttendanceResponseDto = memberMapper.createMainAttendanceResponseDto(member, rank, eventCount, attendanceCount, history);
         return mainAttendanceResponseDto;
     }
+
+//    public AttendanceMainResponse getAttendanceMainPage() {
+//        Member member = securityUtils.getCurrentMember();
+//        Long rank = memberRepository.findRankByMember(member);
+//
+//        Long attendanceCount = eventParticipateRepository.countByParticipantMember(member);
+//        Long eventCount = eventRepository.count();
+//        List<Event> eventList = eventParticipateRepository.findAllEventsByMember(member);
+//
+////        List<AttendanceHistoryDto> attendanceHistoryDtoList = memberMapper.createAttendanceHistoryDtoList();
+//    }
 }

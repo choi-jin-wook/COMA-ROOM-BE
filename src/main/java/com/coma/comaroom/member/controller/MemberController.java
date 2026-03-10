@@ -2,6 +2,7 @@ package com.coma.comaroom.member.controller;
 
 import com.coma.comaroom.member.dto.request.LeaderboardResponseDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
+import com.coma.comaroom.member.dto.response.AttendanceMainResponse;
 import com.coma.comaroom.member.dto.response.MainAttendanceResponseDto;
 import com.coma.comaroom.member.dto.response.MainDashboardResponse;
 import com.coma.comaroom.member.dto.response.ProfileResponseDto;
@@ -34,7 +35,7 @@ public class MemberController {
     }
 
 
-    // 프로필
+    // 프로필 (테스트 완료)
     @GetMapping("/api/member/profile")
     public ResponseEntity<?> getMemberProfile() {
         ProfileResponseDto profileResponseDto = memberService.getMemberProfile();
@@ -48,14 +49,14 @@ public class MemberController {
     }
 
     // 메인 페이지 1
-    @GetMapping
+    @GetMapping("/api/member/main")
     public ResponseEntity<Response<MainDashboardResponse>> getMainDashboard() {
         MainDashboardResponse mainDashboardResponse = memberService.getMainDashboard();
         return Response.ok(mainDashboardResponse, HttpStatus.OK).toResponseEntity();
     }
 
     // 메인 페이지 출석
-    @GetMapping("/api/main/attendance")
+    @GetMapping("/api/member/main/attendance")
     public ResponseEntity<?> getMainAttendance() {
         MainAttendanceResponseDto mainAttendanceResponseDto = memberService.getMainAttendance();
         return Response.ok(mainAttendanceResponseDto, HttpStatus.OK).toResponseEntity();
@@ -63,16 +64,16 @@ public class MemberController {
 
 
     // 리더보드
-    @GetMapping("/v1/leaderboard")
+    @GetMapping("/api/member/leaderboard")
     public ResponseEntity<Response<LeaderboardResponseDto>> getLeaderboard() {
-        // userMember.getId() 등을 전달하여 '나의 순위'와 '전체 리스트'를 함께 조회
         LeaderboardResponseDto response = memberService.getLeaderboardData();
         return Response.ok(response, HttpStatus.OK).toResponseEntity();
     }
 
-    // 출석 메인 페이지
-    @GetMapping("/api/attendance")
-    public ResponseEntity<?> getAttendancePage() {
-        return Response.ok(HttpStatus.NOT_IMPLEMENTED).toResponseEntity();
-    }
+//    // 출석 메인 페이지
+//    @GetMapping("/api/member/main/attendance")
+//    public ResponseEntity<?> getAttendanceMainPage() {
+//        AttendanceMainResponse attendanceMainResponse = memberService.getAttendanceMainPage();
+//        return Response.ok(HttpStatus.NOT_IMPLEMENTED).toResponseEntity();
+//    }
 }

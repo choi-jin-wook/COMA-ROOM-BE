@@ -8,7 +8,8 @@ import org.springframework.http.HttpStatus;
 @Getter
 @AllArgsConstructor
 public enum EventError implements ErrorCode {
-    EVENT_NOT_FOUND("EVENT-001", HttpStatus.BAD_REQUEST, "존재하지 않는 이벤트입니다");
+    EVENT_NOT_FOUND("EVENT-001", HttpStatus.BAD_REQUEST, "존재하지 않는 이벤트입니다"),
+    NOT_STUDY_MEMBER("EVENT-002", HttpStatus.BAD_REQUEST, "스터디원이 아닙니다");
 
     private final String code;
     private final HttpStatus httpStatus;

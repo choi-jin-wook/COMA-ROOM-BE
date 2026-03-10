@@ -13,8 +13,8 @@ public class MainDashboardResponse {
     private Long remainingXp;         // 32
 
     // 2. 중앙 통계 지표 (요청하신 항목 제외)
-    private int statAttendanceCount; // 출석 횟수: 6회
-    private int statEventCount;      // 행사 참여: 2회
+    private Long statAttendanceCount; // 출석 횟수: 6회
+    private Long statEventCount;      // 행사 참여: 2회
 
     // 3. 나의 순위 섹션
     private Long myRank;              // 12

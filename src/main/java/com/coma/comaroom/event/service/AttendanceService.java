@@ -1,5 +1,7 @@
 package com.coma.comaroom.event.service;
 
+import com.coma.comaroom.BusinessException;
+import com.coma.comaroom.event.EventError;
 import com.coma.comaroom.event.dto.CreateAttendanceCheckRequestDto;
 import com.coma.comaroom.event.dto.CreateAttendanceCheckResponseDto;
 import com.coma.comaroom.event.dto.CreateAttendanceRequestDto;
@@ -62,12 +64,15 @@ public class AttendanceService {
 
     public void createAttendance(CreateAttendanceRequestDto createAttendanceRequestDto) {
         Long eventId = Long.valueOf(redisTemplate.opsForValue().get(createAttendanceRequestDto.getQrCodeId()));
+        Member currentUser = securityUtils.getCurrentMember();
         System.out.println(eventId);
 
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new IllegalStateException("이벤트 없음"));
+                .orElseThrow(() -> new BusinessException(EventError.EVENT_NOT_FOUND));
 
-        Member currentUser = securityUtils.getCurrentMember();
+        if (event.getEventCategory() == EventCategory.STUDY && eventParticipateRepository.existsByParticipantMemberAndEvent(currentUser, event)) {
+            throw new BusinessException(EventError.NOT_STUDY_MEMBER);
+        }
 
         EventParticipant participant = EventParticipant.builder()
                 .event(event)

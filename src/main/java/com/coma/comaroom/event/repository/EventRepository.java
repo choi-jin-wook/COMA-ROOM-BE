@@ -12,4 +12,5 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     Optional<Event> findByTitleAndEventCategory(String title, EventCategory category);
     Optional<Event> findFirstByEventDateAfterOrderByEventDateAsc(LocalDateTime now);
     List<Event> findAllByOrderByEventDateDesc();
+
 }

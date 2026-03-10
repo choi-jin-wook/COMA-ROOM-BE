@@ -36,6 +36,7 @@ public class Event extends BaseEntity {
     private String location;
 
     @Column(name = "event_category", nullable = false)
+    @Enumerated(EnumType.STRING)
     private EventCategory eventCategory;
 
     @ManyToOne(fetch = FetchType.LAZY)

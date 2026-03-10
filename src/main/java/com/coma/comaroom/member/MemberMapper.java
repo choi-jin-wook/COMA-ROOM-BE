@@ -1,21 +1,24 @@
 package com.coma.comaroom.member;
 
 import com.coma.comaroom.event.entity.Event;
+import com.coma.comaroom.event.entity.EventCategory;
+import com.coma.comaroom.event.entity.EventParticipant;
 import com.coma.comaroom.member.dto.request.LeaderboardResponseDto;
 import com.coma.comaroom.member.dto.request.MyRankingDto;
 import com.coma.comaroom.member.dto.request.RankingItemDto;
 import com.coma.comaroom.member.dto.response.*;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.notice.entity.Notice;
+import com.coma.comaroom.vote.entity.Vote;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.IntStream;
+import java.time.temporal.ChronoUnit;
 
 @Component
 public class MemberMapper {
@@ -62,26 +65,37 @@ public class MemberMapper {
                 .build();
     }
 
-    public MainDashboardResponse createMainDashboardResponse(Member member, Event event, Notice notice) {
+    public MainDashboardResponse createMainDashboardResponse(Member member, Optional<Event> event, Notice notice, Long rank, Long statAttendanceCount, Long statEventCount, Optional<Vote> vote) {
         NoticeDto noticeDto = NoticeDto.builder()
                 .title(notice.getTitle())
                 .content(notice.getContent())
                 .date(notice.getCreatedAt().toLocalDate())
                 .build();
 
-        LocalDateTime eventDate = event.getEventDate();
-        String date = eventDate.format(DateTimeFormatter.ofPattern("M월 d일", Locale.KOREAN));
-        String dayOfWeek = eventDate.format(DateTimeFormatter.ofPattern("E", Locale.KOREAN));
-        String time = eventDate.format(DateTimeFormatter.ofPattern("a h시", Locale.KOREAN));
+        VoteDto voteDto = vote.map(voteEntity -> VoteDto.builder()
+                .voteId(voteEntity.getVoteId())
+                .title(voteEntity.getTitle())
+                .description(voteEntity.getDescription())
+                .remainingDays(ChronoUnit.DAYS.between(LocalDateTime.now(), voteEntity.getDeadline()))
+                .rewardXp(2L)
+                .build()
+        ).orElse(null);
 
-        UpcomingEventDto upcomingEventDto = UpcomingEventDto.builder()
-                .title(event.getTitle())
-//                .rewardXp()
-                .location(event.getLocation())
-                .date(date)
-                .dayOfWeek(dayOfWeek)
-                .time(time)
-                .build();
+        UpcomingEventDto upcomingEventDto = event.map(e -> {
+            LocalDateTime eventDate = e.getEventDate();
+
+            String date = eventDate.format(DateTimeFormatter.ofPattern("M월 d일", Locale.KOREAN));
+            String dayOfWeek = eventDate.format(DateTimeFormatter.ofPattern("E", Locale.KOREAN));
+            String time = eventDate.format(DateTimeFormatter.ofPattern("a h시", Locale.KOREAN));
+
+            return UpcomingEventDto.builder()
+                    .title(e.getTitle())
+                    .location(e.getLocation())
+                    .date(date)
+                    .dayOfWeek(dayOfWeek)
+                    .time(time)
+                    .build();
+        }).orElse(null);
 
         Long remainingXp;
         if (member.getXp() >= 50) {
@@ -95,17 +109,18 @@ public class MemberMapper {
                 .currentXp(member.getXp())
                 .remainingXp(remainingXp)
                 .semester("2026년 1학기")
-//                .statAttendanceCount()
-//                .statEventCount()
-//                .myRank()
+                .statAttendanceCount(statAttendanceCount)
+                .statEventCount(statEventCount)
+                .myRank(rank)
                 .upcomingEvent(upcomingEventDto)
                 .notice(noticeDto)
+                .votePoll(voteDto)
                 .build();
 
         return mainDashboardResponse;
     }
 
-    public ProfileResponseDto createProfileResponseDto(Member member, Long rank, Long attendanceCount, Long eventCount) {
+    public ProfileResponseDto createProfileResponseDto(Member member, Long rank, Long attendanceCount, Long eventCount, List<RecentActivityDto> recentActivityDtoList) {
         ProfileResponseDto profileResponseDto = ProfileResponseDto.builder()
                 .name(member.getName())
                 .major(member.getMajor())
@@ -116,6 +131,7 @@ public class MemberMapper {
                 .memberStatus(member.getRole())
                 .attendanceCount(attendanceCount)
                 .eventCount(eventCount)
+                .recentActivities(recentActivityDtoList)
                 .build();
 
         return profileResponseDto;
@@ -150,8 +166,25 @@ public class MemberMapper {
                 .attendanceRate(attendanceRate)
                 .totalEarnedXp(member.getXp())
                 .attendanceRank(rank)
+                .attendanceHistory(history)
                 .build();
 
         return mainAttendanceResponseDto;
+    }
+
+    public List<RecentActivityDto> createRecentActivityDto(List<EventParticipant> eventParticipants) {
+        return eventParticipants.stream()
+                .map(participant -> {
+                    Event event = participant.getEvent();
+
+                    return RecentActivityDto.builder()
+                            .title(event.getTitle()) // Event 엔티티의 제목 필드명에 맞춰 수정하세요
+                            .eventCategory(event.getEventCategory())
+                            // BaseEntity의 생성일(LocalDateTime)에서 LocalDate만 추출
+                            .date(participant.getCreatedAt().toLocalDate())
+                            .rewardXp(event.getRewardXp()) // Event 엔티티의 XP 필드명에 맞춰 수정하세요
+                            .build();
+                })
+                .toList();
     }
 }

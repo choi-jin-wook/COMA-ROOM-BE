@@ -24,6 +24,7 @@ public interface EventParticipateRepository extends JpaRepository<EventParticipa
      */
     Long countByParticipantMemberAndEvent_EventCategoryNot(Member member, EventCategory category);
 
+    // 사용자 출석 수
     Long countByParticipantMember(Member member);
 
     boolean existsByParticipantMemberAndEvent(Member member, Event event);
@@ -31,4 +32,12 @@ public interface EventParticipateRepository extends JpaRepository<EventParticipa
     // 특정 멤버가 참여한 이벤트들의 ID 리스트만 조회
     @Query("SELECT ep.event.id FROM EventParticipant ep WHERE ep.participantMember = :member")
     List<Long> findAllEventIdsByMember(@Param("member") Member member);
+
+    // 특정 멤버가 참여한 이벤트들의 리스트 조회
+    @Query("SELECT ep.event FROM EventParticipant ep " +
+            "JOIN ep.event " +
+            "WHERE ep.participantMember = :member")
+    List<Event> findAllEventsByMember(@Param("member") Member member);
+
+    List<EventParticipant> findTop5ByParticipantMemberOrderByEventParticipantIdDesc(Member member);
 }

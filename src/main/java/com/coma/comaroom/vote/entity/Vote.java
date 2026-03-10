@@ -30,6 +30,9 @@ public class Vote extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long voteId;
 
+    @Column(name = "description", nullable = false)
+    private String description;
+
     @Column(name = "title", nullable = false)
     private String title;
 
