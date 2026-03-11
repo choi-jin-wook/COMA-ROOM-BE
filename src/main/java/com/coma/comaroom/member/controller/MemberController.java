@@ -69,11 +69,5 @@ public class MemberController {
         LeaderboardResponseDto response = memberService.getLeaderboardData();
         return Response.ok(response, HttpStatus.OK).toResponseEntity();
     }
-
-//    // 출석 메인 페이지
-//    @GetMapping("/api/member/main/attendance")
-//    public ResponseEntity<?> getAttendanceMainPage() {
-//        AttendanceMainResponse attendanceMainResponse = memberService.getAttendanceMainPage();
-//        return Response.ok(HttpStatus.NOT_IMPLEMENTED).toResponseEntity();
-//    }
 }
+

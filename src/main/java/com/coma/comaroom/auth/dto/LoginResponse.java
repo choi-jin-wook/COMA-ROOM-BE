@@ -1,5 +1,6 @@
 package com.coma.comaroom.auth.dto;
 
+import com.coma.comaroom.member.entity.Role;
 import lombok.*;
 
 @Data
@@ -10,4 +11,5 @@ public class LoginResponse {
     private String accessToken;
     private String refreshToken;
     private String message;
+    private Role role;
 }

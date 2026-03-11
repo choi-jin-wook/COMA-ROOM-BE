@@ -1,30 +1,29 @@
-package com.coma.comaroom.event.service;
+package com.coma.comaroom.member.service;
 
 import com.coma.comaroom.event.dto.*;
 import com.coma.comaroom.event.entity.ApprovalStatus;
 import com.coma.comaroom.event.entity.EventApproval;
 import com.coma.comaroom.event.mapper.EventApprovalMapper;
-import com.coma.comaroom.event.mapper.XpManagementMapper;
+import com.coma.comaroom.member.XpManagementMapper;
 import com.coma.comaroom.event.repository.EventApprovalRepository;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.member.repository.MemberRepository;
 import com.coma.comaroom.utils.SecurityUtils;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
-@AllArgsConstructor
 @Transactional
-public class XpService {
+@AllArgsConstructor
+public class AdminMemberService {
     private final MemberRepository memberRepository;
     private final EventApprovalRepository eventApprovalRepository;
     private final SecurityUtils securityUtils;
@@ -42,7 +41,9 @@ public class XpService {
         EventApproval eventApproval = eventApprovalRepository.findById(requestId).orElseThrow(() -> new EntityNotFoundException("나중에 처리하지 뭐"));
         eventApproval.setApprovalStatus(provisionApprovalRequestDto.getApprovalStatus());
         Member requester = eventApproval.getRequester();
-        requester.setXp(requester.getXp() + eventApproval.getGrantedXp());
+        if (provisionApprovalRequestDto.getApprovalStatus() == ApprovalStatus.APPROVED) {
+            requester.setXp(requester.getXp() + eventApproval.getGrantedXp());
+        }
     }
 
     public XpPetitionResponseDto requestProvisionXp(XpPetitionRequestDto xpPetitionRequestDto) {

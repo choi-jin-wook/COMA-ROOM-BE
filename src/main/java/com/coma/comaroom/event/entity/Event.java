@@ -49,6 +49,15 @@ public class Event extends BaseEntity {
     @OneToMany(mappedBy = "event", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<EventPost> eventPosts = new ArrayList<>();
 
+    public void addParticipant(Member member) {
+        EventParticipant participant = EventParticipant.builder()
+                .event(this)
+                .participantMember(member)
+                .build();
+
+        eventParticipants.add(participant);
+    }
+
 //    @OneToMany(mappedBy = "event", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 //    private List<EventApproval> eventApprovals = new ArrayList<>();
 }
