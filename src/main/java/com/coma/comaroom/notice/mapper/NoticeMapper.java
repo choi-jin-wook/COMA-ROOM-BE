@@ -1,4 +1,4 @@
-package com.coma.comaroom.notice;
+package com.coma.comaroom.notice.mapper;
 
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.notice.dto.request.CreateNoticeRequestDto;

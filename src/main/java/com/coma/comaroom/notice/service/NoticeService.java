@@ -1,7 +1,8 @@
-package com.coma.comaroom.notice;
+package com.coma.comaroom.notice.service;
 
 import com.coma.comaroom.BusinessException;
 import com.coma.comaroom.member.entity.Member;
+import com.coma.comaroom.notice.mapper.NoticeMapper;
 import com.coma.comaroom.notice.dto.request.CreateNoticeRequestDto;
 import com.coma.comaroom.notice.dto.request.UpdateNoticeRequestDto;
 import com.coma.comaroom.notice.dto.response.CreateNoticeResponseDto;
@@ -10,7 +11,6 @@ import com.coma.comaroom.notice.dto.response.UpdateNoticeResponseDto;
 import com.coma.comaroom.notice.entity.Notice;
 import com.coma.comaroom.notice.exception.NoticeErrorCode;
 import com.coma.comaroom.notice.repository.NoticeRepository;
-import com.coma.comaroom.utils.ErrorCode;
 import com.coma.comaroom.utils.SecurityUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
