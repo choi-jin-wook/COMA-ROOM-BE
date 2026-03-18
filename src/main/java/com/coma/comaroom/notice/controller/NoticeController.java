@@ -1,6 +1,7 @@
-package com.coma.comaroom.notice;
+package com.coma.comaroom.notice.controller;
 
 
+import com.coma.comaroom.notice.service.NoticeService;
 import com.coma.comaroom.notice.dto.request.CreateNoticeRequestDto;
 import com.coma.comaroom.notice.dto.request.UpdateNoticeRequestDto;
 import com.coma.comaroom.notice.dto.response.CreateNoticeResponseDto;

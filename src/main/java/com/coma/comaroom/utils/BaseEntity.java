@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 public abstract class BaseEntity {
-
     @CreatedDate
     @Column(updatable = false)
     LocalDateTime createdAt; // private은 안 되고, protected가 정석

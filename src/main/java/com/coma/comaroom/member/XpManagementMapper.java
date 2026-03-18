@@ -1,9 +1,8 @@
-package com.coma.comaroom.event.mapper;
+package com.coma.comaroom.member;
 
 import com.coma.comaroom.event.dto.RecentActivityLogDto;
 import com.coma.comaroom.event.dto.XpManagementMainResponseDto;
 import com.coma.comaroom.event.entity.EventApproval;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

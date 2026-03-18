@@ -29,13 +29,14 @@ public class Event extends BaseEntity {
     @Column(name = "event_date", nullable = false)
     private LocalDateTime eventDate;
 
-//    @Column(name = "reward_xp", nullable = false)
-//    private Integer rewardXp;
+    @Column(name = "reward_xp", nullable = false)
+    private Long rewardXp;
 
     @Column(name = "location", nullable = false)
     private String location;
 
     @Column(name = "event_category", nullable = false)
+    @Enumerated(EnumType.STRING)
     private EventCategory eventCategory;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -47,6 +48,15 @@ public class Event extends BaseEntity {
 
     @OneToMany(mappedBy = "event", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<EventPost> eventPosts = new ArrayList<>();
+
+    public void addParticipant(Member member) {
+        EventParticipant participant = EventParticipant.builder()
+                .event(this)
+                .participantMember(member)
+                .build();
+
+        eventParticipants.add(participant);
+    }
 
 //    @OneToMany(mappedBy = "event", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 //    private List<EventApproval> eventApprovals = new ArrayList<>();
