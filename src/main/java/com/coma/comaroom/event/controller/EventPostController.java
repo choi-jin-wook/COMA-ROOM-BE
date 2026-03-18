@@ -16,10 +16,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/event-posts")
-@RequiredArgsConstructor
 @AllArgsConstructor
 public class EventPostController {
-
     private final EventPostService eventPostService;
 
     // CREATE

@@ -7,12 +7,14 @@ import com.coma.comaroom.event.entity.EventPhoto;
 import com.coma.comaroom.event.entity.EventPost;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.member.entity.Role;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+@Component
 public class EventPostMapper {
     public EventPost toEntity(EventPostRequest request, Member author, Event event) {
         // 1. 권한에 따른 승인 상태 결정
