@@ -23,12 +23,27 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/member")
 public class MemberController {
     private final MemberService memberService;
-    // 1. xp지급 요청 (포스트맨 테스트 완료)
-    @PostMapping("/ask-xp")
-    public ResponseEntity<?> askXpProvision(@RequestBody AskXpRequestDto askXpRequestDto) {
-        AskXpResponseDto xpPetitionResponseDto = memberService.askProvisionXp(askXpRequestDto);
-        return Response.ok(xpPetitionResponseDto, HttpStatus.CREATED).toResponseEntity();
+    // 메인 페이지 1
+    @GetMapping("/main")
+    public ResponseEntity<Response<MainDashboardResponse>> getMainDashboard() {
+        MainDashboardResponse mainDashboardResponse = memberService.getMainDashboard();
+        return Response.ok(mainDashboardResponse, HttpStatus.OK).toResponseEntity();
     }
+
+    // 리더보드
+    @GetMapping("/leaderboard")
+    public ResponseEntity<Response<LeaderboardResponseDto>> getLeaderboard() {
+        LeaderboardResponseDto response = memberService.getLeaderboardData();
+        return Response.ok(response, HttpStatus.OK).toResponseEntity();
+    }
+
+    // 메인 페이지 출석
+    @GetMapping("/main/attendance")
+    public ResponseEntity<?> getMainAttendance() {
+        MainAttendanceResponseDto mainAttendanceResponseDto = memberService.getMainAttendance();
+        return Response.ok(mainAttendanceResponseDto, HttpStatus.OK).toResponseEntity();
+    }
+
 
 
     // 프로필 (테스트 완료)
@@ -44,13 +59,6 @@ public class MemberController {
         return Response.ok(HttpStatus.NOT_IMPLEMENTED).toResponseEntity();
     }
 
-    // 메인 페이지 1
-    @GetMapping("/main")
-    public ResponseEntity<Response<MainDashboardResponse>> getMainDashboard() {
-        MainDashboardResponse mainDashboardResponse = memberService.getMainDashboard();
-        return Response.ok(mainDashboardResponse, HttpStatus.OK).toResponseEntity();
-    }
-
 
     // 3. xp 메인페이지 (포스트맨 테스트 완료)
     @GetMapping("/main/xp")
@@ -61,18 +69,14 @@ public class MemberController {
         return Response.ok(xpManagementMainResponseDto, HttpStatus.OK).toResponseEntity();
     }
 
-    // 메인 페이지 출석
-    @GetMapping("/main/attendance")
-    public ResponseEntity<?> getMainAttendance() {
-        MainAttendanceResponseDto mainAttendanceResponseDto = memberService.getMainAttendance();
-        return Response.ok(mainAttendanceResponseDto, HttpStatus.OK).toResponseEntity();
+    // xp지급 요청 (포스트맨 테스트 완료)
+    @PostMapping("/ask-xp")
+    public ResponseEntity<?> askXpProvision(@RequestBody AskXpRequestDto askXpRequestDto) {
+        AskXpResponseDto xpPetitionResponseDto = memberService.askProvisionXp(askXpRequestDto);
+        return Response.ok(xpPetitionResponseDto, HttpStatus.CREATED).toResponseEntity();
     }
 
-    // 리더보드
-    @GetMapping("/leaderboard")
-    public ResponseEntity<Response<LeaderboardResponseDto>> getLeaderboard() {
-        LeaderboardResponseDto response = memberService.getLeaderboardData();
-        return Response.ok(response, HttpStatus.OK).toResponseEntity();
-    }
+
+
 }
 

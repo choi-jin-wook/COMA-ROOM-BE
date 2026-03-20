@@ -25,8 +25,8 @@ public class AuthController {
     }
 
     // 리프레시 토큰
-    @PostMapping("/refrash")
-    public ResponseEntity<?> refreshMember(@RequestBody RegisterMemberRequestDto registerMemberRequestDto) {
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshMember(@RequestBody ReissueTokenResponse reissueTokenResponse ) {
         return Response.ok(HttpStatus.NOT_IMPLEMENTED).toResponseEntity();
     }
 
