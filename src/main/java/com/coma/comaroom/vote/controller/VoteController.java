@@ -17,7 +17,7 @@ import java.util.List;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/api/vote")
 public class VoteController {
     private final VoteService voteService;
 
@@ -38,46 +38,5 @@ public class VoteController {
     }
 
     // - 관리자
-    // 1. 투표 생성 (포스트맨 테스트 완료)
-    @PostMapping("/admin/votes")
-    public ResponseEntity<Response<VoteDetailResponseDto>> createNewVote(@RequestBody CreateNewVoteRequestDto createNewVoteRequestDto) {
-        VoteDetailResponseDto voteDetailResponseDto = voteService.createNewVote(createNewVoteRequestDto);
-        return Response.ok(voteDetailResponseDto, HttpStatus.CREATED).toResponseEntity();
-    }
 
-    // 2. 투표 수정 (제목, 마감일, 중복여부) (포스트맨 테스트 완료)
-    @PatchMapping("/admin/votes/{voteId}")
-    public ResponseEntity<?> updateVote(@RequestBody UpdateVoteRequestDto updateVoteRequestDto, @PathVariable Long voteId) {
-        VoteDetailResponseDto voteDetailResponseDto = voteService.updateVote(updateVoteRequestDto, voteId);
-        return Response.ok(voteDetailResponseDto, HttpStatus.OK).toResponseEntity();
-    }
-
-
-    // 3. 옵션 추가 (포스트맨 테스트 완료)
-    @PostMapping("/admin/votes/{voteId}/options")
-    public ResponseEntity<?> addVoteOption(@RequestBody AddVoteOptionRequestDto addVoteOptionRequestDto,  @PathVariable Long voteId) {
-        VoteDetailResponseDto voteDetailResponseDto = voteService.addVoteOption(addVoteOptionRequestDto, voteId);
-        return Response.ok(voteDetailResponseDto, HttpStatus.CREATED).toResponseEntity();
-    }
-
-    // 4. 옵션 삭제 (포스트맨 테스트 완료)
-    @DeleteMapping("/admin/votes/{voteId}/options/{optionId}")
-    public ResponseEntity<?> deleteVoteOption(@PathVariable Long optionId,  @PathVariable Long voteId) {
-        voteService.deleteVoteOption(optionId, voteId);
-        return Response.ok(HttpStatus.NO_CONTENT).toResponseEntity();
-    }
-
-    // 5. 투표 삭제
-    @DeleteMapping("/admin/votes/{voteId}")
-    public ResponseEntity<?> deleteVote(@PathVariable Long voteId) {
-        voteService.deleteVote(voteId);
-        return Response.ok(HttpStatus.NO_CONTENT).toResponseEntity();
-    }
-
-    // 6. 투표 종료 (포스트맨 테스트 완료)
-    @PatchMapping("/admin/votes/{voteId}/close")
-    public ResponseEntity<?> closeVote(@PathVariable Long voteId) {
-        VoteDetailResponseDto voteDetailResponseDto = voteService.closeVote(voteId);
-        return Response.ok(voteDetailResponseDto, HttpStatus.OK).toResponseEntity();
-    }
 }

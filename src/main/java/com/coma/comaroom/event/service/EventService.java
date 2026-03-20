@@ -40,19 +40,7 @@ public class EventService {
     private final EventMapper eventMapper;
 
 
-    // 출석 생성
-    public CreateAttendanceCheckResponseDto createAttendanceCheck(CreateAttendanceCheckRequestDto createAttendanceCheckRequestDto) {
-        Member currentUser = securityUtils.getCurrentMember();
-        Event event = eventRepository.findById(createAttendanceCheckRequestDto.getEventId()).orElseThrow(() -> new BusinessException(EventError.EVENT_NOT_FOUND));
 
-        // base64로 인코딩한 값으로 (행사이름-열거형)
-        String qrCodeId = Base64.getEncoder().encodeToString(event.getTitle().getBytes()) + "-" + Base64.getEncoder().encodeToString(event.getEventCategory().toString().getBytes());
-        CreateAttendanceCheckResponseDto createAttendanceCheckResponseDto = new CreateAttendanceCheckResponseDto(qrCodeId);
-
-        // 레디스 값에 저장
-        redisTemplate.opsForValue().set(qrCodeId, event.getEventId().toString(), Duration.ofMinutes(createAttendanceCheckRequestDto.getExpirationTime()));
-        return createAttendanceCheckResponseDto;
-    }
 
 
     // 출석하기

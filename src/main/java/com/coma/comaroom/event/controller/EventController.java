@@ -16,6 +16,7 @@ import java.util.List;
 
 @RestController
 @AllArgsConstructor
+@RequestMapping("api/event")
 public class EventController {
     private final EventService eventService;
 
@@ -27,19 +28,18 @@ public class EventController {
     }
 
     @PostMapping
-    public ResponseEntity<Response<EventResponse>> create(@RequestBody EventRequest request) {
-        // 컨트롤러에서 Member를 받지 않음
+    public ResponseEntity<Response<EventResponse>> createEvent(@RequestBody EventRequest request) {
         return Response.ok(eventService.createEvent(request), HttpStatus.CREATED).toResponseEntity();
     }
 
     @DeleteMapping("/{eventId}")
-    public ResponseEntity<Response<Void>> delete(@PathVariable Long eventId) {
+    public ResponseEntity<Response<Void>> deleteEvent(@PathVariable Long eventId) {
         eventService.deleteEvent(eventId);
         return Response.ok(HttpStatus.NO_CONTENT).toResponseEntity();
     }
 
-    @PutMapping("/{eventId}")
-    public ResponseEntity<Response<EventResponse>> update(
+    @PatchMapping("/{eventId}")
+    public ResponseEntity<Response<EventResponse>> updateEvent(
             @PathVariable Long eventId,
             @RequestBody EventRequest request) {
         return Response.ok(eventService.updateEvent(eventId, request), HttpStatus.OK).toResponseEntity();
@@ -48,12 +48,7 @@ public class EventController {
 
 
 
-    // 출석 생성
-    @PostMapping("/admin/attendances")// (포스트맨 테스트 완료)
-    public ResponseEntity<Response<CreateAttendanceCheckResponseDto>> createAttendanceCheck(@RequestBody CreateAttendanceCheckRequestDto createAttendanceCheckRequestDto) {
-        CreateAttendanceCheckResponseDto createAttendanceCheckResponseDto = eventService.createAttendanceCheck(createAttendanceCheckRequestDto);
-        return Response.ok(createAttendanceCheckResponseDto, HttpStatus.CREATED).toResponseEntity();
-    }
+
 
     // 출석처리
     @PostMapping("/attendances/checks") // (포스트맨 테스트 완료)
