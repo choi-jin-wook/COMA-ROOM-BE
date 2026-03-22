@@ -2,12 +2,17 @@ package com.coma.comaroom.member.service;
 
 import com.coma.comaroom.BusinessException;
 import com.coma.comaroom.event.EventError;
-import com.coma.comaroom.event.entity.Event;
-import com.coma.comaroom.event.entity.EventCategory;
-import com.coma.comaroom.event.entity.EventParticipant;
+import com.coma.comaroom.event.dto.AskXpRequestDto;
+import com.coma.comaroom.event.dto.AskXpResponseDto;
+import com.coma.comaroom.event.dto.RecentActivityLogDto;
+import com.coma.comaroom.event.dto.XpManagementMainResponseDto;
+import com.coma.comaroom.event.entity.*;
+import com.coma.comaroom.event.mapper.EventApprovalMapper;
+import com.coma.comaroom.event.repository.EventApprovalRepository;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.event.repository.EventRepository;
 import com.coma.comaroom.member.MemberMapper;
+import com.coma.comaroom.member.XpManagementMapper;
 import com.coma.comaroom.member.dto.request.LeaderboardResponseDto;
 import com.coma.comaroom.member.dto.request.MyRankingDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
@@ -23,7 +28,10 @@ import com.coma.comaroom.vote.entity.Vote;
 import com.coma.comaroom.vote.entity.VoteStatus;
 import com.coma.comaroom.vote.repository.VoteRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +52,9 @@ public class MemberService {
     private final MemberMapper memberMapper;
     private final SecurityUtils securityUtils;
     private final VoteRepository voteRepository;
+    private final EventApprovalMapper eventApprovalMapper;
+    private final XpManagementMapper xpManagementMapper;
+    private final EventApprovalRepository eventApprovalRepository;
 
     public void registerMember(RegisterMemberRequestDto registerMemberRequestDto) {
         Member member = Member.builder()
@@ -55,6 +66,14 @@ public class MemberService {
                 .build();
 
         memberRepository.saveAndFlush(member);
+    }
+
+    public AskXpResponseDto askProvisionXp(AskXpRequestDto xpPetitionRequestDto) {
+        Member currentUser = securityUtils.getCurrentMember();
+        EventApproval eventApproval = EventApproval.requestXpApproval(currentUser, xpPetitionRequestDto.getProvisionReason(), xpPetitionRequestDto.getProvisionAmount());
+        eventApprovalRepository.save(eventApproval);
+        AskXpResponseDto xpPetitionResponseDto = new AskXpResponseDto(eventApproval.getId());
+        return xpPetitionResponseDto;
     }
 
     public LeaderboardResponseDto getLeaderboardData() {
@@ -130,6 +149,31 @@ public class MemberService {
 
         MainAttendanceResponseDto mainAttendanceResponseDto = memberMapper.createMainAttendanceResponseDto(member, rank, eventCount, attendanceCount, history);
         return mainAttendanceResponseDto;
+    }
+
+    public XpManagementMainResponseDto getXpManagementMainData(ApprovalStatus status, Long page) {
+        // 1. 최근 등록순(DESC) + 상속받은 필드(createdAt) + 5개(size) 설정
+        Pageable pageable = PageRequest.of(page.intValue(), 5, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        // 2. status null 체크해서 데이터 가져오기
+        Page<EventApproval> resultPage = (status == null)
+                ? eventApprovalRepository.findAllByOrderByCreatedAtDesc(pageable)
+                : eventApprovalRepository.findByApprovalStatusOrderByCreatedAtDesc(status, pageable);
+
+        // 3. 여기서 실제 객체 5개가 최근 순서대로 담김
+        // 여기서 꺼내고
+        List<EventApproval> eventApprovals = resultPage.getContent();
+
+        // 여기다 쓴다
+        List<RecentActivityLogDto> recentActivityLogs =
+                eventApprovalMapper.toRecentActivityLogDtos(eventApprovals);
+
+        return xpManagementMapper.toMainDto(
+                eventApprovalRepository.countByApprovalStatus(ApprovalStatus.APPROVED),
+                eventApprovalRepository.countByApprovalStatus(ApprovalStatus.REJECTED),
+                eventApprovalRepository.countByApprovalStatus(ApprovalStatus.PENDING),
+                recentActivityLogs
+        );
     }
 
 //    public AttendanceMainResponse getAttendanceMainPage() {

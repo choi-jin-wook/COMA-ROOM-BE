@@ -1,4 +1,4 @@
-package com.coma.comaroom.auth.dto;
+package com.coma.comaroom.member.dto.response;
 
 import com.coma.comaroom.member.entity.Role;
 import lombok.*;

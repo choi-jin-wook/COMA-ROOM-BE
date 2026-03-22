@@ -1,4 +1,4 @@
-package com.coma.comaroom.auth;
+package com.coma.comaroom.member;
 
 import com.coma.comaroom.utils.ErrorCode;
 import lombok.Getter;
@@ -6,7 +6,10 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public enum AuthError implements ErrorCode {
-    MEMBER_NOT_FOUND("AUTH-001", HttpStatus.BAD_REQUEST, "로그인 후 이용해주세요");
+    MEMBER_NOT_FOUND("AUTH-001", HttpStatus.BAD_REQUEST, "로그인 후 이용해주세요"),
+    LOGIN_FAIL("Auth-002", HttpStatus.BAD_REQUEST, "아이디 혹은 비밀번호를 확인해주세요"),
+    NOT_ADMIN("Auth-002", HttpStatus.BAD_REQUEST, "관리자가 아닙니다");
+
 
     private final String code;
     private final HttpStatus httpStatus;

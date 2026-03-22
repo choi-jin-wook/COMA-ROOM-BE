@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class XpPetitionRequestDto {
+public class AskXpRequestDto {
     private Long provisionAmount;
     private String provisionReason;
 

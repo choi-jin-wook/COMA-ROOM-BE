@@ -1,7 +1,7 @@
 package com.coma.comaroom.utils;
 
 import com.coma.comaroom.BusinessException;
-import com.coma.comaroom.auth.AuthError;
+import com.coma.comaroom.member.AuthError;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.auth.CustomUserDetails;
 import com.coma.comaroom.member.repository.MemberRepository;

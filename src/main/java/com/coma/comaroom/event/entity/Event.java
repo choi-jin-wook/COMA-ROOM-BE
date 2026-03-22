@@ -1,5 +1,6 @@
 package com.coma.comaroom.event.entity;
 
+import com.coma.comaroom.event.dto.request.EventRequest;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.utils.BaseEntity;
 import jakarta.persistence.*;
@@ -56,6 +57,28 @@ public class Event extends BaseEntity {
                 .build();
 
         eventParticipants.add(participant);
+    }
+
+    public void update(EventRequest request) {
+        if (request.title() != null) {
+            this.title = request.title();
+        }
+        if (request.eventDate() != null) {
+            this.eventDate = request.eventDate();
+        }
+        if (request.location() != null) {
+            this.location = request.location();
+        }
+        if (request.eventCategory() != null) {
+            this.eventCategory = request.eventCategory();
+        }
+
+        // rewardXp는 요청값이 있으면 그 값으로, 없으면 카테고리의 기본값으로 업데이트
+        if (request.rewardXp() != null) {
+            this.rewardXp = request.rewardXp();
+        } else if (request.eventCategory() != null) {
+            this.rewardXp = request.eventCategory().getDefaultXp();
+        }
     }
 
 //    @OneToMany(mappedBy = "event", fetch = FetchType.LAZY, cascade = CascadeType.ALL)

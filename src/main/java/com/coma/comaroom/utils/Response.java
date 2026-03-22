@@ -33,6 +33,7 @@ public class Response<T> {
                 .code("GEN-000")
                 .status(status.value())
                 .message("Success")
+                .data(null)
                 .build();
     }
 
