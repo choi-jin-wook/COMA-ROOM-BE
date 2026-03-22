@@ -1,12 +1,7 @@
 package com.coma.comaroom.notice.controller;
 
-
 import com.coma.comaroom.notice.service.NoticeService;
-import com.coma.comaroom.notice.dto.request.CreateNoticeRequestDto;
-import com.coma.comaroom.notice.dto.request.UpdateNoticeRequestDto;
-import com.coma.comaroom.notice.dto.response.CreateNoticeResponseDto;
 import com.coma.comaroom.notice.dto.response.GetNoticeResponseDto;
-import com.coma.comaroom.notice.dto.response.UpdateNoticeResponseDto;
 import com.coma.comaroom.utils.Response;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("api/notice")
 public class NoticeController {
     private final NoticeService noticeService;
-    // 4. 공지 페이징 조회
+    //  공지 페이징 조회 (테스트 완료)
     @GetMapping
     public ResponseEntity<?> getNotices(@RequestParam(defaultValue = "0") int page) {
         GetNoticeResponseDto getNoticeResponseDto  = noticeService.getNotices(page);

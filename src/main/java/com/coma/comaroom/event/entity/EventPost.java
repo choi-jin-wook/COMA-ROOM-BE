@@ -3,6 +3,7 @@ package com.coma.comaroom.event.entity;
 
 import com.coma.comaroom.BusinessException;
 import com.coma.comaroom.event.EventPostError;
+import com.coma.comaroom.event.dto.request.EventPostRequest;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.utils.BaseEntity;
 import jakarta.persistence.*;
@@ -41,26 +42,32 @@ public class EventPost extends BaseEntity {
     private Event event;
 
     @OneToMany(mappedBy = "eventPost", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<EventPhoto> eventPhotos = new ArrayList<>();
+    private List<EventPhoto> eventPhotos;
 
 
-    public void updatePhotos(List<String> newPhotoUrls) {
-        this.eventPhotos.clear(); // 기존 사진 연결 해제 (orphanRemoval로 인해 DB에서도 삭제됨)
-        if (newPhotoUrls != null) {
-            newPhotoUrls.forEach(url -> {
-                this.eventPhotos.add(EventPhoto.builder()
-                        .photoUrl(url)
-                        .eventPost(this)
-                        .build());
-            });
+    public void update(EventPostRequest request) {
+        // 1. 제목 업데이트 및 검증
+        if (request.title() != null) {
+            if (request.title().isBlank()) {
+                throw new BusinessException(EventPostError.INVALID_TITLE);
+            }
+            this.title = request.title();
         }
-    }
 
-    public void updateTitle(String title) {
-        if (title == null || title.isBlank()) {
-            throw new BusinessException(EventPostError.INVALID_TITLE);
+        // 2. 사진 리스트 업데이트 (Stream 사용)
+        if (request.photoUrls() != null) {
+            this.eventPhotos.clear(); // 기존 연관 관계 제거 (orphanRemoval=true 필요)
+
+            // URL 스트림을 엔티티 리스트로 변환하여 추가
+            List<EventPhoto> newPhotos = request.photoUrls().stream()
+                    .map(url -> EventPhoto.builder()
+                            .photoUrl(url)
+                            .eventPost(this)
+                            .build())
+                    .toList();
+
+            this.eventPhotos.addAll(newPhotos);
         }
-        this.title = title;
     }
 
 

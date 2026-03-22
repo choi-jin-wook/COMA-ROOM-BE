@@ -1,7 +1,6 @@
 package com.coma.comaroom.auth;
 
-import com.coma.comaroom.member.entity.Role;
-import com.coma.comaroom.auth.dto.LoginResponse;
+import com.coma.comaroom.member.dto.response.LoginResponse;
 import com.coma.comaroom.auth.jwt.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

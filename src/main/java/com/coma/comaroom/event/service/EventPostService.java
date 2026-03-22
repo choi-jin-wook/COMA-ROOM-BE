@@ -66,8 +66,7 @@ public class EventPostService {
         // 권한 확인 (작성자만 수정 가능)
         validateAuthor(post, currentMember);
 
-        post.updateTitle(request.title());
-        post.updatePhotos(request.photoUrls());
+        post.update(request);
 
         return EventPostResponse.from(post);
     }
@@ -80,23 +79,6 @@ public class EventPostService {
 
         validateAuthor(post, currentMember);
         eventPostRepository.delete(post);
-    }
-
-    public EventPostResponse updatePostStatus(Integer postId, EventPostStatusRequest request) {
-        // 1. 현재 사용자 조회 및 관리자 권한 확인
-        Member currentMember = securityUtils.getCurrentMember();
-        if (currentMember.getRole() != Role.ADMIN) {
-            throw new BusinessException(EventPostError.UNAUTHORIZED_ACCESS);
-        }
-
-        // 2. 게시글 조회
-        EventPost post = eventPostRepository.findById(postId)
-                .orElseThrow(() -> new BusinessException(EventPostError.POST_NOT_FOUND));
-
-        // 3. 상태 업데이트 (도메인 메서드 호출)
-        post.updateStatus(request.approvalStatus());
-
-        return EventPostResponse.from(post);
     }
 
 

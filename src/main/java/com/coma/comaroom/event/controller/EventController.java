@@ -20,6 +20,7 @@ import java.util.List;
 public class EventController {
     private final EventService eventService;
 
+    // 이달의 행사 조회  (테스트 완료)
     @GetMapping("/monthly")
     public ResponseEntity<Response<List<EventResponse>>> getMonthlyEvents(
             @RequestParam int year,
@@ -27,30 +28,9 @@ public class EventController {
         return Response.ok(eventService.getMonthlyEvents(year, month), HttpStatus.OK).toResponseEntity();
     }
 
-    @PostMapping
-    public ResponseEntity<Response<EventResponse>> createEvent(@RequestBody EventRequest request) {
-        return Response.ok(eventService.createEvent(request), HttpStatus.CREATED).toResponseEntity();
-    }
-
-    @DeleteMapping("/{eventId}")
-    public ResponseEntity<Response<Void>> deleteEvent(@PathVariable Long eventId) {
-        eventService.deleteEvent(eventId);
-        return Response.ok(HttpStatus.NO_CONTENT).toResponseEntity();
-    }
-
-    @PatchMapping("/{eventId}")
-    public ResponseEntity<Response<EventResponse>> updateEvent(
-            @PathVariable Long eventId,
-            @RequestBody EventRequest request) {
-        return Response.ok(eventService.updateEvent(eventId, request), HttpStatus.OK).toResponseEntity();
-    }
 
 
-
-
-
-
-    // 출석처리
+    // 출석처리 (테스트 완료)
     @PostMapping("/attendances/checks") // (포스트맨 테스트 완료)
     public ResponseEntity<?> recordAttendanceCheck(@RequestBody CreateAttendanceRequestDto createAttendanceRequestDto) {
         eventService.createAttendance(createAttendanceRequestDto);

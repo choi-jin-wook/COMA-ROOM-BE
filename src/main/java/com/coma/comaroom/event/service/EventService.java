@@ -71,46 +71,5 @@ public class EventService {
                 .toList();
     }
 
-    // 2. 이벤트 생성
-    @Transactional
-    public EventResponse createEvent(EventRequest request) {
-        // 서비스 단계에서 현 사용자 정보를 가져옴
-        Member currentMember = securityUtils.getCurrentMember();
 
-        Event event = eventMapper.toEntity(request, currentMember);
-        return EventResponse.from(eventRepository.save(event));
-    }
-
-    // 3. 이벤트 삭제
-    @Transactional
-    public void deleteEvent(Long eventId) {
-        Member currentMember = securityUtils.getCurrentMember();
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new BusinessException(EventPostError.POST_NOT_FOUND));
-
-        // 권한 확인: 관리자이거나 이벤트 호스트인 경우만 삭제 가능
-        if (currentMember.getRole() != Role.ADMIN && !event.getHost().equals(currentMember)) {
-            throw new BusinessException(EventPostError.UNAUTHORIZED_ACCESS);
-        }
-
-        eventRepository.delete(event);
-    }
-
-    // 4. 이벤트 수정
-    @Transactional
-    public EventResponse updateEvent(Long eventId, EventRequest request) {
-        Member currentMember = securityUtils.getCurrentMember();
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new BusinessException(EventPostError.POST_NOT_FOUND));
-
-        // 수정 권한 확인
-        if (currentMember.getRole() != Role.ADMIN && !event.getHost().equals(currentMember)) {
-            throw new BusinessException(EventPostError.UNAUTHORIZED_ACCESS);
-        }
-
-        // 엔티티 필드 업데이트 (도메인 메서드 사용 권장)
-        // event.update(request.title(), request.eventDate(), ...);
-
-        return EventResponse.from(event);
-    }
 }
