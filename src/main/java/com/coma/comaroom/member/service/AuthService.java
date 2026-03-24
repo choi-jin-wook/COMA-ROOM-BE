@@ -44,7 +44,7 @@ public class AuthService {
         Member member = Member.builder()
                 .studentId(registerMemberRequestDto.getStudentId())
                 .name(registerMemberRequestDto.getName())
-                .role(Role.ADMIN)
+                .role(registerMemberRequestDto.getRole())
                 .password(passwordEncoder.encode(registerMemberRequestDto.getPassword()))
                 .xp(0L)
                 .major(registerMemberRequestDto.getMajor())
