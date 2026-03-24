@@ -57,29 +57,6 @@ public class EventPostService {
                 .toList();
     }
 
-    // UPDATE
-    public EventPostResponse updatePost(Integer postId, EventPostRequest request) {
-        Member currentMember = securityUtils.getCurrentMember();
-        EventPost post = eventPostRepository.findById(postId)
-                .orElseThrow(() -> new BusinessException(EventPostError.POST_NOT_FOUND));
-
-        // 권한 확인 (작성자만 수정 가능)
-        validateAuthor(post, currentMember);
-
-        post.update(request);
-
-        return EventPostResponse.from(post);
-    }
-
-    // DELETE
-    public void deletePost(Integer postId) {
-        Member currentMember = securityUtils.getCurrentMember();
-        EventPost post = eventPostRepository.findById(postId)
-                .orElseThrow(() -> new BusinessException(EventPostError.POST_NOT_FOUND));
-
-        validateAuthor(post, currentMember);
-        eventPostRepository.delete(post);
-    }
 
 
     private void validateAuthor(EventPost post, Member member) {

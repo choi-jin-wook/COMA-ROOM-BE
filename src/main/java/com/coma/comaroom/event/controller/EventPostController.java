@@ -39,21 +39,4 @@ public class EventPostController {
         return Response.ok(eventPostService.getAllPosts(), HttpStatus.OK).toResponseEntity();
     }
 
-    // UPDATE (이건 수정 필요)
-    @PatchMapping("/{postId}")
-    public ResponseEntity<Response<EventPostResponse>> update(
-            @PathVariable Integer postId,
-            @RequestBody EventPostRequest request) {
-        EventPostResponse data = eventPostService.updatePost(postId, request);
-        return Response.ok(data, HttpStatus.OK).toResponseEntity();
-    }
-
-    // DELETE (테스트 완료)
-    @DeleteMapping("/{postId}")
-    public ResponseEntity<Response<Void>> delete(
-            @PathVariable Integer postId) {
-
-        eventPostService.deletePost(postId);
-        return Response.ok(HttpStatus.NO_CONTENT).toResponseEntity();
-    }
 }
