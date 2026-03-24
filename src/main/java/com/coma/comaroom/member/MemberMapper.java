@@ -75,7 +75,7 @@ public class MemberMapper {
         VoteDto voteDto = vote.map(voteEntity -> VoteDto.builder()
                 .voteId(voteEntity.getVoteId())
                 .title(voteEntity.getTitle())
-                .description(voteEntity.getDescription())
+//                .description(voteEntity.getDescription())
                 .remainingDays(ChronoUnit.DAYS.between(LocalDateTime.now(), voteEntity.getDeadline()))
                 .rewardXp(2L)
                 .build()
