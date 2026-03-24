@@ -2,6 +2,7 @@ package com.coma.comaroom.event.service;
 
 import com.coma.comaroom.BusinessException;
 import com.coma.comaroom.event.EventPostError;
+import com.coma.comaroom.event.dto.request.EventPostRequest;
 import com.coma.comaroom.event.dto.request.EventPostStatusRequest;
 import com.coma.comaroom.event.dto.response.EventPostResponse;
 import com.coma.comaroom.event.entity.EventPost;
@@ -38,4 +39,34 @@ public class AdminEventPostService {
         return EventPostResponse.from(post);
     }
 
+
+    // DELETE
+    public void deletePost(Integer postId) {
+        Member currentMember = securityUtils.getCurrentMember();
+        EventPost post = eventPostRepository.findById(postId)
+                .orElseThrow(() -> new BusinessException(EventPostError.POST_NOT_FOUND));
+
+        validateAuthor(post, currentMember);
+        eventPostRepository.delete(post);
+    }
+
+    public EventPostResponse updatePost(Integer postId, EventPostRequest request) {
+        Member currentMember = securityUtils.getCurrentMember();
+        EventPost post = eventPostRepository.findById(postId)
+                .orElseThrow(() -> new BusinessException(EventPostError.POST_NOT_FOUND));
+
+        // 권한 확인 (작성자만 수정 가능)
+        validateAuthor(post, currentMember);
+
+        post.update(request);
+
+        return EventPostResponse.from(post);
+    }
+
+
+    private void validateAuthor(EventPost post, Member member) {
+        if (!post.getAuthor().getMemberId().equals(member.getMemberId())) {
+            throw new BusinessException(EventPostError.UNAUTHORIZED_ACCESS);
+        }
+    }
 }
