@@ -50,11 +50,8 @@ public class EventService {
         if (eventIdStr == null) {
             throw new BusinessException(EventError.INVALID_QR_CODE);
         }
-
         Long eventId = Long.valueOf(eventIdStr);
-
         Member currentUser = securityUtils.getCurrentMember();
-
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(EventError.EVENT_NOT_FOUND));
 
