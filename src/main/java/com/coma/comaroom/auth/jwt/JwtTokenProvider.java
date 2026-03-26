@@ -1,5 +1,7 @@
 package com.coma.comaroom.auth.jwt;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -29,6 +31,31 @@ public class JwtTokenProvider {
     public String createRefreshToken(Long memberId) {
         // 리프레시는 권한 정보를 넣지 않는 것이 일반적입니다.
         return createToken(memberId, null, 14 * 24 * 60 * 60 * 1000L);
+    }
+
+    public boolean validateToken(String token) {
+        try {
+            getClaims(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    public Long getMemberId(String token) {
+        return Long.valueOf(getClaims(token).getSubject());
+    }
+
+    public String getRole(String token) {
+        return getClaims(token).get("role", String.class);
+    }
+
+    private Claims getClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     private String createToken(Long memberId, String role, long validity) {
