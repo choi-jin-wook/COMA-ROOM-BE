@@ -38,7 +38,8 @@ public class VoteService {
     // - 사용자
     // 1. 전체 투표 조회
     public List<VoteDetailResponseDto> voteDashboard(Integer page, VoteStatus status) {
-        Pageable pageable = PageRequest.of(page, 5);
+        final int PAGE_SIZE = 5;
+        Pageable pageable = PageRequest.of(page, PAGE_SIZE);
         List<Vote> votes = voteRepository.findAllByVoteStatusOrderByCreatedAtDesc(status, pageable);
 
         return votes.stream()
@@ -54,77 +55,5 @@ public class VoteService {
         vote.participate(participateVoteRequestDto.getVoteOptionId(), member);
         return voteMapper.toDetailDto(vote);
     }
-
-    // - 관리자
-    // 1. 투표 생성 (커밋 완료)
-    public VoteDetailResponseDto createNewVote(CreateNewVoteRequestDto dto) {
-        // 엔티티 객체로 변환
-        Vote vote = Vote.builder()
-                .title(dto.getTitle())
-                .isMultiVote(dto.getIsMultiple())
-                .voteStatus(VoteStatus.IN_PROGRESS)
-                .deadline(dto.getDeadline())
-                .build();
-
-        // 옵션 추가
-        dto.getOptions().stream()
-                .map(optionDto -> VoteOption.builder()
-                        .content(optionDto.getContent())
-                        .build())
-                .forEach(vote::addOption);
-
-
-        // 저장
-        voteRepository.save(vote);
-        return voteMapper.toDetailDto(vote);
-    }
-
-
-    // 2. 투표 수정 (구현 완료)
-    public VoteDetailResponseDto updateVote(UpdateVoteRequestDto updateVoteRequestDto, Long voteId) {
-        Vote vote = voteRepository.findById(voteId).orElseThrow(() -> new EntityNotFoundException());
-        vote.update(updateVoteRequestDto);
-
-
-
-        return voteMapper.toDetailDto(vote);
-    }
-
-    // 3. 옵션 추가 (커밋 완료)
-    public VoteDetailResponseDto addVoteOption(AddVoteOptionRequestDto addVoteOptionRequestDto, Long voteId) {
-        Vote vote = voteRepository.findById(voteId).orElseThrow(() -> new EntityNotFoundException());
-        vote.addOption(
-                VoteOption.builder()
-                        .content(addVoteOptionRequestDto.getContent())
-                        .build()
-        );
-        voteRepository.saveAndFlush(vote);
-
-        return voteMapper.toDetailDto(vote);
-    }
-
-
-    // 4. 옵션 삭제 (구현완료)
-    public void deleteVoteOption(Long voteOptionId, Long optionId) {
-        voteOptionRepository.deleteById(voteOptionId);
-    }
-
-    // 5. 투표  삭제 (구현 완료)
-    public void deleteVote(Long voteId) {
-        voteRepository.deleteById(voteId);
-    }
-
-    // 5. 투표 종료 (구현 완료)
-    public VoteDetailResponseDto closeVote(Long voteId) {
-        Vote vote = voteRepository.findById(voteId)
-                .orElseThrow(() -> new EntityNotFoundException("해당 투표를 찾을 수 없습니다."));
-
-        // 2. 상태 변경 (Dirty Checking으로 반영됨)
-        vote.close();
-
-        // 3. 변수 선언 없이 즉시 리턴
-        return voteMapper.toDetailDto(vote);
-    }
-
 
 }

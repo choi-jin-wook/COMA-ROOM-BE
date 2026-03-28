@@ -1,7 +1,6 @@
 package com.coma.comaroom.auth;
 
-import com.coma.comaroom.member.entity.Role;
-import com.coma.comaroom.auth.dto.LoginResponse;
+import com.coma.comaroom.member.dto.response.LoginResponse;
 import com.coma.comaroom.auth.jwt.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,12 +22,13 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        String accessToken = jwtTokenProvider.createAccessToken(userDetails.getMemberId(), Role.USER.toString());
+        String accessToken = jwtTokenProvider.createAccessToken(userDetails.getMemberId(), userDetails.getRole().name());
         String refreshToken = jwtTokenProvider.createRefreshToken(userDetails.getMemberId());
         LoginResponse loginResponse = LoginResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .message("로그인 성공")
+                .role(userDetails.getRole())
                 .build();
 
         response.setStatus(HttpServletResponse.SC_OK);

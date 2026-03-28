@@ -1,5 +1,7 @@
 package com.coma.comaroom.member.dto.request;
 
+import com.coma.comaroom.member.entity.Major;
+import com.coma.comaroom.member.entity.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,4 +15,6 @@ public class RegisterMemberRequestDto {
     private String studentId;
     private String name;
     private String password;
+    private Major major;
+    private Role role;
 }

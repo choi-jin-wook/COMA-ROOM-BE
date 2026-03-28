@@ -20,6 +20,7 @@ public class CreateNewVoteRequestDto {
     @NotNull(message = "투표 타입(SINGLE, MULTI)을 선택해주세요.")
     private Boolean isMultiple;
 
+
     @NotEmpty(message = "최소 하나 이상의 투표 선택지가 필요합니다.")
     private List<CreateVoteOptionRequestDto> options;
 

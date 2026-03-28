@@ -1,5 +1,6 @@
 package com.coma.comaroom.event.entity;
 
+import com.coma.comaroom.event.dto.request.EventRequest;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.utils.BaseEntity;
 import jakarta.persistence.*;
@@ -29,13 +30,14 @@ public class Event extends BaseEntity {
     @Column(name = "event_date", nullable = false)
     private LocalDateTime eventDate;
 
-//    @Column(name = "reward_xp", nullable = false)
-//    private Integer rewardXp;
+    @Column(name = "reward_xp", nullable = false)
+    private Long rewardXp;
 
     @Column(name = "location", nullable = false)
     private String location;
 
     @Column(name = "event_category", nullable = false)
+    @Enumerated(EnumType.STRING)
     private EventCategory eventCategory;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -47,6 +49,37 @@ public class Event extends BaseEntity {
 
     @OneToMany(mappedBy = "event", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<EventPost> eventPosts = new ArrayList<>();
+
+    public void addParticipant(Member member) {
+        EventParticipant participant = EventParticipant.builder()
+                .event(this)
+                .participantMember(member)
+                .build();
+
+        eventParticipants.add(participant);
+    }
+
+    public void update(EventRequest request) {
+        if (request.title() != null) {
+            this.title = request.title();
+        }
+        if (request.eventDate() != null) {
+            this.eventDate = request.eventDate();
+        }
+        if (request.location() != null) {
+            this.location = request.location();
+        }
+        if (request.eventCategory() != null) {
+            this.eventCategory = request.eventCategory();
+        }
+
+        // rewardXp는 요청값이 있으면 그 값으로, 없으면 카테고리의 기본값으로 업데이트
+        if (request.rewardXp() != null) {
+            this.rewardXp = request.rewardXp();
+        } else if (request.eventCategory() != null) {
+            this.rewardXp = request.eventCategory().getDefaultXp();
+        }
+    }
 
 //    @OneToMany(mappedBy = "event", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 //    private List<EventApproval> eventApprovals = new ArrayList<>();
