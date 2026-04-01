@@ -2,7 +2,9 @@ package com.coma.comaroom.member.controller;
 
 import com.coma.comaroom.member.dto.request.LoginRequestDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
+import com.coma.comaroom.member.dto.request.ReissueTokenRequestDto;
 import com.coma.comaroom.member.dto.response.LoginResponse;
+import com.coma.comaroom.member.dto.response.ReissueTokenResponseDto;
 import com.coma.comaroom.member.service.AuthService;
 import com.coma.comaroom.utils.Response;
 import jakarta.validation.Valid;
@@ -27,10 +29,11 @@ public class AuthController {
         return Response.ok(registerMemberRequestDto, HttpStatus.CREATED).toResponseEntity();
     }
 
-    // 리프레시 토큰
+    // 리프레시 토큰으로 액세스 토큰 재발급
     @PostMapping("/refresh")
-    public ResponseEntity<?> refreshMember(@RequestBody ReissueTokenResponse reissueTokenResponse ) {
-        return Response.ok(HttpStatus.NOT_IMPLEMENTED).toResponseEntity();
+    public ResponseEntity<?> refreshMember(@RequestBody @Valid ReissueTokenRequestDto request) {
+        String newAccessToken = authService.reissue(request.getRefreshToken());
+        return Response.ok(new ReissueTokenResponseDto(newAccessToken), HttpStatus.OK).toResponseEntity();
     }
 
     // 로그인 (테스트 완료)

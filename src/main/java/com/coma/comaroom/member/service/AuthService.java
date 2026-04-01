@@ -53,6 +53,19 @@ public class AuthService {
         memberRepository.saveAndFlush(member);
     }
 
+    // 리프레시 토큰으로 액세스 토큰 재발급
+    public String reissue(String refreshToken) {
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            throw new BusinessException(INVALID_TOKEN);
+        }
+
+        Long memberId = jwtTokenProvider.getMemberId(refreshToken);
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(MEMBER_NOT_FOUND));
+
+        return jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name());
+    }
+
     // 로그인
     public LoginResponse login(LoginRequestDto request) {
         // 1. 학번으로 회원 찾기
