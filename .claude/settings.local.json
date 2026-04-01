@@ -65,7 +65,8 @@
       "Read(//c/Users/tempadmin/AppData/Local/JetBrains//**)",
       "Bash(JAVA_HOME=\"/c/Users/tempadmin/.jdks/corretto-25.0.2\" ./gradlew test --tests \"com.coma.comaroom.member.service.AdminMemberServiceTest\")",
       "Bash(JAVA_HOME=\"/c/Users/tempadmin/.jdks/corretto-25.0.2\" ./gradlew test --tests \"com.coma.comaroom.member.service.AdminMemberServiceTest.xpManagementPage_empty\")",
-      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\)['data']; print\\(f'currentPage={d[\\\\\"currentPage\\\\\"]}, totalPages={d[\\\\\"totalPages\\\\\"]}, totalElements={d[\\\\\"totalElements\\\\\"]}, items={len\\(d[\\\\\"eventApprovalResponseDtoList\\\\\"]\\)}'\\)\")"
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\)['data']; print\\(f'currentPage={d[\\\\\"currentPage\\\\\"]}, totalPages={d[\\\\\"totalPages\\\\\"]}, totalElements={d[\\\\\"totalElements\\\\\"]}, items={len\\(d[\\\\\"eventApprovalResponseDtoList\\\\\"]\\)}'\\)\")",
+      "Bash(JAVA_HOME=\"/c/Users/tempadmin/.jdks/corretto-25.0.2\" ./gradlew bootRun)"
     ]
   }
 }

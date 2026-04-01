@@ -6,10 +6,13 @@ import com.coma.comaroom.event.dto.ProvisionApprovalRequestDto;
 import com.coma.comaroom.event.dto.XpProvisionRequestDto;
 import com.coma.comaroom.event.entity.ApprovalStatus;
 import com.coma.comaroom.event.entity.EventApproval;
+import com.coma.comaroom.event.entity.EventCategory;
 import com.coma.comaroom.event.mapper.EventApprovalMapper;
 import com.coma.comaroom.event.repository.EventApprovalRepository;
+import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.member.AuthError;
 import com.coma.comaroom.member.XpManagementMapper;
+import com.coma.comaroom.member.dto.response.MemberManagementPageRequestDto;
 import com.coma.comaroom.member.dto.response.XpManagementPageResponseDto;
 import com.coma.comaroom.member.entity.Major;
 import com.coma.comaroom.member.entity.Member;
@@ -37,6 +40,7 @@ class AdminMemberServiceTest {
 
     @Mock private MemberRepository memberRepository;
     @Mock private EventApprovalRepository eventApprovalRepository;
+    @Mock private EventParticipateRepository eventParticipateRepository;
     @Mock private SecurityUtils securityUtils;
     @Mock private EventApprovalMapper eventApprovalMapper;
     @Mock private XpManagementMapper xpManagementMapper;
@@ -66,6 +70,72 @@ class AdminMemberServiceTest {
                 .reason("스터디 참여")
                 .requester(member)
                 .build();
+    }
+
+    // ─────────────────────────────────────────────
+    // memberManagementPage
+    // ─────────────────────────────────────────────
+
+    @Test
+    @DisplayName("멤버 관리 페이지 조회 성공 - 통계 및 목록 반환")
+    void memberManagementPage_success() {
+        when(memberRepository.count()).thenReturn(1L);
+        when(memberRepository.findAverageXp()).thenReturn(100.0);
+        when(memberRepository.findPageByOrderByXpDescMemberIdAsc(PageRequest.of(0, 5)))
+                .thenReturn(new PageImpl<>(List.of(member), PageRequest.of(0, 5), 1L));
+        when(eventParticipateRepository.countByParticipantMemberAndEvent_EventCategory(member, EventCategory.EVENT))
+                .thenReturn(3L);
+        when(eventParticipateRepository.countByParticipantMemberAndEvent_EventCategory(member, EventCategory.REGULAR_MEETING))
+                .thenReturn(5L);
+
+        MemberManagementPageRequestDto result = adminMemberService.memberManagementPage(0);
+
+        assertThat(result.getTotalMember()).isEqualTo(1L);
+        assertThat(result.getActivateMember()).isEqualTo(1L);
+        assertThat(result.getAverageXp()).isEqualTo(100L);
+        assertThat(result.getMemberInformationResponseDtos()).hasSize(1);
+        assertThat(result.getCurrentPage()).isEqualTo(0);
+        assertThat(result.getTotalPages()).isEqualTo(1);
+        assertThat(result.getTotalElements()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("멤버 관리 페이지 조회 - DTO 필드 매핑 검증")
+    void memberManagementPage_dtoMapping() {
+        when(memberRepository.count()).thenReturn(1L);
+        when(memberRepository.findAverageXp()).thenReturn(100.0);
+        when(memberRepository.findPageByOrderByXpDescMemberIdAsc(PageRequest.of(0, 5)))
+                .thenReturn(new PageImpl<>(List.of(member), PageRequest.of(0, 5), 1L));
+        when(eventParticipateRepository.countByParticipantMemberAndEvent_EventCategory(member, EventCategory.EVENT))
+                .thenReturn(2L);
+        when(eventParticipateRepository.countByParticipantMemberAndEvent_EventCategory(member, EventCategory.REGULAR_MEETING))
+                .thenReturn(4L);
+
+        MemberManagementPageRequestDto result = adminMemberService.memberManagementPage(0);
+
+        var dto = result.getMemberInformationResponseDtos().get(0);
+        assertThat(dto.getName()).isEqualTo("테스터");
+        assertThat(dto.getStudentId()).isEqualTo("20210001");
+        assertThat(dto.getMajor()).isEqualTo("컴퓨터정보공학부");
+        assertThat(dto.getXp()).isEqualTo(100L);
+        assertThat(dto.getEventAttendance()).isEqualTo(2L);
+        assertThat(dto.getMeetingAttendance()).isEqualTo(4L);
+    }
+
+    @Test
+    @DisplayName("멤버 관리 페이지 조회 - 멤버 없을 때 빈 목록 반환")
+    void memberManagementPage_empty() {
+        when(memberRepository.count()).thenReturn(0L);
+        when(memberRepository.findAverageXp()).thenReturn(0.0);
+        when(memberRepository.findPageByOrderByXpDescMemberIdAsc(PageRequest.of(0, 5)))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 5), 0L));
+
+        MemberManagementPageRequestDto result = adminMemberService.memberManagementPage(0);
+
+        assertThat(result.getTotalMember()).isEqualTo(0L);
+        assertThat(result.getAverageXp()).isEqualTo(0L);
+        assertThat(result.getMemberInformationResponseDtos()).isEmpty();
+        assertThat(result.getTotalPages()).isEqualTo(0);
     }
 
     // ─────────────────────────────────────────────

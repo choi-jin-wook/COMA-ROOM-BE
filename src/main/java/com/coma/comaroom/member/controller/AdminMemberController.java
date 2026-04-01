@@ -1,7 +1,7 @@
 package com.coma.comaroom.member.controller;
 
 import com.coma.comaroom.event.dto.*;
-import com.coma.comaroom.event.entity.ApprovalStatus;
+import com.coma.comaroom.member.dto.response.MemberManagementPageRequestDto;
 import com.coma.comaroom.member.dto.response.XpManagementPageResponseDto;
 import com.coma.comaroom.member.service.AdminMemberService;
 import com.coma.comaroom.utils.Response;
@@ -15,6 +15,15 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/admin/member")
 public class AdminMemberController {
     private final AdminMemberService adminMemberService;
+
+    // 멤버 관리 페이지
+    @GetMapping("/manage")
+    public ResponseEntity<?> memberManagementPage(@RequestParam(defaultValue = "0") int page) {
+        MemberManagementPageRequestDto memberManagementPageRequestDto = adminMemberService.memberManagementPage(page);
+        return Response.ok(memberManagementPageRequestDto, HttpStatus.OK).toResponseEntity();
+    }
+
+
     // xp 관리 페이지
     @GetMapping("ask-xp")
     public ResponseEntity<?> xpManagementPage(@RequestParam(defaultValue = "0") int page) {

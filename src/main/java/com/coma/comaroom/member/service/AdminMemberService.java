@@ -8,8 +8,12 @@ import com.coma.comaroom.event.entity.EventApproval;
 import com.coma.comaroom.event.mapper.EventApprovalMapper;
 import com.coma.comaroom.member.AuthError;
 import com.coma.comaroom.member.XpManagementMapper;
+import com.coma.comaroom.event.entity.EventCategory;
 import com.coma.comaroom.event.repository.EventApprovalRepository;
+import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.member.dto.response.EventApprovalResponseDto;
+import com.coma.comaroom.member.dto.response.MemberInformationResponseDto;
+import com.coma.comaroom.member.dto.response.MemberManagementPageRequestDto;
 import com.coma.comaroom.member.dto.response.XpManagementPageResponseDto;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.member.repository.MemberRepository;
@@ -28,11 +32,44 @@ import java.util.List;
 public class AdminMemberService {
     private final MemberRepository memberRepository;
     private final EventApprovalRepository eventApprovalRepository;
+    private final EventParticipateRepository eventParticipateRepository;
     private final SecurityUtils securityUtils;
     private final EventApprovalMapper eventApprovalMapper;
     private final XpManagementMapper xpManagementMapper;
 
     private static final int PAGE_SIZE = 5;
+
+    @Transactional(readOnly = true)
+    public MemberManagementPageRequestDto memberManagementPage(int page) {
+        long totalMember = memberRepository.count();
+        long averageXp = memberRepository.findAverageXp().longValue();
+
+        Page<Member> memberPage = memberRepository
+                .findPageByOrderByXpDescMemberIdAsc(PageRequest.of(page, PAGE_SIZE));
+
+        List<MemberInformationResponseDto> dtoList = memberPage.getContent().stream()
+                .map(member -> MemberInformationResponseDto.builder()
+                        .name(member.getName())
+                        .studentId(member.getStudentId())
+                        .major(member.getMajor().getName())
+                        .xp(member.getXp())
+                        .eventAttendance(eventParticipateRepository
+                                .countByParticipantMemberAndEvent_EventCategory(member, EventCategory.EVENT))
+                        .meetingAttendance(eventParticipateRepository
+                                .countByParticipantMemberAndEvent_EventCategory(member, EventCategory.REGULAR_MEETING))
+                        .build())
+                .toList();
+
+        return MemberManagementPageRequestDto.builder()
+                .totalMember(totalMember)
+                .activateMember(totalMember)
+                .averageXp(averageXp)
+                .memberInformationResponseDtos(dtoList)
+                .currentPage(memberPage.getNumber())
+                .totalPages(memberPage.getTotalPages())
+                .totalElements(memberPage.getTotalElements())
+                .build();
+    }
 
     @Transactional(readOnly = true)
     public XpManagementPageResponseDto xpManagementPage(int page) {
