@@ -41,6 +41,10 @@ public class AuthService {
 
     // 회원가입
     public void registerMember(RegisterMemberRequestDto registerMemberRequestDto) {
+        if (memberRepository.existsByStudentId(registerMemberRequestDto.getStudentId())){
+            throw new BusinessException(MEMBER_ALREADY_EXISTS);
+        }
+
         Member member = Member.builder()
                 .studentId(registerMemberRequestDto.getStudentId())
                 .name(registerMemberRequestDto.getName())

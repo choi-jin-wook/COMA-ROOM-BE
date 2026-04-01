@@ -20,4 +20,6 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
 
     List<Member> findAllByOrderByXpDescMemberIdAsc(Pageable pageable);
+
+    boolean existsByStudentId(String studentId);
 }
