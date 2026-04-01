@@ -5,10 +5,8 @@ import com.coma.comaroom.event.dto.AskXpRequestDto;
 import com.coma.comaroom.event.dto.AskXpResponseDto;
 import com.coma.comaroom.event.dto.RecentActivityLogDto;
 import com.coma.comaroom.event.dto.XpManagementMainResponseDto;
-import com.coma.comaroom.event.entity.ApprovalStatus;
-import com.coma.comaroom.event.entity.EventApproval;
-import com.coma.comaroom.event.entity.EventCategory;
-import com.coma.comaroom.event.entity.EventParticipant;
+import com.coma.comaroom.event.entity.*;
+import com.coma.comaroom.member.dto.response.XpHistoryResponseDto;
 import com.coma.comaroom.event.mapper.EventApprovalMapper;
 import com.coma.comaroom.event.repository.EventApprovalRepository;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
@@ -42,6 +40,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -280,5 +279,148 @@ class MemberServiceTest {
 
         assertThat(result).isNotNull();
         verify(eventApprovalRepository).findByApprovalStatusOrderByCreatedAtDesc(eq(ApprovalStatus.PENDING), any());
+    }
+
+    // ─────────────────────────────────────────────
+    // getMemberXpHistory
+    // ─────────────────────────────────────────────
+
+    @Test
+    @DisplayName("XP 내역 조회 성공 - 출석 + 행사 + 승인 요청 혼합")
+    void getMemberXpHistory_success_mixed() {
+        Member memberWith18Xp = Member.builder()
+                .memberId(2L).studentId("20210002").name("홍길동")
+                .password("$2a$10$enc").xp(18L).role(Role.USER).major(Major.COMPUTER_INFO)
+                .build();
+        when(securityUtils.getCurrentMember()).thenReturn(memberWith18Xp);
+
+        Event regularEvent = mock(Event.class);
+        when(regularEvent.getTitle()).thenReturn("정기모임 #7");
+        when(regularEvent.getEventDate()).thenReturn(LocalDateTime.of(2025, 12, 30, 19, 0));
+        when(regularEvent.getRewardXp()).thenReturn(3L);
+        when(regularEvent.getEventCategory()).thenReturn(EventCategory.REGULAR_MEETING);
+
+        Event festEvent = mock(Event.class);
+        when(festEvent.getTitle()).thenReturn("나눔 우식 사업");
+        when(festEvent.getEventDate()).thenReturn(LocalDateTime.of(2025, 12, 25, 14, 0));
+        when(festEvent.getRewardXp()).thenReturn(5L);
+        when(festEvent.getEventCategory()).thenReturn(EventCategory.EVENT);
+
+        EventParticipant ep1 = mock(EventParticipant.class);
+        when(ep1.getEvent()).thenReturn(regularEvent);
+
+        EventParticipant ep2 = mock(EventParticipant.class);
+        when(ep2.getEvent()).thenReturn(festEvent);
+
+        when(eventParticipateRepository.findByParticipantMemberOrderByEventParticipantIdDesc(memberWith18Xp))
+                .thenReturn(List.of(ep1, ep2));
+
+        EventApproval approval = mock(EventApproval.class);
+        when(approval.getApprovalStatus()).thenReturn(ApprovalStatus.APPROVED);
+        when(approval.getGrantedXp()).thenReturn(10L);
+        when(approval.getReason()).thenReturn("특별 기여");
+        when(approval.getCreatedAt()).thenReturn(LocalDateTime.of(2025, 12, 20, 10, 0));
+
+        when(eventApprovalRepository.findByRequesterOrderByCreatedAtDesc(memberWith18Xp))
+                .thenReturn(List.of(approval));
+
+        XpHistoryResponseDto result = memberService.getMemberXpHistory(0);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getCurrentXp()).isEqualTo(18L);
+        assertThat(result.getCurrentLevel()).isEqualTo(4);       // 18/5 + 1
+        assertThat(result.getNextLevelXp()).isEqualTo(20L);      // 4 * 5
+        assertThat(result.getXpInCurrentLevel()).isEqualTo(3L);  // 18 - 15
+        assertThat(result.getAttendanceXp()).isEqualTo(3L);
+        assertThat(result.getAttendanceCount()).isEqualTo(1L);
+        assertThat(result.getEventXp()).isEqualTo(5L);
+        assertThat(result.getEventCount()).isEqualTo(1L);
+        assertThat(result.getApprovalXp()).isEqualTo(10L);
+        assertThat(result.getApprovalCount()).isEqualTo(1L);
+        assertThat(result.getTotalActivities()).isEqualTo(3);
+        assertThat(result.getCurrentPage()).isEqualTo(1);
+        assertThat(result.getTotalPages()).isEqualTo(1);
+        assertThat(result.getActivities()).hasSize(3);
+        assertThat(result.getActivities().get(0).getTitle()).isEqualTo("정기모임 #7");
+    }
+
+    @Test
+    @DisplayName("XP 내역 조회 성공 - 활동 없음")
+    void getMemberXpHistory_empty() {
+        Member emptyMember = Member.builder()
+                .memberId(3L).studentId("20210003").name("빈유저")
+                .password("$2a$10$enc").xp(0L).role(Role.USER).major(Major.COMPUTER_INFO)
+                .build();
+        when(securityUtils.getCurrentMember()).thenReturn(emptyMember);
+        when(eventParticipateRepository.findByParticipantMemberOrderByEventParticipantIdDesc(emptyMember))
+                .thenReturn(List.of());
+        when(eventApprovalRepository.findByRequesterOrderByCreatedAtDesc(emptyMember))
+                .thenReturn(List.of());
+
+        XpHistoryResponseDto result = memberService.getMemberXpHistory(0);
+
+        assertThat(result.getTotalActivities()).isEqualTo(0);
+        assertThat(result.getActivities()).isEmpty();
+        assertThat(result.getCurrentLevel()).isEqualTo(1);
+        assertThat(result.getCurrentXp()).isEqualTo(0L);
+        assertThat(result.getTotalPages()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("XP 내역 조회 성공 - 페이징 2페이지")
+    void getMemberXpHistory_secondPage() {
+        Member memberWithMany = Member.builder()
+                .memberId(4L).studentId("20210004").name("활동왕")
+                .password("$2a$10$enc").xp(50L).role(Role.USER).major(Major.COMPUTER_INFO)
+                .build();
+        when(securityUtils.getCurrentMember()).thenReturn(memberWithMany);
+
+        List<EventParticipant> participants = new ArrayList<>();
+        for (int i = 0; i < 11; i++) {
+            Event e = mock(Event.class);
+            when(e.getTitle()).thenReturn("정기모임 #" + i);
+            when(e.getEventDate()).thenReturn(LocalDateTime.of(2025, 12, i + 1, 19, 0));
+            when(e.getRewardXp()).thenReturn(3L);
+            when(e.getEventCategory()).thenReturn(EventCategory.REGULAR_MEETING);
+            EventParticipant ep = mock(EventParticipant.class);
+            when(ep.getEvent()).thenReturn(e);
+            participants.add(ep);
+        }
+
+        when(eventParticipateRepository.findByParticipantMemberOrderByEventParticipantIdDesc(memberWithMany))
+                .thenReturn(participants);
+        when(eventApprovalRepository.findByRequesterOrderByCreatedAtDesc(memberWithMany))
+                .thenReturn(List.of());
+
+        XpHistoryResponseDto result = memberService.getMemberXpHistory(1);
+
+        assertThat(result.getTotalActivities()).isEqualTo(11);
+        assertThat(result.getTotalPages()).isEqualTo(2);
+        assertThat(result.getCurrentPage()).isEqualTo(2);
+        assertThat(result.getActivities()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("XP 내역 조회 - PENDING 승인 요청은 approvalXp에 포함 안 됨")
+    void getMemberXpHistory_pendingApprovalNotCounted() {
+        when(securityUtils.getCurrentMember()).thenReturn(member);
+        when(eventParticipateRepository.findByParticipantMemberOrderByEventParticipantIdDesc(member))
+                .thenReturn(List.of());
+
+        EventApproval pending = mock(EventApproval.class);
+        when(pending.getApprovalStatus()).thenReturn(ApprovalStatus.PENDING);
+        when(pending.getGrantedXp()).thenReturn(10L);
+        when(pending.getReason()).thenReturn("미승인 요청");
+        when(pending.getCreatedAt()).thenReturn(LocalDateTime.now());
+
+        when(eventApprovalRepository.findByRequesterOrderByCreatedAtDesc(member))
+                .thenReturn(List.of(pending));
+
+        XpHistoryResponseDto result = memberService.getMemberXpHistory(0);
+
+        assertThat(result.getApprovalXp()).isEqualTo(0L);
+        assertThat(result.getApprovalCount()).isEqualTo(0L);
+        assertThat(result.getTotalActivities()).isEqualTo(1);
+        assertThat(result.getActivities().get(0).getStatus()).isEqualTo("PENDING");
     }
 }

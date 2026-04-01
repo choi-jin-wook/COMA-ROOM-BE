@@ -176,6 +176,100 @@ public class MemberService {
         );
     }
 
+    public XpHistoryResponseDto getMemberXpHistory(int page) {
+        final int PAGE_SIZE = 10;
+        Member member = securityUtils.getCurrentMember();
+
+        // 1. 이벤트 참여 목록 (출석 기반 XP)
+        List<EventParticipant> allParticipants = eventParticipateRepository
+                .findByParticipantMemberOrderByEventParticipantIdDesc(member);
+
+        // 2. XP 승인 요청 목록 (수동 지급 XP)
+        List<EventApproval> allApprovals = eventApprovalRepository
+                .findByRequesterOrderByCreatedAtDesc(member);
+
+        // 3. XP 분석: 행사(EVENT) vs 출석(나머지 카테고리) vs 기타(APPROVED 승인 요청)
+        long eventXp = allParticipants.stream()
+                .filter(ep -> ep.getEvent().getEventCategory() == EventCategory.EVENT)
+                .mapToLong(ep -> ep.getEvent().getRewardXp() != null ? ep.getEvent().getRewardXp() : 0L)
+                .sum();
+        long eventCount = allParticipants.stream()
+                .filter(ep -> ep.getEvent().getEventCategory() == EventCategory.EVENT)
+                .count();
+
+        long attendanceXp = allParticipants.stream()
+                .filter(ep -> ep.getEvent().getEventCategory() != EventCategory.EVENT)
+                .mapToLong(ep -> ep.getEvent().getRewardXp() != null ? ep.getEvent().getRewardXp() : 0L)
+                .sum();
+        long attendanceCount = allParticipants.stream()
+                .filter(ep -> ep.getEvent().getEventCategory() != EventCategory.EVENT)
+                .count();
+
+        long approvalXp = allApprovals.stream()
+                .filter(ea -> ea.getApprovalStatus() == ApprovalStatus.APPROVED)
+                .mapToLong(ea -> ea.getGrantedXp() != null ? ea.getGrantedXp() : 0L)
+                .sum();
+        long approvalCount = allApprovals.stream()
+                .filter(ea -> ea.getApprovalStatus() == ApprovalStatus.APPROVED)
+                .count();
+
+        // 4. 전체 활동 목록 합산 후 최신순 정렬
+        List<XpActivityItemDto> allActivities = new ArrayList<>();
+
+        allParticipants.forEach(ep -> allActivities.add(XpActivityItemDto.builder()
+                .activityType(ep.getEvent().getEventCategory().name())
+                .title(ep.getEvent().getTitle())
+                .date(ep.getEvent().getEventDate())
+                .xp(ep.getEvent().getRewardXp() != null ? ep.getEvent().getRewardXp() : 0L)
+                .status(null)
+                .build()));
+
+        allApprovals.forEach(ea -> allActivities.add(XpActivityItemDto.builder()
+                .activityType("APPROVAL")
+                .title(ea.getReason())
+                .date(ea.getCreatedAt())
+                .xp(ea.getGrantedXp() != null ? ea.getGrantedXp() : 0L)
+                .status(ea.getApprovalStatus().name())
+                .build()));
+
+        allActivities.sort(Comparator.comparing(XpActivityItemDto::getDate, Comparator.nullsLast(Comparator.reverseOrder())));
+
+        // 5. 페이징
+        int totalActivities = allActivities.size();
+        int totalPages = (int) Math.ceil((double) totalActivities / PAGE_SIZE);
+        int clampedPage = Math.max(0, Math.min(page, totalPages - 1));
+        int fromIndex = clampedPage * PAGE_SIZE;
+        int toIndex = Math.min(fromIndex + PAGE_SIZE, totalActivities);
+        List<XpActivityItemDto> pagedActivities = (totalActivities > 0)
+                ? allActivities.subList(fromIndex, toIndex)
+                : Collections.emptyList();
+
+        // 6. 레벨 계산 (5 XP 단위, Lv.1부터 시작)
+        long xp = member.getXp();
+        int level = (int) (xp / 5) + 1;
+        long levelStartXp = (long) (level - 1) * 5;
+        long nextLevelXp = (long) level * 5;
+        long xpInCurrentLevel = xp - levelStartXp;
+
+        return XpHistoryResponseDto.builder()
+                .currentLevel(level)
+                .currentXp(xp)
+                .levelStartXp(levelStartXp)
+                .nextLevelXp(nextLevelXp)
+                .xpInCurrentLevel(xpInCurrentLevel)
+                .attendanceXp(attendanceXp)
+                .attendanceCount(attendanceCount)
+                .eventXp(eventXp)
+                .eventCount(eventCount)
+                .approvalXp(approvalXp)
+                .approvalCount(approvalCount)
+                .totalActivities(totalActivities)
+                .currentPage(clampedPage + 1)
+                .totalPages(Math.max(totalPages, 1))
+                .activities(pagedActivities)
+                .build();
+    }
+
 //    public AttendanceMainResponse getAttendanceMainPage() {
 //        Member member = securityUtils.getCurrentMember();
 //        Long rank = memberRepository.findRankByMember(member);
