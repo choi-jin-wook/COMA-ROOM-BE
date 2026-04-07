@@ -51,7 +51,7 @@ public class AdminMemberService {
                 .map(member -> MemberInformationResponseDto.builder()
                         .name(member.getName())
                         .studentId(member.getStudentId())
-                        .major(member.getMajor().getName())
+                        .major(member.getMajor().getMajor())
                         .xp(member.getXp())
                         .eventAttendance(eventParticipateRepository
                                 .countByParticipantMemberAndEvent_EventCategory(member, EventCategory.EVENT))
