@@ -10,6 +10,7 @@ import com.coma.comaroom.member.dto.request.LoginRequestDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
 import com.coma.comaroom.member.dto.response.LoginResponse;
 import com.coma.comaroom.member.entity.Member;
+import com.coma.comaroom.member.entity.MemberStatus;
 import com.coma.comaroom.member.entity.Role;
 import com.coma.comaroom.member.repository.MemberRepository;
 import com.coma.comaroom.notice.repository.NoticeRepository;
@@ -68,6 +69,12 @@ public class AuthService {
                 .orElseThrow(() -> new BusinessException(MEMBER_NOT_FOUND));
 
         return jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name());
+    }
+
+    // 회원 탈퇴
+    public void withdraw() {
+        Member member = securityUtils.getCurrentMember();
+        member.setStatus(MemberStatus.WITHDRAWN);
     }
 
     // 로그인

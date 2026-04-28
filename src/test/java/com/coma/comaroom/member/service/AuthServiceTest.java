@@ -11,6 +11,7 @@ import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
 import com.coma.comaroom.member.dto.response.LoginResponse;
 import com.coma.comaroom.member.entity.Major;
 import com.coma.comaroom.member.entity.Member;
+import com.coma.comaroom.member.entity.MemberStatus;
 import com.coma.comaroom.member.entity.Role;
 import com.coma.comaroom.member.repository.MemberRepository;
 import com.coma.comaroom.notice.repository.NoticeRepository;
@@ -131,5 +132,42 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.login(dto))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(AuthError.LOGIN_FAIL.getMessage());
+    }
+
+    // ─────────────────────────────────────────────
+    // withdraw
+    // ─────────────────────────────────────────────
+
+    @Test
+    @DisplayName("회원 탈퇴 성공 - status가 WITHDRAWN으로 변경됨")
+    void withdraw_success() {
+        when(securityUtils.getCurrentMember()).thenReturn(member);
+
+        authService.withdraw();
+
+        assertThat(member.getStatus()).isEqualTo(MemberStatus.WITHDRAWN);
+    }
+
+    @Test
+    @DisplayName("회원 탈퇴 후 로그인 실패 - 탈퇴 회원은 조회되지 않음")
+    void withdraw_afterWithdraw_loginFails() {
+        // @SQLRestriction으로 인해 탈퇴 회원은 findByStudentId에서 반환되지 않음
+        LoginRequestDto dto = mock(LoginRequestDto.class);
+        when(dto.getStudentId()).thenReturn("20210001");
+        when(memberRepository.findByStudentId("20210001")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.login(dto))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(AuthError.LOGIN_FAIL.getMessage());
+    }
+
+    @Test
+    @DisplayName("회원 탈퇴 실패 - 인증되지 않은 사용자")
+    void withdraw_unauthenticated() {
+        when(securityUtils.getCurrentMember()).thenThrow(new BusinessException(AuthError.MEMBER_NOT_FOUND));
+
+        assertThatThrownBy(() -> authService.withdraw())
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(AuthError.MEMBER_NOT_FOUND.getMessage());
     }
 }
