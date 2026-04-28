@@ -37,6 +37,13 @@ public class VoteController {
 
     }
 
+    // 3. 투표 취소
+    @DeleteMapping("/votes/{voteId}/participate")
+    public ResponseEntity<?> cancelVote(@PathVariable Long voteId) {
+        voteService.cancelVote(voteId);
+        return Response.ok(null, HttpStatus.OK).toResponseEntity();
+    }
+
     // - 관리자
 
 }

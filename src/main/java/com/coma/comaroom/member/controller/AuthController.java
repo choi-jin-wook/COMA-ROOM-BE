@@ -11,10 +11,8 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @AllArgsConstructor
@@ -41,5 +39,12 @@ public class AuthController {
     public ResponseEntity<Response<LoginResponse>> login(@RequestBody LoginRequestDto loginRequestDto) {
         LoginResponse response = authService.login(loginRequestDto);
         return Response.ok(response, HttpStatus.OK).toResponseEntity();
+    }
+
+    // 회원 탈퇴
+    @DeleteMapping("/withdraw")
+    public ResponseEntity<?> withdraw() {
+        authService.withdraw();
+        return Response.ok(null, HttpStatus.OK).toResponseEntity();
     }
 }

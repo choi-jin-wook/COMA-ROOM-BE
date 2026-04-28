@@ -1,13 +1,16 @@
 package com.coma.comaroom.vote.service;
 
+import com.coma.comaroom.BusinessException;
 import com.coma.comaroom.member.entity.Major;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.member.entity.Role;
 import com.coma.comaroom.utils.SecurityUtils;
+import com.coma.comaroom.vote.VoteError;
 import com.coma.comaroom.vote.component.VoteMapper;
 import com.coma.comaroom.vote.dto.request.ParticipateVoteRequestDto;
 import com.coma.comaroom.vote.dto.response.VoteDetailResponseDto;
 import com.coma.comaroom.vote.entity.Vote;
+import com.coma.comaroom.vote.entity.VoteResult;
 import com.coma.comaroom.vote.entity.VoteStatus;
 import com.coma.comaroom.vote.repository.VoteOptionRepository;
 import com.coma.comaroom.vote.repository.VoteRepository;
@@ -121,5 +124,33 @@ class VoteServiceTest {
 
         assertThatThrownBy(() -> voteService.participateVote(dto, 99L))
                 .isInstanceOf(EntityNotFoundException.class);
+    }
+
+    // ─────────────────────────────────────────────
+    // cancelVote
+    // ─────────────────────────────────────────────
+
+    @Test
+    @DisplayName("투표 취소 성공")
+    void cancelVote_success() {
+        VoteResult result = mock(VoteResult.class);
+        when(securityUtils.getCurrentMember()).thenReturn(member);
+        when(voteResultRepository.existsByVoterAndVoteOption_Vote_VoteId(member, 1L)).thenReturn(true);
+        when(voteResultRepository.findByVoterAndVoteOption_Vote_VoteId(member, 1L)).thenReturn(List.of(result));
+
+        voteService.cancelVote(1L);
+
+        verify(voteResultRepository).deleteAll(List.of(result));
+    }
+
+    @Test
+    @DisplayName("투표 취소 실패 - 투표한 내역 없음")
+    void cancelVote_notFound() {
+        when(securityUtils.getCurrentMember()).thenReturn(member);
+        when(voteResultRepository.existsByVoterAndVoteOption_Vote_VoteId(member, 1L)).thenReturn(false);
+
+        assertThatThrownBy(() -> voteService.cancelVote(1L))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(VoteError.VOTE_RESULT_NOT_FOUND.getMessage());
     }
 }
