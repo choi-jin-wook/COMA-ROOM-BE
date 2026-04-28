@@ -184,13 +184,23 @@ class MemberServiceTest {
     }
 
     @Test
-    @DisplayName("메인 대시보드 조회 실패 - 공지사항 없음")
-    void getMainDashboard_noticeNotFound() {
+    @DisplayName("메인 대시보드 조회 성공 - 공지사항 없어도 정상 반환")
+    void getMainDashboard_noticeNull() {
         when(securityUtils.getCurrentMember()).thenReturn(member);
         when(noticeRepository.findFirstByOrderByCreatedAtDesc()).thenReturn(Optional.empty());
+        when(eventRepository.findFirstByEventDateAfterOrderByEventDateAsc(any())).thenReturn(Optional.empty());
+        when(memberRepository.findRankByMember(member)).thenReturn(1L);
+        when(eventParticipateRepository.countByParticipantMemberAndEvent_EventCategoryNot(member, EventCategory.EVENT)).thenReturn(0L);
+        when(eventParticipateRepository.countByParticipantMemberAndEvent_EventCategory(member, EventCategory.EVENT)).thenReturn(0L);
+        when(voteRepository.findFirstByVoteStatusOrderByCreatedAtDesc(VoteStatus.IN_PROGRESS)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> memberService.getMainDashboard())
-                .isInstanceOf(BusinessException.class);
+        MainDashboardResponse expected = mock(MainDashboardResponse.class);
+        when(memberMapper.createMainDashboardResponse(any(), any(), isNull(), any(), any(), any(), any())).thenReturn(expected);
+
+        MainDashboardResponse result = memberService.getMainDashboard();
+
+        assertThat(result).isNotNull();
+        verify(memberMapper).createMainDashboardResponse(any(), any(), isNull(), any(), any(), any(), any());
     }
 
     // ─────────────────────────────────────────────

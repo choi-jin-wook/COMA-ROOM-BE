@@ -66,7 +66,7 @@ public class MemberMapper {
     }
 
     public MainDashboardResponse createMainDashboardResponse(Member member, Optional<Event> event, Notice notice, Long rank, Long statAttendanceCount, Long statEventCount, Optional<Vote> vote) {
-        NoticeDto noticeDto = NoticeDto.builder()
+        NoticeDto noticeDto = notice == null ? null : NoticeDto.builder()
                 .title(notice.getTitle())
                 .content(notice.getContent())
                 .date(notice.getCreatedAt().toLocalDate())

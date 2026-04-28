@@ -91,8 +91,8 @@ public class MemberService {
         // 현재 사용자
         Member member = securityUtils.getCurrentMember();
 
-        // 공지 찾기
-        Notice notice = noticeRepository.findFirstByOrderByCreatedAtDesc().orElseThrow(() -> new BusinessException(NoticeError.NOTICE_NOT_FOUND));
+        // 공지 찾기 (없으면 null)
+        Notice notice = noticeRepository.findFirstByOrderByCreatedAtDesc().orElse(null);
 
         Optional<Event> event = eventRepository.findFirstByEventDateAfterOrderByEventDateAsc(LocalDateTime.now());
 

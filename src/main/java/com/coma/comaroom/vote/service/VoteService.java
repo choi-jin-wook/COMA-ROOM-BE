@@ -1,7 +1,9 @@
 package com.coma.comaroom.vote.service;
 
+import com.coma.comaroom.BusinessException;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.utils.SecurityUtils;
+import com.coma.comaroom.vote.VoteError;
 import com.coma.comaroom.vote.component.VoteMapper;
 import com.coma.comaroom.vote.dto.AddVoteOptionRequestDto;
 import com.coma.comaroom.vote.dto.request.CreateNewVoteRequestDto;
@@ -54,6 +56,18 @@ public class VoteService {
 
         vote.participate(participateVoteRequestDto.getVoteOptionId(), member);
         return voteMapper.toDetailDto(vote);
+    }
+
+    // 3. 투표 취소
+    public void cancelVote(Long voteId) {
+        Member member = securityUtils.getCurrentMember();
+
+        if (!voteResultRepository.existsByVoterAndVoteOption_Vote_VoteId(member, voteId)) {
+            throw new BusinessException(VoteError.VOTE_RESULT_NOT_FOUND);
+        }
+
+        List<VoteResult> results = voteResultRepository.findByVoterAndVoteOption_Vote_VoteId(member, voteId);
+        voteResultRepository.deleteAll(results);
     }
 
 }
