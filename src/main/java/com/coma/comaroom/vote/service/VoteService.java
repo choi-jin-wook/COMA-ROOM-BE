@@ -43,19 +43,26 @@ public class VoteService {
         final int PAGE_SIZE = 5;
         Pageable pageable = PageRequest.of(page, PAGE_SIZE);
         List<Vote> votes = voteRepository.findAllByVoteStatusOrderByCreatedAtDesc(status, pageable);
+        Member member = securityUtils.getCurrentMember();
 
         return votes.stream()
-                .map(voteMapper::toDetailDto)
+                .map(vote -> {
+                    VoteDetailResponseDto dto = voteMapper.toDetailDto(vote);
+                    dto.setVoted(voteResultRepository.existsByVoterAndVoteOption_Vote_VoteId(member, vote.getVoteId()));
+                    return dto;
+                })
                 .toList();
-
     }
+
     // 2. 투표 참여
     public VoteDetailResponseDto participateVote(ParticipateVoteRequestDto participateVoteRequestDto, Long voteId) {
         Vote vote = voteRepository.findById(voteId).orElseThrow(EntityNotFoundException::new);
         Member member = securityUtils.getCurrentMember();
 
         vote.participate(participateVoteRequestDto.getVoteOptionId(), member);
-        return voteMapper.toDetailDto(vote);
+        VoteDetailResponseDto dto = voteMapper.toDetailDto(vote);
+        dto.setVoted(true);
+        return dto;
     }
 
     // 3. 투표 취소
