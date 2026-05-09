@@ -37,9 +37,7 @@ public class EventController {
         return Response.ok(HttpStatus.OK).toResponseEntity();
     }
 
-    // 출석 조정
 
-    // 출석 명단
 
 
 }
