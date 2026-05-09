@@ -38,7 +38,6 @@ public class MemberController {
         return Response.ok(response, HttpStatus.OK).toResponseEntity();
     }
 
-    // 메인 페이지 출석
     @GetMapping("/main/attendance")
     public ResponseEntity<?> getMainAttendance() {
         MainAttendanceResponseDto mainAttendanceResponseDto = memberService.getMainAttendance();
