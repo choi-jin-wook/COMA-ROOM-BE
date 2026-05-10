@@ -56,8 +56,9 @@ public class VoteService {
 
     // 2. 투표 참여
     public VoteDetailResponseDto participateVote(ParticipateVoteRequestDto participateVoteRequestDto, Long voteId) {
-        Vote vote = voteRepository.findById(voteId).orElseThrow(EntityNotFoundException::new);
+        Vote vote = voteRepository.findById(voteId).orElseThrow(() ->  new BusinessException(VoteError.VOTE_NOT_FOUND));
         Member member = securityUtils.getCurrentMember();
+        member.setXp(member.getXp() + 2);
 
         vote.participate(participateVoteRequestDto.getVoteOptionId(), member);
         VoteDetailResponseDto dto = voteMapper.toDetailDto(vote);
@@ -68,6 +69,9 @@ public class VoteService {
     // 3. 투표 취소
     public void cancelVote(Long voteId) {
         Member member = securityUtils.getCurrentMember();
+        if (member.getXp() >= 2) {
+            member.setXp(member.getXp() - 2);
+        }
 
         if (!voteResultRepository.existsByVoterAndVoteOption_Vote_VoteId(member, voteId)) {
             throw new BusinessException(VoteError.VOTE_RESULT_NOT_FOUND);
