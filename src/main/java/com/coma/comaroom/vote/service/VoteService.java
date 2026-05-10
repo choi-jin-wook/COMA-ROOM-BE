@@ -80,5 +80,4 @@ public class VoteService {
         List<VoteResult> results = voteResultRepository.findByVoterAndVoteOption_Vote_VoteId(member, voteId);
         voteResultRepository.deleteAll(results);
     }
-
 }

@@ -5,6 +5,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -14,7 +15,8 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
-    private final String secretKeyString = "your-256-bit-secret-key-must-be-at-least-32-characters-long";
+    @Value("${jwt.secret}")
+    private String secretKeyString;
     private SecretKey key;
 
     @PostConstruct
