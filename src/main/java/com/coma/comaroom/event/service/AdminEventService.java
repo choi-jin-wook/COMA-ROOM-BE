@@ -26,8 +26,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.util.Base64;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -45,8 +45,7 @@ public class AdminEventService {
         Member currentUser = securityUtils.getCurrentMember();
         Event event = eventRepository.findById(createAttendanceCheckRequestDto.getEventId()).orElseThrow(() -> new BusinessException(EventError.EVENT_NOT_FOUND));
 
-        // base64로 인코딩한 값으로 (행사이름-열거형)
-        String qrCodeId = Base64.getEncoder().encodeToString(event.getTitle().getBytes()) + "-" + Base64.getEncoder().encodeToString(event.getEventCategory().toString().getBytes());
+        String qrCodeId = UUID.randomUUID().toString();
         CreateAttendanceCheckResponseDto createAttendanceCheckResponseDto = new CreateAttendanceCheckResponseDto(qrCodeId);
 
         // 레디스 값에 저장

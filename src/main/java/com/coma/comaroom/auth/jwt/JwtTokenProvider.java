@@ -5,6 +5,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -14,7 +15,8 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
-    private final String secretKeyString = "your-256-bit-secret-key-must-be-at-least-32-characters-long";
+    @Value("${jwt.secret}")
+    private String secretKeyString;
     private SecretKey key;
 
     @PostConstruct
@@ -24,7 +26,7 @@ public class JwtTokenProvider {
 
     // 액세스 토큰 발급 (30분)
     public String createAccessToken(Long memberId, String role) {
-        return createToken(memberId, role, 300 * 60 * 1000L);
+        return createToken(memberId, role, 30 * 60 * 1000L);
     }
 
     // 리프레시 토큰 발급 (14일)
