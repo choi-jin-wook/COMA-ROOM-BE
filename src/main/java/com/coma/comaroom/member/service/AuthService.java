@@ -10,6 +10,7 @@ import com.coma.comaroom.member.dto.request.LoginRequestDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
 import com.coma.comaroom.member.dto.response.LoginResponse;
 import com.coma.comaroom.member.entity.Member;
+import com.coma.comaroom.member.entity.MemberStatus;
 import com.coma.comaroom.member.entity.Role;
 import com.coma.comaroom.member.repository.MemberRepository;
 import com.coma.comaroom.notice.repository.NoticeRepository;
@@ -41,16 +42,39 @@ public class AuthService {
 
     // 회원가입
     public void registerMember(RegisterMemberRequestDto registerMemberRequestDto) {
+        if (memberRepository.existsByStudentId(registerMemberRequestDto.getStudentId())){
+            throw new BusinessException(MEMBER_ALREADY_EXISTS);
+        }
+
         Member member = Member.builder()
                 .studentId(registerMemberRequestDto.getStudentId())
                 .name(registerMemberRequestDto.getName())
-                .role(registerMemberRequestDto.getRole())
+                .role(Role.USER)
                 .password(passwordEncoder.encode(registerMemberRequestDto.getPassword()))
                 .xp(0L)
                 .major(registerMemberRequestDto.getMajor())
                 .build();
 
         memberRepository.saveAndFlush(member);
+    }
+
+    // 리프레시 토큰으로 액세스 토큰 재발급
+    public String reissue(String refreshToken) {
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            throw new BusinessException(INVALID_TOKEN);
+        }
+
+        Long memberId = jwtTokenProvider.getMemberId(refreshToken);
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(MEMBER_NOT_FOUND));
+
+        return jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name());
+    }
+
+    // 회원 탈퇴
+    public void withdraw() {
+        Member member = securityUtils.getCurrentMember();
+        member.setStatus(MemberStatus.WITHDRAWN);
     }
 
     // 로그인

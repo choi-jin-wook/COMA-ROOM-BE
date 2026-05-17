@@ -20,4 +20,5 @@ public class VoteDetailResponseDto {
     private VoteStatus status;
     private Boolean isMultiple;
     private List<VoteOptionDetailResponseDto> options;
+    private Boolean voted;
 }

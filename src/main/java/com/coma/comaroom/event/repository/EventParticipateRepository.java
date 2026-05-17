@@ -40,4 +40,16 @@ public interface EventParticipateRepository extends JpaRepository<EventParticipa
     List<Event> findAllEventsByMember(@Param("member") Member member);
 
     List<EventParticipant> findTop5ByParticipantMemberOrderByEventParticipantIdDesc(Member member);
+
+    // 사용자 XP 내역: 특정 회원의 전체 참여 목록 (최신순)
+    List<EventParticipant> findByParticipantMemberOrderByEventParticipantIdDesc(Member member);
+
+    // 카테고리별 XP 합산용
+    List<EventParticipant> findByParticipantMemberAndEvent_EventCategory(Member member, EventCategory category);
+
+    // 특정 이벤트의 전체 출석 명단
+    List<EventParticipant> findByEvent(Event event);
+
+    // 특정 이벤트 + 특정 멤버의 출석 기록 조회 (출석 조정용)
+    java.util.Optional<EventParticipant> findByEventAndParticipantMember(Event event, Member member);
 }

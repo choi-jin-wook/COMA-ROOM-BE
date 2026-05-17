@@ -56,6 +56,7 @@ public class EventService {
                 .orElseThrow(() -> new BusinessException(EventError.EVENT_NOT_FOUND));
 
         event.addParticipant(currentUser);
+        currentUser.setXp(currentUser.getXp() + 3);
     }
 
     // 1. 이달의 이벤트 조회

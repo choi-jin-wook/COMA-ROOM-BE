@@ -7,14 +7,18 @@ import com.coma.comaroom.event.dto.CreateAttendanceCheckRequestDto;
 import com.coma.comaroom.event.dto.CreateAttendanceCheckResponseDto;
 import com.coma.comaroom.event.dto.request.CreateEventRequest;
 import com.coma.comaroom.event.dto.request.EventRequest;
+import com.coma.comaroom.event.dto.response.AttendanceItemResponseDto;
 import com.coma.comaroom.event.dto.response.EventResponse;
 import com.coma.comaroom.event.entity.Event;
+import com.coma.comaroom.event.entity.EventParticipant;
 import com.coma.comaroom.event.mapper.AttendanceMapper;
 import com.coma.comaroom.event.mapper.EventMapper;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.event.repository.EventRepository;
+import com.coma.comaroom.member.AuthError;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.member.entity.Role;
+import com.coma.comaroom.member.repository.MemberRepository;
 import com.coma.comaroom.utils.SecurityUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -22,7 +26,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.util.Base64;
+import java.util.List;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -32,14 +37,15 @@ public class AdminEventService {
     private final EventRepository eventRepository;
     private StringRedisTemplate redisTemplate;
     private final EventMapper eventMapper;
+    private final EventParticipateRepository eventParticipateRepository;
+    private final MemberRepository memberRepository;
 
     // 출석 생성 (테스트 완료)
     public CreateAttendanceCheckResponseDto createAttendanceCheck(CreateAttendanceCheckRequestDto createAttendanceCheckRequestDto) {
         Member currentUser = securityUtils.getCurrentMember();
         Event event = eventRepository.findById(createAttendanceCheckRequestDto.getEventId()).orElseThrow(() -> new BusinessException(EventError.EVENT_NOT_FOUND));
 
-        // base64로 인코딩한 값으로 (행사이름-열거형)
-        String qrCodeId = Base64.getEncoder().encodeToString(event.getTitle().getBytes()) + "-" + Base64.getEncoder().encodeToString(event.getEventCategory().toString().getBytes());
+        String qrCodeId = UUID.randomUUID().toString();
         CreateAttendanceCheckResponseDto createAttendanceCheckResponseDto = new CreateAttendanceCheckResponseDto(qrCodeId);
 
         // 레디스 값에 저장
@@ -73,6 +79,47 @@ public class AdminEventService {
         }
 
         eventRepository.delete(event);
+    }
+
+    // 출석 명단 조회
+    @Transactional(readOnly = true)
+    public List<AttendanceItemResponseDto> getAttendanceList(Long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(EventError.EVENT_NOT_FOUND));
+
+        return eventParticipateRepository.findByEvent(event).stream()
+                .map(AttendanceItemResponseDto::from)
+                .toList();
+    }
+
+    // 출석 추가
+    public void addAttendance(Long eventId, Long memberId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(EventError.EVENT_NOT_FOUND));
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(AuthError.MEMBER_NOT_FOUND));
+
+        if (eventParticipateRepository.existsByParticipantMemberAndEvent(member, event)) {
+            throw new BusinessException(EventError.ALREADY_ATTENDED);
+        }
+
+        event.addParticipant(member);
+        member.setXp(member.getXp() + event.getRewardXp());
+    }
+
+    // 출석 삭제
+    public void removeAttendance(Long eventId, Long memberId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new BusinessException(EventError.EVENT_NOT_FOUND));
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(AuthError.MEMBER_NOT_FOUND));
+
+        EventParticipant participant = eventParticipateRepository
+                .findByEventAndParticipantMember(event, member)
+                .orElseThrow(() -> new BusinessException(EventError.ATTENDANCE_NOT_FOUND));
+
+        eventParticipateRepository.delete(participant);
+        member.setXp(Math.max(0L, member.getXp() - event.getRewardXp()));
     }
 
     // 4. 이벤트 수정

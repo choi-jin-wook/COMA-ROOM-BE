@@ -10,6 +10,7 @@ import com.coma.comaroom.member.dto.response.AttendanceMainResponse;
 import com.coma.comaroom.member.dto.response.MainAttendanceResponseDto;
 import com.coma.comaroom.member.dto.response.MainDashboardResponse;
 import com.coma.comaroom.member.dto.response.ProfileResponseDto;
+import com.coma.comaroom.member.dto.response.XpHistoryResponseDto;
 import com.coma.comaroom.member.service.MemberService;
 import com.coma.comaroom.utils.Response;
 import lombok.AllArgsConstructor;
@@ -37,7 +38,6 @@ public class MemberController {
         return Response.ok(response, HttpStatus.OK).toResponseEntity();
     }
 
-    // 메인 페이지 출석
     @GetMapping("/main/attendance")
     public ResponseEntity<?> getMainAttendance() {
         MainAttendanceResponseDto mainAttendanceResponseDto = memberService.getMainAttendance();
@@ -55,8 +55,10 @@ public class MemberController {
 
     // 사용자 xp 내역
     @GetMapping("/xp-history")
-    public ResponseEntity<?> getMemberXpHistory() {
-        return Response.ok(HttpStatus.NOT_IMPLEMENTED).toResponseEntity();
+    public ResponseEntity<?> getMemberXpHistory(
+            @RequestParam(defaultValue = "1") int page) {
+        XpHistoryResponseDto response = memberService.getMemberXpHistory(page - 1);
+        return Response.ok(response, HttpStatus.OK).toResponseEntity();
     }
 
 

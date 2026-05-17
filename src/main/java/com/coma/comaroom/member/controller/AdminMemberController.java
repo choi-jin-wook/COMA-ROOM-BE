@@ -1,6 +1,8 @@
 package com.coma.comaroom.member.controller;
 
 import com.coma.comaroom.event.dto.*;
+import com.coma.comaroom.member.dto.response.MemberManagementPageRequestDto;
+import com.coma.comaroom.member.dto.response.XpManagementPageResponseDto;
 import com.coma.comaroom.member.service.AdminMemberService;
 import com.coma.comaroom.utils.Response;
 import lombok.AllArgsConstructor;
@@ -14,6 +16,20 @@ import org.springframework.web.bind.annotation.*;
 public class AdminMemberController {
     private final AdminMemberService adminMemberService;
 
+    // 멤버 관리 페이지
+    @GetMapping("/manage")
+    public ResponseEntity<?> memberManagementPage(@RequestParam(defaultValue = "0") int page) {
+        MemberManagementPageRequestDto memberManagementPageRequestDto = adminMemberService.memberManagementPage(page);
+        return Response.ok(memberManagementPageRequestDto, HttpStatus.OK).toResponseEntity();
+    }
+
+
+    // xp 관리 페이지
+    @GetMapping("ask-xp")
+    public ResponseEntity<?> xpManagementPage(@RequestParam(defaultValue = "0") int page) {
+        XpManagementPageResponseDto xpManagementPageResponseDto = adminMemberService.xpManagementPage(page);
+        return Response.ok(xpManagementPageResponseDto, HttpStatus.OK).toResponseEntity();
+    }
 
 
     // 2. xp지급 승인 거절 (포스트맨 테스트 완료)

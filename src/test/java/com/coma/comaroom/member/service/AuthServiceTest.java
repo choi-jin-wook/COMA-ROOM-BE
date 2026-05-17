@@ -11,6 +11,7 @@ import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
 import com.coma.comaroom.member.dto.response.LoginResponse;
 import com.coma.comaroom.member.entity.Major;
 import com.coma.comaroom.member.entity.Member;
+import com.coma.comaroom.member.entity.MemberStatus;
 import com.coma.comaroom.member.entity.Role;
 import com.coma.comaroom.member.repository.MemberRepository;
 import com.coma.comaroom.notice.repository.NoticeRepository;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -74,7 +76,6 @@ class AuthServiceTest {
         when(dto.getStudentId()).thenReturn("20210001");
         when(dto.getName()).thenReturn("테스터");
         when(dto.getPassword()).thenReturn("rawPassword");
-        when(dto.getRole()).thenReturn(Role.USER);
         when(dto.getMajor()).thenReturn(Major.COMPUTER_INFO);
         when(passwordEncoder.encode("rawPassword")).thenReturn("$2a$10$encoded");
         when(memberRepository.saveAndFlush(any(Member.class))).thenReturn(member);
@@ -82,6 +83,42 @@ class AuthServiceTest {
         assertThatNoException().isThrownBy(() -> authService.registerMember(dto));
         verify(memberRepository).saveAndFlush(any(Member.class));
         verify(passwordEncoder).encode("rawPassword");
+    }
+
+    @Test
+    @DisplayName("[보안] 회원가입 시 역할은 항상 USER로 고정된다")
+    void registerMember_roleAlwaysUser() {
+        RegisterMemberRequestDto dto = RegisterMemberRequestDto.builder()
+                .studentId("20210002")
+                .name("공격자")
+                .password("pw")
+                .major(Major.COMPUTER_INFO)
+                .build();
+        when(memberRepository.existsByStudentId("20210002")).thenReturn(false);
+        when(passwordEncoder.encode("pw")).thenReturn("$2a$10$encoded");
+
+        ArgumentCaptor<Member> captor = ArgumentCaptor.forClass(Member.class);
+        when(memberRepository.saveAndFlush(captor.capture())).thenReturn(member);
+
+        authService.registerMember(dto);
+
+        assertThat(captor.getValue().getRole()).isEqualTo(Role.USER);
+    }
+
+    @Test
+    @DisplayName("[보안] 중복 학번으로 회원가입 시 예외 발생")
+    void registerMember_duplicateStudentId() {
+        RegisterMemberRequestDto dto = RegisterMemberRequestDto.builder()
+                .studentId("20210001")
+                .name("테스터")
+                .password("pw")
+                .major(Major.COMPUTER_INFO)
+                .build();
+        when(memberRepository.existsByStudentId("20210001")).thenReturn(true);
+
+        assertThatThrownBy(() -> authService.registerMember(dto))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(AuthError.MEMBER_ALREADY_EXISTS.getMessage());
     }
 
     // ─────────────────────────────────────────────
@@ -131,5 +168,42 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.login(dto))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(AuthError.LOGIN_FAIL.getMessage());
+    }
+
+    // ─────────────────────────────────────────────
+    // withdraw
+    // ─────────────────────────────────────────────
+
+    @Test
+    @DisplayName("회원 탈퇴 성공 - status가 WITHDRAWN으로 변경됨")
+    void withdraw_success() {
+        when(securityUtils.getCurrentMember()).thenReturn(member);
+
+        authService.withdraw();
+
+        assertThat(member.getStatus()).isEqualTo(MemberStatus.WITHDRAWN);
+    }
+
+    @Test
+    @DisplayName("회원 탈퇴 후 로그인 실패 - 탈퇴 회원은 조회되지 않음")
+    void withdraw_afterWithdraw_loginFails() {
+        // @SQLRestriction으로 인해 탈퇴 회원은 findByStudentId에서 반환되지 않음
+        LoginRequestDto dto = mock(LoginRequestDto.class);
+        when(dto.getStudentId()).thenReturn("20210001");
+        when(memberRepository.findByStudentId("20210001")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.login(dto))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(AuthError.LOGIN_FAIL.getMessage());
+    }
+
+    @Test
+    @DisplayName("회원 탈퇴 실패 - 인증되지 않은 사용자")
+    void withdraw_unauthenticated() {
+        when(securityUtils.getCurrentMember()).thenThrow(new BusinessException(AuthError.MEMBER_NOT_FOUND));
+
+        assertThatThrownBy(() -> authService.withdraw())
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(AuthError.MEMBER_NOT_FOUND.getMessage());
     }
 }

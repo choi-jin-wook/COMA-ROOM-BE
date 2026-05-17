@@ -2,17 +2,17 @@ package com.coma.comaroom.member.controller;
 
 import com.coma.comaroom.member.dto.request.LoginRequestDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
+import com.coma.comaroom.member.dto.request.ReissueTokenRequestDto;
 import com.coma.comaroom.member.dto.response.LoginResponse;
+import com.coma.comaroom.member.dto.response.ReissueTokenResponseDto;
 import com.coma.comaroom.member.service.AuthService;
 import com.coma.comaroom.utils.Response;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @AllArgsConstructor
@@ -27,10 +27,11 @@ public class AuthController {
         return Response.ok(registerMemberRequestDto, HttpStatus.CREATED).toResponseEntity();
     }
 
-    // 리프레시 토큰
+    // 리프레시 토큰으로 액세스 토큰 재발급
     @PostMapping("/refresh")
-    public ResponseEntity<?> refreshMember(@RequestBody ReissueTokenResponse reissueTokenResponse ) {
-        return Response.ok(HttpStatus.NOT_IMPLEMENTED).toResponseEntity();
+    public ResponseEntity<?> refreshMember(@RequestBody @Valid ReissueTokenRequestDto request) {
+        String newAccessToken = authService.reissue(request.getRefreshToken());
+        return Response.ok(new ReissueTokenResponseDto(newAccessToken), HttpStatus.OK).toResponseEntity();
     }
 
     // 로그인 (테스트 완료)
@@ -38,5 +39,12 @@ public class AuthController {
     public ResponseEntity<Response<LoginResponse>> login(@RequestBody LoginRequestDto loginRequestDto) {
         LoginResponse response = authService.login(loginRequestDto);
         return Response.ok(response, HttpStatus.OK).toResponseEntity();
+    }
+
+    // 회원 탈퇴
+    @DeleteMapping("/withdraw")
+    public ResponseEntity<?> withdraw() {
+        authService.withdraw();
+        return Response.ok(null, HttpStatus.OK).toResponseEntity();
     }
 }

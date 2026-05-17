@@ -1,7 +1,9 @@
 package com.coma.comaroom.vote.service;
 
+import com.coma.comaroom.BusinessException;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.utils.SecurityUtils;
+import com.coma.comaroom.vote.VoteError;
 import com.coma.comaroom.vote.component.VoteMapper;
 import com.coma.comaroom.vote.dto.AddVoteOptionRequestDto;
 import com.coma.comaroom.vote.dto.request.CreateNewVoteRequestDto;
@@ -41,19 +43,41 @@ public class VoteService {
         final int PAGE_SIZE = 5;
         Pageable pageable = PageRequest.of(page, PAGE_SIZE);
         List<Vote> votes = voteRepository.findAllByVoteStatusOrderByCreatedAtDesc(status, pageable);
-
-        return votes.stream()
-                .map(voteMapper::toDetailDto)
-                .toList();
-
-    }
-    // 2. 투표 참여
-    public VoteDetailResponseDto participateVote(ParticipateVoteRequestDto participateVoteRequestDto, Long voteId) {
-        Vote vote = voteRepository.findById(voteId).orElseThrow(EntityNotFoundException::new);
         Member member = securityUtils.getCurrentMember();
 
-        vote.participate(participateVoteRequestDto.getVoteOptionId(), member);
-        return voteMapper.toDetailDto(vote);
+        return votes.stream()
+                .map(vote -> {
+                    VoteDetailResponseDto dto = voteMapper.toDetailDto(vote);
+                    dto.setVoted(voteResultRepository.existsByVoterAndVoteOption_Vote_VoteId(member, vote.getVoteId()));
+                    return dto;
+                })
+                .toList();
     }
 
+    // 2. 투표 참여
+    public VoteDetailResponseDto participateVote(ParticipateVoteRequestDto participateVoteRequestDto, Long voteId) {
+        Vote vote = voteRepository.findById(voteId).orElseThrow(() ->  new BusinessException(VoteError.VOTE_NOT_FOUND));
+        Member member = securityUtils.getCurrentMember();
+        member.setXp(member.getXp() + 2);
+
+        vote.participate(participateVoteRequestDto.getVoteOptionId(), member);
+        VoteDetailResponseDto dto = voteMapper.toDetailDto(vote);
+        dto.setVoted(true);
+        return dto;
+    }
+
+    // 3. 투표 취소
+    public void cancelVote(Long voteId) {
+        Member member = securityUtils.getCurrentMember();
+        if (member.getXp() >= 2) {
+            member.setXp(member.getXp() - 2);
+        }
+
+        if (!voteResultRepository.existsByVoterAndVoteOption_Vote_VoteId(member, voteId)) {
+            throw new BusinessException(VoteError.VOTE_RESULT_NOT_FOUND);
+        }
+
+        List<VoteResult> results = voteResultRepository.findByVoterAndVoteOption_Vote_VoteId(member, voteId);
+        voteResultRepository.deleteAll(results);
+    }
 }
