@@ -72,7 +72,7 @@
       "PowerShell($maxWait = 60; $elapsed = 0; do { Start-Sleep -Seconds 5; $elapsed += 5; $log = Get-Content \"C:\\\\Users\\\\tempadmin\\\\Desktop\\\\comaroom\\\\server.log\" -ErrorAction SilentlyContinue -Tail 5; $started = $log | Select-String \"Started ComaRoomApplication\"; Write-Output \"[$elapsed s] $\\($log[-1]\\)\"; if \\($started\\) { break } } while \\($elapsed -lt $maxWait\\))",
       "PowerShell($env:JAVA_HOME = \"C:\\\\Program Files\\\\JetBrains\\\\IntelliJ IDEA 2025.3.2\\\\jbr\"; $env:PATH = \"$env:JAVA_HOME\\\\bin;$env:PATH\"; Set-Location \"C:\\\\Users\\\\tempadmin\\\\Desktop\\\\comaroom\\\\COMA_ROOM_BE\"; .\\\\gradlew.bat test --tests \"com.coma.comaroom.auth.SecurityConfigTest\" 2>&1)",
       "PowerShell($env:JAVA_HOME = \"C:\\\\Program Files\\\\JetBrains\\\\IntelliJ IDEA 2025.3.2\\\\jbr\"; $env:PATH = \"$env:JAVA_HOME\\\\bin;$env:PATH\"; Set-Location \"C:\\\\Users\\\\tempadmin\\\\Desktop\\\\comaroom\\\\COMA_ROOM_BE\"; .\\\\gradlew.bat dependencies --configuration testRuntimeClasspath 2>&1 | Select-String \"spring-boot-test\" | Select-Object -First 20)",
-      "Bash('/c/Program Files/JetBrains/IntelliJ IDEA 2025.3.2/jbr/bin/jar' tf /c/Users/tempadmin/.gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-test-autoconfigure/4.0.1/35cbc74f7cfaabdf2ec455f8cb90b92e2ec0fae7/spring-boot-test-autoconfigure-4.0.1.jar)",
+      "Bash('./c/Program Files/JetBrains/IntelliJ IDEA 2025.3.2/jbr/bin/jar' tf /c/Users/tempadmin/.gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-test-autoconfigure/4.0.1/35cbc74f7cfaabdf2ec455f8cb90b92e2ec0fae7/spring-boot-test-autoconfigure-4.0.1.jar)",
       "Bash(python3 -c 'import zipfile; z=zipfile.ZipFile\\('\\\\''/c/Users/tempadmin/.gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-test-autoconfigure/4.0.1/35cbc74f7cfaabdf2ec455f8cb90b92e2ec0fae7/spring-boot-test-autoconfigure-4.0.1.jar'\\\\''\\); [print\\(n\\) for n in z.namelist\\(\\) if '\\\\''WebMvc'\\\\'' in n or '\\\\''webmvc'\\\\'' in n.lower\\(\\)]')",
       "Bash(python -c 'import zipfile; z=zipfile.ZipFile\\('\\\\''/c/Users/tempadmin/.gradle/caches/modules-2/files-2.1/org.springframework.boot/spring-boot-test-autoconfigure/4.0.1/35cbc74f7cfaabdf2ec455f8cb90b92e2ec0fae7/spring-boot-test-autoconfigure-4.0.1.jar'\\\\''\\); [print\\(n\\) for n in z.namelist\\(\\) if '\\\\''WebMvc'\\\\'' in n or '\\\\''webmvc'\\\\'' in n.lower\\(\\)]')",
       "PowerShell($env:JAVA_HOME = \"C:\\\\Program Files\\\\JetBrains\\\\IntelliJ IDEA 2025.3.2\\\\jbr\"; cd \"C:\\\\Users\\\\tempadmin\\\\Desktop\\\\comaroom\\\\COMA_ROOM_BE\"; .\\\\gradlew.bat compileJava 2>&1 | Select-Object -Last 20)",
@@ -84,7 +84,17 @@
       "PowerShell($file = \"C:\\\\Users\\\\TEMPAD~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-tempadmin-Desktop-comaroom-COMA-ROOM-BE\\\\3cb7a5f2-78ed-4910-b003-2b116c88d5e1\\\\tasks\\\\b5x0pd252.output\"; $bytes = [System.IO.File]::ReadAllBytes\\($file\\); $text = [System.Text.Encoding]::UTF8.GetString\\($bytes\\); $lines = $text -split \"`n\"; $lines | Select-Object -Last 20)",
       "PowerShell($deadline = \\(Get-Date\\).AddSeconds\\(90\\); do { Start-Sleep -Seconds 5; try { $result = Invoke-RestMethod -Uri \"http://localhost:8080/api/auth/login\" -Method POST -ContentType \"application/json\" -Body '{\"studentId\":\"test\",\"password\":\"test\"}' -ErrorAction SilentlyContinue; $up = $true } catch { $up = \\($_.Exception.Response -ne $null\\) } } while \\(-not $up -and \\(Get-Date\\) -lt $deadline\\); if \\($up\\) { Write-Host \"SERVER UP\" } else { Write-Host \"TIMEOUT\" })",
       "PowerShell($env:MYSQL_PWD=\"1234\"; & \"C:\\\\Program Files\\\\MySQL\\\\MySQL Server 8.0\\\\bin\\\\mysql.exe\" -u root comaroom_db -e \"UPDATE member SET role = 'ADMIN' WHERE student_id = '12345678'; SELECT member_id, student_id, role FROM member WHERE student_id = '12345678';\")",
-      "PowerShell($env:MYSQL_PWD=\"1234\"; & \"C:\\\\Program Files\\\\MySQL\\\\MySQL Server 8.0\\\\bin\\\\mysql.exe\" -u root comaroom_db -e \"SELECT member_id, student_id, role, status FROM member WHERE student_id = '12345678';\")"
+      "PowerShell($env:MYSQL_PWD=\"1234\"; & \"C:\\\\Program Files\\\\MySQL\\\\MySQL Server 8.0\\\\bin\\\\mysql.exe\" -u root comaroom_db -e \"SELECT member_id, student_id, role, status FROM member WHERE student_id = '12345678';\")",
+      "Bash(./gradlew compileJava)",
+      "Bash(xargs -I{} jar tf {})",
+      "Bash(xargs jar tf)",
+      "Bash(xargs -I{} sh -c 'jar tf \"$1\" 2>/dev/null | grep -i \"MethodNotAllowed\" | sed \"s|^|$1: |\"' _ {})",
+      "Bash(grep -v \"^$\")",
+      "Bash(jar tf *)",
+      "Bash(redis-cli ping *)",
+      "Bash(echo \"raw: $\\(curl -s http://localhost:8080/api/nonexistent\\)\")",
+      "Bash(pkill -f \"ComaRoomApplication\")",
+      "Bash(./gradlew bootRun)"
     ]
   }
 }
