@@ -152,26 +152,20 @@ public class MemberService {
     }
 
     public XpManagementMainResponseDto getXpManagementMainData(ApprovalStatus status, Long page) {
-        // 1. 최근 등록순(DESC) + 상속받은 필드(createdAt) + 5개(size) 설정
+        Member currentMember = securityUtils.getCurrentMember();
         Pageable pageable = PageRequest.of(page.intValue(), 5, Sort.by(Sort.Direction.DESC, "createdAt"));
 
-        // 2. status null 체크해서 데이터 가져오기
         Page<EventApproval> resultPage = (status == null)
-                ? eventApprovalRepository.findAllByOrderByCreatedAtDesc(pageable)
-                : eventApprovalRepository.findByApprovalStatusOrderByCreatedAtDesc(status, pageable);
+                ? eventApprovalRepository.findByRequesterOrderByCreatedAtDesc(currentMember, pageable)
+                : eventApprovalRepository.findByRequesterAndApprovalStatusOrderByCreatedAtDesc(currentMember, status, pageable);
 
-        // 3. 여기서 실제 객체 5개가 최근 순서대로 담김
-        // 여기서 꺼내고
-        List<EventApproval> eventApprovals = resultPage.getContent();
-
-        // 여기다 쓴다
         List<RecentActivityLogDto> recentActivityLogs =
-                eventApprovalMapper.toRecentActivityLogDtos(eventApprovals);
+                eventApprovalMapper.toRecentActivityLogDtos(resultPage.getContent());
 
         return xpManagementMapper.toMainDto(
-                eventApprovalRepository.countByApprovalStatus(ApprovalStatus.APPROVED),
-                eventApprovalRepository.countByApprovalStatus(ApprovalStatus.REJECTED),
-                eventApprovalRepository.countByApprovalStatus(ApprovalStatus.PENDING),
+                eventApprovalRepository.countByRequesterAndApprovalStatus(currentMember, ApprovalStatus.APPROVED),
+                eventApprovalRepository.countByRequesterAndApprovalStatus(currentMember, ApprovalStatus.REJECTED),
+                eventApprovalRepository.countByRequesterAndApprovalStatus(currentMember, ApprovalStatus.PENDING),
                 recentActivityLogs
         );
     }

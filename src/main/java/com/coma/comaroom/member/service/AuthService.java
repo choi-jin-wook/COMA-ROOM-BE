@@ -49,7 +49,7 @@ public class AuthService {
         Member member = Member.builder()
                 .studentId(registerMemberRequestDto.getStudentId())
                 .name(registerMemberRequestDto.getName())
-                .role(registerMemberRequestDto.getRole())
+                .role(Role.USER)
                 .password(passwordEncoder.encode(registerMemberRequestDto.getPassword()))
                 .xp(0L)
                 .major(registerMemberRequestDto.getMajor())

@@ -425,4 +425,43 @@ class AdminEventServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(EventError.ATTENDANCE_NOT_FOUND.getMessage());
     }
+
+    // ─────────────────────────────────────────────
+    // [보안] QR 코드 예측 불가능성 (Vuln 6)
+    // ─────────────────────────────────────────────
+
+    @Test
+    @DisplayName("[보안] 동일 이벤트로 QR 생성 시 매번 다른 ID가 발급된다")
+    void createAttendanceCheck_qrCodeIsUnique() {
+        CreateAttendanceCheckRequestDto dto = mock(CreateAttendanceCheckRequestDto.class);
+        when(dto.getEventId()).thenReturn(1L);
+        when(dto.getExpirationTime()).thenReturn(10);
+        when(securityUtils.getCurrentMember()).thenReturn(adminMember);
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(event));
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+
+        String qr1 = adminEventService.createAttendanceCheck(dto).getQrCodeId();
+        String qr2 = adminEventService.createAttendanceCheck(dto).getQrCodeId();
+
+        assertThat(qr1).isNotEqualTo(qr2);
+    }
+
+    @Test
+    @DisplayName("[보안] QR 코드 ID는 이벤트 제목·카테고리로 역산할 수 없다 (UUID 형식)")
+    void createAttendanceCheck_qrCodeIsUuid() {
+        CreateAttendanceCheckRequestDto dto = mock(CreateAttendanceCheckRequestDto.class);
+        when(dto.getEventId()).thenReturn(1L);
+        when(dto.getExpirationTime()).thenReturn(10);
+        when(securityUtils.getCurrentMember()).thenReturn(adminMember);
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(event));
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+
+        String qrCodeId = adminEventService.createAttendanceCheck(dto).getQrCodeId();
+
+        // UUID 형식 검증 (8-4-4-4-12)
+        assertThat(qrCodeId).matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
+        // 이벤트 제목이나 카테고리 문자열이 포함되지 않음
+        assertThat(qrCodeId).doesNotContain(event.getTitle());
+        assertThat(qrCodeId).doesNotContain(event.getEventCategory().toString());
+    }
 }

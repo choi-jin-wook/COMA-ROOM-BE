@@ -123,7 +123,7 @@ class VoteServiceTest {
         when(voteRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> voteService.participateVote(dto, 99L))
-                .isInstanceOf(EntityNotFoundException.class);
+                .isInstanceOf(BusinessException.class);
     }
 
     // ─────────────────────────────────────────────

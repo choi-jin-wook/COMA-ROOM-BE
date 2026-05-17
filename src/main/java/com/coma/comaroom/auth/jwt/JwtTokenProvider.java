@@ -26,7 +26,7 @@ public class JwtTokenProvider {
 
     // 액세스 토큰 발급 (30분)
     public String createAccessToken(Long memberId, String role) {
-        return createToken(memberId, role, 300 * 60 * 1000L);
+        return createToken(memberId, role, 30 * 60 * 1000L);
     }
 
     // 리프레시 토큰 발급 (14일)
