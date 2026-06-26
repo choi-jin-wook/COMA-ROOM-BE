@@ -21,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -75,7 +76,6 @@ class AuthServiceTest {
         when(dto.getStudentId()).thenReturn("20210001");
         when(dto.getName()).thenReturn("테스터");
         when(dto.getPassword()).thenReturn("rawPassword");
-        when(dto.getRole()).thenReturn(Role.USER);
         when(dto.getMajor()).thenReturn(Major.COMPUTER_INFO);
         when(passwordEncoder.encode("rawPassword")).thenReturn("$2a$10$encoded");
         when(memberRepository.saveAndFlush(any(Member.class))).thenReturn(member);
@@ -83,6 +83,42 @@ class AuthServiceTest {
         assertThatNoException().isThrownBy(() -> authService.registerMember(dto));
         verify(memberRepository).saveAndFlush(any(Member.class));
         verify(passwordEncoder).encode("rawPassword");
+    }
+
+    @Test
+    @DisplayName("[보안] 회원가입 시 역할은 항상 USER로 고정된다")
+    void registerMember_roleAlwaysUser() {
+        RegisterMemberRequestDto dto = RegisterMemberRequestDto.builder()
+                .studentId("20210002")
+                .name("공격자")
+                .password("pw")
+                .major(Major.COMPUTER_INFO)
+                .build();
+        when(memberRepository.existsByStudentId("20210002")).thenReturn(false);
+        when(passwordEncoder.encode("pw")).thenReturn("$2a$10$encoded");
+
+        ArgumentCaptor<Member> captor = ArgumentCaptor.forClass(Member.class);
+        when(memberRepository.saveAndFlush(captor.capture())).thenReturn(member);
+
+        authService.registerMember(dto);
+
+        assertThat(captor.getValue().getRole()).isEqualTo(Role.USER);
+    }
+
+    @Test
+    @DisplayName("[보안] 중복 학번으로 회원가입 시 예외 발생")
+    void registerMember_duplicateStudentId() {
+        RegisterMemberRequestDto dto = RegisterMemberRequestDto.builder()
+                .studentId("20210001")
+                .name("테스터")
+                .password("pw")
+                .major(Major.COMPUTER_INFO)
+                .build();
+        when(memberRepository.existsByStudentId("20210001")).thenReturn(true);
+
+        assertThatThrownBy(() -> authService.registerMember(dto))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(AuthError.MEMBER_ALREADY_EXISTS.getMessage());
     }
 
     // ─────────────────────────────────────────────

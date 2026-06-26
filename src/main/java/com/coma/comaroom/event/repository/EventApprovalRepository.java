@@ -27,4 +27,13 @@ public interface EventApprovalRepository extends JpaRepository<EventApproval, Lo
 
     // 사용자 XP 내역: 특정 회원 + 상태별 XP 합산용
     List<EventApproval> findByRequesterAndApprovalStatus(Member requester, ApprovalStatus approvalStatus);
+
+    // 사용자 XP 메인페이지: 특정 회원의 페이징 조회
+    Page<EventApproval> findByRequesterOrderByCreatedAtDesc(Member requester, Pageable pageable);
+
+    // 사용자 XP 메인페이지: 특정 회원 + 상태별 페이징 조회
+    Page<EventApproval> findByRequesterAndApprovalStatusOrderByCreatedAtDesc(Member requester, ApprovalStatus approvalStatus, Pageable pageable);
+
+    // 사용자 XP 메인페이지: 특정 회원의 상태별 카운트
+    Long countByRequesterAndApprovalStatus(Member requester, ApprovalStatus approvalStatus);
 }
