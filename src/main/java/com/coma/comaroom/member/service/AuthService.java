@@ -63,12 +63,15 @@ public class AuthService {
         if (!jwtTokenProvider.validateToken(refreshToken)) {
             throw new BusinessException(INVALID_TOKEN);
         }
+        if (!"refresh".equals(jwtTokenProvider.getTokenType(refreshToken))) {
+            throw new BusinessException(INVALID_TOKEN);
+        }
 
         Long memberId = jwtTokenProvider.getMemberId(refreshToken);
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(MEMBER_NOT_FOUND));
 
-        return jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name());
+        return jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name(), member.getStudentId());
     }
 
     // 회원 탈퇴
@@ -88,8 +91,7 @@ public class AuthService {
             throw new BusinessException(LOGIN_FAIL);
         }
 
-        // 3. 토큰 생성 (지금은 placeholder – 실제로는 JWT 라이브러리 써서 만들어)
-        String accessToken = jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name());
+        String accessToken = jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name(), member.getStudentId());
         String refreshToken = jwtTokenProvider.createRefreshToken(member.getMemberId());
 
         // 4. 응답 빌드 (Lombok @AllArgsConstructor 썼으니 이렇게)
