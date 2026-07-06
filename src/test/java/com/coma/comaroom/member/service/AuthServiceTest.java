@@ -133,7 +133,7 @@ class AuthServiceTest {
         when(dto.getPassword()).thenReturn("rawPassword");
         when(memberRepository.findByStudentId("20210001")).thenReturn(Optional.of(member));
         when(passwordEncoder.matches("rawPassword", member.getPassword())).thenReturn(true);
-        when(jwtTokenProvider.createAccessToken(1L, "USER")).thenReturn("access_token");
+        when(jwtTokenProvider.createAccessToken(1L, "USER", "20210001")).thenReturn("access_token");
         when(jwtTokenProvider.createRefreshToken(1L)).thenReturn("refresh_token");
 
         LoginResponse result = authService.login(dto);
