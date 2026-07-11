@@ -112,6 +112,12 @@ public class AdminMemberService {
     public void decideProvision(ProvisionApprovalRequestDto provisionApprovalRequestDto, Long requestId) {
         EventApproval eventApproval = eventApprovalRepository.findById(requestId)
                 .orElseThrow(() -> new BusinessException(EventError.APPROVAL_NOT_FOUND));
+
+        // 이미 처리된 요청을 다시 승인하면 XP가 중복 지급되므로 PENDING 상태만 처리 가능
+        if (eventApproval.getApprovalStatus() != ApprovalStatus.PENDING) {
+            throw new BusinessException(EventError.APPROVAL_ALREADY_DECIDED);
+        }
+
         eventApproval.setApprovalStatus(provisionApprovalRequestDto.getApprovalStatus());
         Member requester = eventApproval.getRequester();
         if (provisionApprovalRequestDto.getApprovalStatus() == ApprovalStatus.APPROVED) {
