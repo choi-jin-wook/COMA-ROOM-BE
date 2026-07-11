@@ -94,7 +94,7 @@ class AuthServiceTest {
                 .password("pw")
                 .major(Major.COMPUTER_INFO)
                 .build();
-        when(memberRepository.existsByStudentId("20210002")).thenReturn(false);
+        when(memberRepository.existsByStudentIdIncludingWithdrawn("20210002")).thenReturn(false);
         when(passwordEncoder.encode("pw")).thenReturn("$2a$10$encoded");
 
         ArgumentCaptor<Member> captor = ArgumentCaptor.forClass(Member.class);
@@ -114,7 +114,7 @@ class AuthServiceTest {
                 .password("pw")
                 .major(Major.COMPUTER_INFO)
                 .build();
-        when(memberRepository.existsByStudentId("20210001")).thenReturn(true);
+        when(memberRepository.existsByStudentIdIncludingWithdrawn("20210001")).thenReturn(true);
 
         assertThatThrownBy(() -> authService.registerMember(dto))
                 .isInstanceOf(BusinessException.class)

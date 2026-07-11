@@ -28,4 +28,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     Double findAverageXp();
 
     boolean existsByStudentId(String studentId);
+
+    // @SQLRestriction("status = 'ACTIVE'")을 우회해 탈퇴 회원까지 포함한 학번 중복 확인
+    @Query(value = "SELECT EXISTS (SELECT 1 FROM member WHERE student_id = :studentId)", nativeQuery = true)
+    boolean existsByStudentIdIncludingWithdrawn(@Param("studentId") String studentId);
 }
