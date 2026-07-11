@@ -23,7 +23,7 @@ public class AuthController {
 
     // 회원가입 (테스트 완료)
     @PostMapping("/register")
-    public ResponseEntity<?> joinMember(@RequestBody RegisterMemberRequestDto registerMemberRequestDto) {
+    public ResponseEntity<?> joinMember(@RequestBody @Valid RegisterMemberRequestDto registerMemberRequestDto) {
         authService.registerMember(registerMemberRequestDto);
         return Response.ok(RegisterMemberResponseDto.from(registerMemberRequestDto), HttpStatus.CREATED).toResponseEntity();
     }
@@ -37,7 +37,7 @@ public class AuthController {
 
     // 로그인 (테스트 완료)
     @PostMapping("/login")
-    public ResponseEntity<Response<LoginResponse>> login(@RequestBody LoginRequestDto loginRequestDto) {
+    public ResponseEntity<Response<LoginResponse>> login(@RequestBody @Valid LoginRequestDto loginRequestDto) {
         LoginResponse response = authService.login(loginRequestDto);
         return Response.ok(response, HttpStatus.OK).toResponseEntity();
     }
