@@ -57,7 +57,7 @@ public class AdminEventService {
         Member currentUser = securityUtils.getCurrentMember();
 
         // XP 결정 로직 (요청값이 없으면 카테고리 기본값 사용)
-        if (request.getRewardXp() != null) {
+        if (request.getRewardXp() == null) {
             request.setRewardXp(request.getEventCategory().getDefaultXp());
         }
 

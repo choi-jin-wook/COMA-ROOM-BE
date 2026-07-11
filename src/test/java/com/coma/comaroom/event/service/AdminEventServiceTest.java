@@ -132,11 +132,10 @@ class AdminEventServiceTest {
     // ─────────────────────────────────────────────
 
     @Test
-    @DisplayName("이벤트 생성 성공")
+    @DisplayName("이벤트 생성 성공 - 요청한 rewardXp 값이 그대로 유지된다")
     void createEvent_success() {
-        CreateEventRequest request = mock(CreateEventRequest.class);
-        when(request.getRewardXp()).thenReturn(5L);
-        when(request.getEventCategory()).thenReturn(EventCategory.EVENT);
+        CreateEventRequest request = new CreateEventRequest(
+                "정기 모임", LocalDateTime.now().plusDays(1), "강의실 A", EventCategory.EVENT, 7L);
         when(securityUtils.getCurrentMember()).thenReturn(adminMember);
         when(eventMapper.toEntity(request, adminMember)).thenReturn(event);
         when(eventRepository.save(event)).thenReturn(event);
@@ -145,7 +144,22 @@ class AdminEventServiceTest {
 
         assertThat(result).isNotNull();
         assertThat(result.title()).isEqualTo("정기 모임");
+        assertThat(request.getRewardXp()).isEqualTo(7L);
         verify(eventRepository).save(event);
+    }
+
+    @Test
+    @DisplayName("이벤트 생성 - rewardXp가 없으면 카테고리 기본값이 적용된다")
+    void createEvent_defaultRewardXp() {
+        CreateEventRequest request = new CreateEventRequest(
+                "정기 모임", LocalDateTime.now().plusDays(1), "강의실 A", EventCategory.EVENT, null);
+        when(securityUtils.getCurrentMember()).thenReturn(adminMember);
+        when(eventMapper.toEntity(request, adminMember)).thenReturn(event);
+        when(eventRepository.save(event)).thenReturn(event);
+
+        adminEventService.createEvent(request);
+
+        assertThat(request.getRewardXp()).isEqualTo(EventCategory.EVENT.getDefaultXp());
     }
 
     // ─────────────────────────────────────────────
