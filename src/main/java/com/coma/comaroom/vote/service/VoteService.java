@@ -24,7 +24,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -58,9 +60,30 @@ public class VoteService {
     public VoteDetailResponseDto participateVote(ParticipateVoteRequestDto participateVoteRequestDto, Long voteId) {
         Vote vote = voteRepository.findById(voteId).orElseThrow(() ->  new BusinessException(VoteError.VOTE_NOT_FOUND));
         Member member = securityUtils.getCurrentMember();
+
+        if (vote.getVoteStatus() == VoteStatus.CLOSED || vote.getDeadline().isBefore(LocalDateTime.now())) {
+            throw new BusinessException(VoteError.VOTE_CLOSED);
+        }
+
+        if (voteResultRepository.existsByVoterAndVoteOption_Vote_VoteId(member, voteId)) {
+            throw new BusinessException(VoteError.ALREADY_VOTED);
+        }
+
+        List<Long> voteOptionIds = participateVoteRequestDto.getVoteOptionId();
+        if (!vote.isMultiVote() && voteOptionIds.size() > 1) {
+            throw new BusinessException(VoteError.MULTI_VOTE_NOT_ALLOWED);
+        }
+
+        Set<Long> validOptionIds = vote.getVoteOptions().stream()
+                .map(VoteOption::getVoteOptionId)
+                .collect(Collectors.toSet());
+        if (voteOptionIds.isEmpty() || !validOptionIds.containsAll(voteOptionIds)) {
+            throw new BusinessException(VoteError.VOTE_OPTION_NOT_FOUND);
+        }
+
+        vote.participate(voteOptionIds, member);
         member.setXp(member.getXp() + 2);
 
-        vote.participate(participateVoteRequestDto.getVoteOptionId(), member);
         VoteDetailResponseDto dto = voteMapper.toDetailDto(vote);
         dto.setVoted(true);
         return dto;
@@ -69,9 +92,6 @@ public class VoteService {
     // 3. 투표 취소
     public void cancelVote(Long voteId) {
         Member member = securityUtils.getCurrentMember();
-        if (member.getXp() >= 2) {
-            member.setXp(member.getXp() - 2);
-        }
 
         if (!voteResultRepository.existsByVoterAndVoteOption_Vote_VoteId(member, voteId)) {
             throw new BusinessException(VoteError.VOTE_RESULT_NOT_FOUND);
@@ -79,5 +99,9 @@ public class VoteService {
 
         List<VoteResult> results = voteResultRepository.findByVoterAndVoteOption_Vote_VoteId(member, voteId);
         voteResultRepository.deleteAll(results);
+
+        if (member.getXp() >= 2) {
+            member.setXp(member.getXp() - 2);
+        }
     }
 }
