@@ -29,25 +29,6 @@ public class NoticeService {
     private final NoticeMapper noticeMapper;
     private final SecurityUtils securityUtils;
 
-    public CreateNoticeResponseDto createNotice(CreateNoticeRequestDto createNoticeRequestDto) {
-        Member author = securityUtils.getCurrentMember();
-        Notice newNotice = noticeMapper.createNotice(createNoticeRequestDto, author);
-        noticeRepository.save(newNotice);
-        return noticeMapper.toCreateResponseDto(newNotice);
-
-    }
-
-    public void deleteNotice(Long noticeId) {
-        noticeRepository.deleteById(noticeId);
-    }
-
-    public UpdateNoticeResponseDto updateNotice(Long noticeId, UpdateNoticeRequestDto updateNoticeRequestDto) {
-        Notice notice = noticeRepository.findById(noticeId).orElseThrow(() -> new BusinessException(NoticeErrorCode.NOTICE_NOT_FOUND));
-        notice.update(updateNoticeRequestDto);
-        noticeRepository.saveAndFlush(notice);
-        return noticeMapper.toUpdateResponseDto(notice);
-    }
-
     public GetNoticeResponseDto getNotices(int page) {
         final int PAGE_SIZE = 10;
         Pageable pageable = PageRequest.of(page, PAGE_SIZE);
@@ -57,20 +38,4 @@ public class NoticeService {
         return noticeMapper.getNoticeResponseDtoMapper(pinnedNotices, openedNoticePage);
     }
 
-    public void pinnedNotice(Long noticeId) {
-        Notice notice = noticeRepository.findById(noticeId).orElseThrow(() -> new BusinessException(NoticeErrorCode.NOTICE_NOT_FOUND));
-        if (!notice.isPinned()) {
-            long pinnedCount = noticeRepository.countByPinnedTrueAndHiddenFalse();
-            if (pinnedCount >= 3) {
-                throw new BusinessException(NoticeErrorCode.EXCEEDED_PINNED_LIMIT);
-            }
-        }
-
-        notice.updatePinned();
-    }
-
-    public void hiddenNotice(Long noticeId) {
-        Notice notice = noticeRepository.findById(noticeId).orElseThrow(() -> new BusinessException(NoticeErrorCode.NOTICE_NOT_FOUND));
-        notice.updateHidden();
-    }
 }

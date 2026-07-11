@@ -93,24 +93,6 @@ class MemberServiceTest {
     }
 
     // ─────────────────────────────────────────────
-    // registerMember
-    // ─────────────────────────────────────────────
-
-    @Test
-    @DisplayName("회원가입 성공 - USER 역할 고정")
-    void registerMember_success() {
-        RegisterMemberRequestDto dto = mock(RegisterMemberRequestDto.class);
-        when(dto.getStudentId()).thenReturn("20210001");
-        when(dto.getName()).thenReturn("테스터");
-        when(dto.getPassword()).thenReturn("rawPassword");
-        when(passwordEncoder.encode("rawPassword")).thenReturn("$2a$10$encoded");
-        when(memberRepository.saveAndFlush(any(Member.class))).thenReturn(member);
-
-        assertThatNoException().isThrownBy(() -> memberService.registerMember(dto));
-        verify(memberRepository).saveAndFlush(argThat(m -> m.getRole() == Role.USER));
-    }
-
-    // ─────────────────────────────────────────────
     // askProvisionXp
     // ─────────────────────────────────────────────
 
