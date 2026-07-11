@@ -93,6 +93,24 @@ class EventServiceTest {
 
         assertThatNoException().isThrownBy(() -> eventService.createAttendance(dto));
         verify(eventRepository).findById(1L);
+        assertThat(member.getXp()).isEqualTo(event.getRewardXp());
+    }
+
+    @Test
+    @DisplayName("출석 실패 - 이미 출석한 이벤트는 중복 출석 불가")
+    void createAttendance_alreadyAttended() {
+        CreateAttendanceRequestDto dto = mock(CreateAttendanceRequestDto.class);
+        when(dto.getQrCodeId()).thenReturn("validQrCode");
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("validQrCode")).thenReturn("1");
+        when(securityUtils.getCurrentMember()).thenReturn(member);
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(event));
+        when(eventParticipateRepository.existsByParticipantMemberAndEvent(member, event)).thenReturn(true);
+
+        assertThatThrownBy(() -> eventService.createAttendance(dto))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(EventError.ALREADY_ATTENDED.getMessage());
+        assertThat(member.getXp()).isZero();
     }
 
     @Test
