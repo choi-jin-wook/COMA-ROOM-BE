@@ -32,7 +32,7 @@ public class AuthService {
     public void registerMember(RegisterMemberRequestDto registerMemberRequestDto) {
         // 탈퇴 회원은 @SQLRestriction으로 조회에서 제외되지만 student_id unique 제약은 남아있으므로
         // 탈퇴 회원까지 포함해 중복을 확인해야 DB 제약 위반(500)을 막을 수 있다
-        if (memberRepository.existsByStudentIdIncludingWithdrawn(registerMemberRequestDto.getStudentId())){
+        if (memberRepository.countByStudentIdIncludingWithdrawn(registerMemberRequestDto.getStudentId()) > 0){
             throw new BusinessException(MEMBER_ALREADY_EXISTS);
         }
 
