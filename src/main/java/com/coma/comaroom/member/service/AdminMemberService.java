@@ -83,8 +83,8 @@ public class AdminMemberService {
         List<EventApprovalResponseDto> dtoList = approvalPage.getContent().stream()
                 .map(approval -> EventApprovalResponseDto.builder()
                         .requestId(approval.getId())
-                        .requester(approval.getRequester().getName())
-                        .studentId(approval.getRequester().getStudentId())
+                        .requester(approval.getRequester() != null ? approval.getRequester().getName() : "탈퇴한 회원")
+                        .studentId(approval.getRequester() != null ? approval.getRequester().getStudentId() : "-")
                         .rewardXp(approval.getGrantedXp())
                         .reason(approval.getReason())
                         .localDateTime(approval.getCreatedAt())
@@ -118,8 +118,13 @@ public class AdminMemberService {
             throw new BusinessException(EventError.APPROVAL_ALREADY_DECIDED);
         }
 
-        eventApproval.setApprovalStatus(provisionApprovalRequestDto.getApprovalStatus());
         Member requester = eventApproval.getRequester();
+        if (requester == null) {
+            // 탈퇴한 회원의 요청은 처리 불가
+            throw new BusinessException(AuthError.MEMBER_NOT_FOUND);
+        }
+
+        eventApproval.setApprovalStatus(provisionApprovalRequestDto.getApprovalStatus());
         if (provisionApprovalRequestDto.getApprovalStatus() == ApprovalStatus.APPROVED) {
             requester.setXp(requester.getXp() + eventApproval.getGrantedXp());
         }
