@@ -4,6 +4,7 @@ import com.coma.comaroom.member.dto.request.LoginRequestDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
 import com.coma.comaroom.member.dto.request.ReissueTokenRequestDto;
 import com.coma.comaroom.member.dto.response.LoginResponse;
+import com.coma.comaroom.member.dto.response.RegisterMemberResponseDto;
 import com.coma.comaroom.member.dto.response.ReissueTokenResponseDto;
 import com.coma.comaroom.member.service.AuthService;
 import com.coma.comaroom.utils.Response;
@@ -24,7 +25,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> joinMember(@RequestBody RegisterMemberRequestDto registerMemberRequestDto) {
         authService.registerMember(registerMemberRequestDto);
-        return Response.ok(registerMemberRequestDto, HttpStatus.CREATED).toResponseEntity();
+        return Response.ok(RegisterMemberResponseDto.from(registerMemberRequestDto), HttpStatus.CREATED).toResponseEntity();
     }
 
     // 리프레시 토큰으로 액세스 토큰 재발급
