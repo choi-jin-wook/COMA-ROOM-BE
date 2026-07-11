@@ -25,7 +25,7 @@ public class VoteController {
     // 1. 진행중인 투표 목록 (뭔가 꼬롬함)
     @GetMapping("/votes")
     public ResponseEntity<Response<List<VoteDetailResponseDto>>> voteDashboard(@RequestParam(defaultValue = "1", required = false) Integer page, @RequestParam VoteStatus status) {
-        List<VoteDetailResponseDto> voteDetailResponseDtoList = voteService.voteDashboard(page - 1, status);
+        List<VoteDetailResponseDto> voteDetailResponseDtoList = voteService.voteDashboard(Math.max(0, page - 1), status);
         return Response.ok(voteDetailResponseDtoList, HttpStatus.OK).toResponseEntity();
     }
 
