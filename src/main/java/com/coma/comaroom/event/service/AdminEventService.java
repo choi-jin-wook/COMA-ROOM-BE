@@ -74,7 +74,7 @@ public class AdminEventService {
                 .orElseThrow(() -> new BusinessException(EventPostError.POST_NOT_FOUND));
 
         // 권한 확인: 관리자이거나 이벤트 호스트인 경우만 삭제 가능
-        if (currentMember.getRole() != Role.ADMIN && !event.getHost().equals(currentMember)) {
+        if (currentMember.getRole() != Role.ADMIN && (event.getHost() == null || !event.getHost().getMemberId().equals(currentMember.getMemberId()))) {
             throw new BusinessException(EventPostError.UNAUTHORIZED_ACCESS);
         }
 
@@ -129,7 +129,7 @@ public class AdminEventService {
                 .orElseThrow(() -> new BusinessException(EventPostError.POST_NOT_FOUND));
 
         // 수정 권한 확인
-        if (currentMember.getRole() != Role.ADMIN && !event.getHost().equals(currentMember)) {
+        if (currentMember.getRole() != Role.ADMIN && (event.getHost() == null || !event.getHost().getMemberId().equals(currentMember.getMemberId()))) {
             throw new BusinessException(EventPostError.UNAUTHORIZED_ACCESS);
         }
 

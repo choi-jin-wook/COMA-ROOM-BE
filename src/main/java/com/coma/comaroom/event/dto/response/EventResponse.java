@@ -22,7 +22,7 @@ public record EventResponse(
                 event.getRewardXp(),
                 event.getLocation(),
                 event.getEventCategory(),
-                event.getHost().getName()
+                event.getHost() != null ? event.getHost().getName() : "탈퇴한 회원"
         );
     }
 }
