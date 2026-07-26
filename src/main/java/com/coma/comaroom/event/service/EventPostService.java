@@ -6,20 +6,17 @@ import com.coma.comaroom.event.EventPostError;
 import com.coma.comaroom.event.dto.request.EventPostRequest;
 import com.coma.comaroom.event.dto.request.EventPostStatusRequest;
 import com.coma.comaroom.event.dto.response.EventPostResponse;
-import com.coma.comaroom.event.entity.ApprovalStatus;
 import com.coma.comaroom.event.entity.Event;
 import com.coma.comaroom.event.entity.EventPost;
 import com.coma.comaroom.event.repository.EventPostRepository;
 import com.coma.comaroom.event.repository.EventRepository;
 import com.coma.comaroom.member.entity.Member;
-import com.coma.comaroom.member.entity.Role;
 import com.coma.comaroom.utils.SecurityUtils;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @Transactional
@@ -47,11 +44,10 @@ public class EventPostService {
                 .orElseThrow(() -> new BusinessException(EventPostError.POST_NOT_FOUND));
     }
 
-    // READ (전체 목록 - 페이징 처리 권장)
-    public List<EventPostResponse> getAllPosts() {
-        return eventPostRepository.findAll().stream()
-                .map(EventPostResponse::from)
-                .toList();
+    // READ (전체 목록)
+    public Page<EventPostResponse> getAllPosts(Pageable pageable) {
+        return eventPostRepository.findAll(pageable)
+                .map(EventPostResponse::from);
     }
 
 
