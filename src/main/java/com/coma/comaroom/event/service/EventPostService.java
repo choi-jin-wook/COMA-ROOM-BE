@@ -9,7 +9,6 @@ import com.coma.comaroom.event.dto.response.EventPostResponse;
 import com.coma.comaroom.event.entity.ApprovalStatus;
 import com.coma.comaroom.event.entity.Event;
 import com.coma.comaroom.event.entity.EventPost;
-import com.coma.comaroom.event.mapper.EventPostMapper;
 import com.coma.comaroom.event.repository.EventPostRepository;
 import com.coma.comaroom.event.repository.EventRepository;
 import com.coma.comaroom.member.entity.Member;
@@ -29,7 +28,6 @@ public class EventPostService {
     private final EventPostRepository eventPostRepository;
     private final EventRepository eventRepository;
     private final SecurityUtils securityUtils;
-    private final EventPostMapper eventPostMapper;
 
     // CREATE
     public EventPostResponse createPost(EventPostRequest request) {
@@ -37,8 +35,7 @@ public class EventPostService {
         Event event = eventRepository.findById(request.eventId())
                 .orElseThrow(() -> new BusinessException(EventError.EVENT_NOT_FOUND));
 
-        // 매퍼가 권한 체크와 사진 연관 관계 설정을 모두 처리함
-        EventPost post = eventPostMapper.toEntity(request, currentMember, event);
+        EventPost post = request.toEntity(currentMember, event);
         EventPost savedPost = eventPostRepository.save(post);
         return EventPostResponse.from(savedPost);
     }
