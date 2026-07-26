@@ -24,10 +24,6 @@ public class AdminEventPostService {
 
     public EventPostResponse updatePostStatus(Integer postId, EventPostStatusRequest request) {
         // 1. 현재 사용자 조회 및 관리자 권한 확인
-        Member currentMember = securityUtils.getCurrentMember();
-        if (currentMember.getRole() != Role.ADMIN) {
-            throw new BusinessException(AuthError.NOT_ADMIN);
-        }
 
         // 2. 게시글 조회
         EventPost post = eventPostRepository.findById(postId)
