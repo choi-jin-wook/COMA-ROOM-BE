@@ -7,12 +7,10 @@ import com.coma.comaroom.event.dto.RecentActivityLogDto;
 import com.coma.comaroom.event.dto.XpManagementMainResponseDto;
 import com.coma.comaroom.event.entity.*;
 import com.coma.comaroom.member.dto.response.XpHistoryResponseDto;
-import com.coma.comaroom.event.mapper.EventApprovalMapper;
 import com.coma.comaroom.event.repository.EventApprovalRepository;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.event.repository.EventRepository;
 import com.coma.comaroom.member.MemberMapper;
-import com.coma.comaroom.member.XpManagementMapper;
 import com.coma.comaroom.member.dto.request.LeaderboardResponseDto;
 import com.coma.comaroom.member.dto.request.MyRankingDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
@@ -59,8 +57,6 @@ class MemberServiceTest {
     @Mock private MemberMapper memberMapper;
     @Mock private SecurityUtils securityUtils;
     @Mock private VoteRepository voteRepository;
-    @Mock private EventApprovalMapper eventApprovalMapper;
-    @Mock private XpManagementMapper xpManagementMapper;
     @Mock private EventApprovalRepository eventApprovalRepository;
 
     @InjectMocks
@@ -264,14 +260,12 @@ class MemberServiceTest {
         when(eventApprovalRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.APPROVED)).thenReturn(5L);
         when(eventApprovalRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.REJECTED)).thenReturn(2L);
         when(eventApprovalRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.PENDING)).thenReturn(3L);
-        when(eventApprovalMapper.toRecentActivityLogDtos(anyList())).thenReturn(List.of());
-
-        XpManagementMainResponseDto expected = mock(XpManagementMainResponseDto.class);
-        when(xpManagementMapper.toMainDto(5L, 2L, 3L, List.of())).thenReturn(expected);
-
         XpManagementMainResponseDto result = memberService.getXpManagementMainData(null, 0L);
 
-        assertThat(result).isNotNull();
+        assertThat(result.getApprovedCount()).isEqualTo(5L);
+        assertThat(result.getRejectedCount()).isEqualTo(2L);
+        assertThat(result.getPendingCount()).isEqualTo(3L);
+        assertThat(result.getRecentActivityLogs()).isEmpty();
         verify(eventApprovalRepository).findByRequesterOrderByCreatedAtDesc(eq(member), any());
     }
 
@@ -284,14 +278,12 @@ class MemberServiceTest {
         when(eventApprovalRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.APPROVED)).thenReturn(5L);
         when(eventApprovalRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.REJECTED)).thenReturn(2L);
         when(eventApprovalRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.PENDING)).thenReturn(3L);
-        when(eventApprovalMapper.toRecentActivityLogDtos(anyList())).thenReturn(List.of());
-
-        XpManagementMainResponseDto expected = mock(XpManagementMainResponseDto.class);
-        when(xpManagementMapper.toMainDto(5L, 2L, 3L, List.of())).thenReturn(expected);
-
         XpManagementMainResponseDto result = memberService.getXpManagementMainData(ApprovalStatus.PENDING, 0L);
 
-        assertThat(result).isNotNull();
+        assertThat(result.getApprovedCount()).isEqualTo(5L);
+        assertThat(result.getRejectedCount()).isEqualTo(2L);
+        assertThat(result.getPendingCount()).isEqualTo(3L);
+        assertThat(result.getRecentActivityLogs()).isEmpty();
         verify(eventApprovalRepository).findByRequesterAndApprovalStatusOrderByCreatedAtDesc(eq(member), eq(ApprovalStatus.PENDING), any());
     }
 

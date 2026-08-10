@@ -7,12 +7,10 @@ import com.coma.comaroom.event.dto.AskXpResponseDto;
 import com.coma.comaroom.event.dto.RecentActivityLogDto;
 import com.coma.comaroom.event.dto.XpManagementMainResponseDto;
 import com.coma.comaroom.event.entity.*;
-import com.coma.comaroom.event.mapper.EventApprovalMapper;
 import com.coma.comaroom.event.repository.EventApprovalRepository;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.event.repository.EventRepository;
 import com.coma.comaroom.member.MemberMapper;
-import com.coma.comaroom.member.XpManagementMapper;
 import com.coma.comaroom.member.dto.request.LeaderboardResponseDto;
 import com.coma.comaroom.member.dto.request.MyRankingDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
@@ -51,8 +49,6 @@ public class MemberService {
     private final MemberMapper memberMapper;
     private final SecurityUtils securityUtils;
     private final VoteRepository voteRepository;
-    private final EventApprovalMapper eventApprovalMapper;
-    private final XpManagementMapper xpManagementMapper;
     private final EventApprovalRepository eventApprovalRepository;
 
     public void registerMember(RegisterMemberRequestDto registerMemberRequestDto) {
@@ -154,9 +150,9 @@ public class MemberService {
                 : eventApprovalRepository.findByRequesterAndApprovalStatusOrderByCreatedAtDesc(currentMember, status, pageable);
 
         List<RecentActivityLogDto> recentActivityLogs =
-                eventApprovalMapper.toRecentActivityLogDtos(resultPage.getContent());
+                RecentActivityLogDto.listOf(resultPage.getContent());
 
-        return xpManagementMapper.toMainDto(
+        return XpManagementMainResponseDto.of(
                 eventApprovalRepository.countByRequesterAndApprovalStatus(currentMember, ApprovalStatus.APPROVED),
                 eventApprovalRepository.countByRequesterAndApprovalStatus(currentMember, ApprovalStatus.REJECTED),
                 eventApprovalRepository.countByRequesterAndApprovalStatus(currentMember, ApprovalStatus.PENDING),

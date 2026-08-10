@@ -7,11 +7,9 @@ import com.coma.comaroom.event.dto.XpProvisionRequestDto;
 import com.coma.comaroom.event.entity.ApprovalStatus;
 import com.coma.comaroom.event.entity.EventApproval;
 import com.coma.comaroom.event.entity.EventCategory;
-import com.coma.comaroom.event.mapper.EventApprovalMapper;
 import com.coma.comaroom.event.repository.EventApprovalRepository;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.member.AuthError;
-import com.coma.comaroom.member.XpManagementMapper;
 import com.coma.comaroom.member.dto.response.MemberManagementPageRequestDto;
 import com.coma.comaroom.member.dto.response.XpManagementPageResponseDto;
 import com.coma.comaroom.member.entity.Major;
@@ -42,8 +40,6 @@ class AdminMemberServiceTest {
     @Mock private EventApprovalRepository eventApprovalRepository;
     @Mock private EventParticipateRepository eventParticipateRepository;
     @Mock private SecurityUtils securityUtils;
-    @Mock private EventApprovalMapper eventApprovalMapper;
-    @Mock private XpManagementMapper xpManagementMapper;
 
     @InjectMocks
     private AdminMemberService adminMemberService;
