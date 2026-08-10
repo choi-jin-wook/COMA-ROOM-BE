@@ -124,20 +124,23 @@ class StudyManagerServiceTest {
     @Test
     @DisplayName("스터디 멤버 추가 성공")
     void addStudyMember_success() {
-        AddStudyMemberRequest request = mock(AddStudyMemberRequest.class);
-        when(request.getMemberId()).thenReturn(2L);
+        AddStudyMemberRequest request = new AddStudyMemberRequest(2L);
         when(studyRepository.findById(1L)).thenReturn(Optional.of(study));
         when(memberRepository.findById(2L)).thenReturn(Optional.of(newMember));
         when(studyMemberRepository.existsByStudyIdAndMemberMemberId(1L, 2L)).thenReturn(false);
 
         assertThatNoException().isThrownBy(() -> studyManagerService.addStudyMember(1L, request));
-        verify(studyMemberRepository).save(any(StudyMember.class));
+
+        ArgumentCaptor<StudyMember> captor = ArgumentCaptor.forClass(StudyMember.class);
+        verify(studyMemberRepository).save(captor.capture());
+        assertThat(captor.getValue().getStudy()).isSameAs(study);
+        assertThat(captor.getValue().getMember()).isSameAs(newMember);
     }
 
     @Test
     @DisplayName("스터디 멤버 추가 실패 - 스터디 없음")
     void addStudyMember_studyNotFound() {
-        AddStudyMemberRequest request = mock(AddStudyMemberRequest.class);
+        AddStudyMemberRequest request = new AddStudyMemberRequest(2L);
         when(studyRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> studyManagerService.addStudyMember(99L, request))
@@ -148,8 +151,7 @@ class StudyManagerServiceTest {
     @Test
     @DisplayName("스터디 멤버 추가 실패 - 멤버 없음")
     void addStudyMember_memberNotFound() {
-        AddStudyMemberRequest request = mock(AddStudyMemberRequest.class);
-        when(request.getMemberId()).thenReturn(99L);
+        AddStudyMemberRequest request = new AddStudyMemberRequest(99L);
         when(studyRepository.findById(1L)).thenReturn(Optional.of(study));
         when(memberRepository.findById(99L)).thenReturn(Optional.empty());
 
@@ -161,8 +163,7 @@ class StudyManagerServiceTest {
     @Test
     @DisplayName("스터디 멤버 추가 실패 - 이미 스터디 멤버")
     void addStudyMember_alreadyMember() {
-        AddStudyMemberRequest request = mock(AddStudyMemberRequest.class);
-        when(request.getMemberId()).thenReturn(2L);
+        AddStudyMemberRequest request = new AddStudyMemberRequest(2L);
         when(studyRepository.findById(1L)).thenReturn(Optional.of(study));
         when(memberRepository.findById(2L)).thenReturn(Optional.of(newMember));
         when(studyMemberRepository.existsByStudyIdAndMemberMemberId(1L, 2L)).thenReturn(true);

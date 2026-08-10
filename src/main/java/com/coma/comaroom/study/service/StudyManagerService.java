@@ -46,7 +46,7 @@ public class StudyManagerService {
         if (studyMemberRepository.existsByStudyIdAndMemberMemberId(studyId, request.getMemberId())) {
             throw new BusinessException(StudyError.ALREADY_STUDY_MEMBER);
         }
-        studyMemberRepository.save(StudyMember.builder().study(study).member(member).build());
+        studyMemberRepository.save(request.toEntity(study, member));
     }
 
     // 스터디 멤버 삭제
