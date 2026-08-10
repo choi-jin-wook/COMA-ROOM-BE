@@ -8,7 +8,6 @@ import com.coma.comaroom.event.entity.Event;
 import com.coma.comaroom.event.entity.EventCategory;
 import com.coma.comaroom.event.entity.EventParticipant;
 import com.coma.comaroom.event.entity.EventPost;
-import com.coma.comaroom.event.mapper.EventMapper;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.event.repository.EventRepository;
 import com.coma.comaroom.member.entity.Major;
@@ -41,7 +40,6 @@ class EventServiceTest {
     @Mock private EventRepository eventRepository;
     @Mock private StringRedisTemplate redisTemplate;
     @Mock private EventParticipateRepository eventParticipateRepository;
-    @Mock private EventMapper eventMapper;
     @Mock private ValueOperations<String, String> valueOperations;
 
     @InjectMocks

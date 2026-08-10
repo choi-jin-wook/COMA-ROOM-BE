@@ -12,7 +12,6 @@ import com.coma.comaroom.event.dto.response.EventResponse;
 import com.coma.comaroom.event.entity.Event;
 import com.coma.comaroom.event.entity.EventCategory;
 import com.coma.comaroom.event.entity.EventParticipant;
-import com.coma.comaroom.event.mapper.EventMapper;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.event.repository.EventRepository;
 import com.coma.comaroom.member.AuthError;
@@ -25,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -47,7 +47,6 @@ class AdminEventServiceTest {
     @Mock private SecurityUtils securityUtils;
     @Mock private EventRepository eventRepository;
     @Mock private StringRedisTemplate redisTemplate;
-    @Mock private EventMapper eventMapper;
     @Mock private EventParticipateRepository eventParticipateRepository;
     @Mock private MemberRepository memberRepository;
     @Mock private ValueOperations<String, String> valueOperations;
@@ -134,18 +133,28 @@ class AdminEventServiceTest {
     @Test
     @DisplayName("이벤트 생성 성공")
     void createEvent_success() {
-        CreateEventRequest request = mock(CreateEventRequest.class);
-        when(request.getRewardXp()).thenReturn(5L);
-        when(request.getEventCategory()).thenReturn(EventCategory.EVENT);
+        CreateEventRequest request = new CreateEventRequest(
+                "정기 모임",
+                LocalDateTime.now().plusDays(1),
+                "강의실 A",
+                EventCategory.EVENT,
+                5L);
         when(securityUtils.getCurrentMember()).thenReturn(adminMember);
-        when(eventMapper.toEntity(request, adminMember)).thenReturn(event);
-        when(eventRepository.save(event)).thenReturn(event);
+        when(eventRepository.save(any(Event.class))).thenReturn(event);
 
         EventResponse result = adminEventService.createEvent(request);
 
         assertThat(result).isNotNull();
         assertThat(result.title()).isEqualTo("정기 모임");
-        verify(eventRepository).save(event);
+
+        ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+        verify(eventRepository).save(captor.capture());
+
+        Event saved = captor.getValue();
+        assertThat(saved.getTitle()).isEqualTo("정기 모임");
+        assertThat(saved.getLocation()).isEqualTo("강의실 A");
+        assertThat(saved.getEventCategory()).isEqualTo(EventCategory.EVENT);
+        assertThat(saved.getHost()).isSameAs(adminMember);
     }
 
     // ─────────────────────────────────────────────
