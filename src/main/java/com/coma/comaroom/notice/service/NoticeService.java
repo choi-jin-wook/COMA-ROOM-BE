@@ -2,7 +2,6 @@ package com.coma.comaroom.notice.service;
 
 import com.coma.comaroom.BusinessException;
 import com.coma.comaroom.member.entity.Member;
-import com.coma.comaroom.notice.mapper.NoticeMapper;
 import com.coma.comaroom.notice.dto.request.CreateNoticeRequestDto;
 import com.coma.comaroom.notice.dto.request.UpdateNoticeRequestDto;
 import com.coma.comaroom.notice.dto.response.CreateNoticeResponseDto;
@@ -26,14 +25,13 @@ import java.util.List;
 @AllArgsConstructor
 public class NoticeService {
     private final NoticeRepository noticeRepository;
-    private final NoticeMapper noticeMapper;
     private final SecurityUtils securityUtils;
 
     public CreateNoticeResponseDto createNotice(CreateNoticeRequestDto createNoticeRequestDto) {
         Member author = securityUtils.getCurrentMember();
-        Notice newNotice = noticeMapper.createNotice(createNoticeRequestDto, author);
+        Notice newNotice = createNoticeRequestDto.toEntity(author);
         noticeRepository.save(newNotice);
-        return noticeMapper.toCreateResponseDto(newNotice);
+        return CreateNoticeResponseDto.from(newNotice);
 
     }
 
@@ -45,7 +43,7 @@ public class NoticeService {
         Notice notice = noticeRepository.findById(noticeId).orElseThrow(() -> new BusinessException(NoticeErrorCode.NOTICE_NOT_FOUND));
         notice.update(updateNoticeRequestDto);
         noticeRepository.saveAndFlush(notice);
-        return noticeMapper.toUpdateResponseDto(notice);
+        return UpdateNoticeResponseDto.from(notice);
     }
 
     public GetNoticeResponseDto getNotices(int page) {
@@ -54,7 +52,7 @@ public class NoticeService {
         List<Notice> pinnedNotices = noticeRepository.findByPinnedTrueAndHiddenFalse();
         Page<Notice> openedNoticePage = noticeRepository.findByPinnedFalseAndHiddenFalse(pageable);
         
-        return noticeMapper.getNoticeResponseDtoMapper(pinnedNotices, openedNoticePage);
+        return GetNoticeResponseDto.of(pinnedNotices, openedNoticePage);
     }
 
     public void pinnedNotice(Long noticeId) {
