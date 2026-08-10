@@ -1,7 +1,6 @@
 package com.coma.comaroom.vote.service;
 
 import com.coma.comaroom.utils.SecurityUtils;
-import com.coma.comaroom.vote.component.VoteMapper;
 import com.coma.comaroom.vote.dto.AddVoteOptionRequestDto;
 import com.coma.comaroom.vote.dto.request.CreateNewVoteRequestDto;
 import com.coma.comaroom.vote.dto.request.UpdateVoteRequestDto;
@@ -23,7 +22,6 @@ public class AdminVoteService {
     private final VoteOptionRepository voteOptionRepository;
     private final VoteResultRepository voteResultRepository;
 
-    private final VoteMapper voteMapper;
     private final SecurityUtils securityUtils;
 
     // 1. 투표 생성 (커밋 완료)
@@ -33,7 +31,7 @@ public class AdminVoteService {
 
         // 저장
         voteRepository.save(vote);
-        return voteMapper.toDetailDto(vote);
+        return VoteDetailResponseDto.from(vote);
     }
 
 
@@ -44,7 +42,7 @@ public class AdminVoteService {
 
 
 
-        return voteMapper.toDetailDto(vote);
+        return VoteDetailResponseDto.from(vote);
     }
 
     // 3. 옵션 추가 (커밋 완료)
@@ -53,7 +51,7 @@ public class AdminVoteService {
         vote.addOption(addVoteOptionRequestDto.toEntity());
         voteRepository.saveAndFlush(vote);
 
-        return voteMapper.toDetailDto(vote);
+        return VoteDetailResponseDto.from(vote);
     }
 
 
@@ -76,7 +74,7 @@ public class AdminVoteService {
         vote.close();
 
         // 3. 변수 선언 없이 즉시 리턴
-        return voteMapper.toDetailDto(vote);
+        return VoteDetailResponseDto.from(vote);
     }
 
 

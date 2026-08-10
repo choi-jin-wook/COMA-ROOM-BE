@@ -1,12 +1,12 @@
 package com.coma.comaroom.vote.service;
 
 import com.coma.comaroom.utils.SecurityUtils;
-import com.coma.comaroom.vote.component.VoteMapper;
 import com.coma.comaroom.vote.dto.AddVoteOptionRequestDto;
 import com.coma.comaroom.vote.dto.request.CreateNewVoteRequestDto;
 import com.coma.comaroom.vote.dto.request.CreateVoteOptionRequestDto;
 import com.coma.comaroom.vote.dto.request.UpdateVoteRequestDto;
 import com.coma.comaroom.vote.dto.response.VoteDetailResponseDto;
+import com.coma.comaroom.vote.dto.response.VoteOptionDetailResponseDto;
 import com.coma.comaroom.vote.entity.Vote;
 import com.coma.comaroom.vote.entity.VoteOption;
 import com.coma.comaroom.vote.entity.VoteStatus;
@@ -37,7 +37,6 @@ class AdminVoteServiceTest {
     @Mock private VoteRepository voteRepository;
     @Mock private VoteOptionRepository voteOptionRepository;
     @Mock private VoteResultRepository voteResultRepository;
-    @Mock private VoteMapper voteMapper;
     @Mock private SecurityUtils securityUtils;
 
     @InjectMocks
@@ -75,12 +74,10 @@ class AdminVoteServiceTest {
 
         when(voteRepository.save(any(Vote.class))).thenReturn(vote);
 
-        VoteDetailResponseDto expected = mock(VoteDetailResponseDto.class);
-        when(voteMapper.toDetailDto(any(Vote.class))).thenReturn(expected);
-
         VoteDetailResponseDto result = adminVoteService.createNewVote(dto);
 
-        assertThat(result).isNotNull();
+        assertThat(result.getTitle()).isEqualTo("점심 메뉴 투표");
+        assertThat(result.getStatus()).isEqualTo(VoteStatus.IN_PROGRESS);
 
         ArgumentCaptor<Vote> captor = ArgumentCaptor.forClass(Vote.class);
         verify(voteRepository).save(captor.capture());
@@ -108,12 +105,9 @@ class AdminVoteServiceTest {
         when(dto.getDeadline()).thenReturn(null);
         when(voteRepository.findById(1L)).thenReturn(Optional.of(vote));
 
-        VoteDetailResponseDto expected = mock(VoteDetailResponseDto.class);
-        when(voteMapper.toDetailDto(vote)).thenReturn(expected);
-
         VoteDetailResponseDto result = adminVoteService.updateVote(dto, 1L);
 
-        assertThat(result).isNotNull();
+        assertThat(result.getTitle()).isEqualTo("수정된 투표");
         assertThat(vote.getTitle()).isEqualTo("수정된 투표");
     }
 
@@ -140,12 +134,11 @@ class AdminVoteServiceTest {
         when(voteRepository.findById(1L)).thenReturn(Optional.of(vote));
         when(voteRepository.saveAndFlush(vote)).thenReturn(vote);
 
-        VoteDetailResponseDto expected = mock(VoteDetailResponseDto.class);
-        when(voteMapper.toDetailDto(vote)).thenReturn(expected);
-
         VoteDetailResponseDto result = adminVoteService.addVoteOption(dto, 1L);
 
-        assertThat(result).isNotNull();
+        assertThat(result.getOptions())
+                .extracting(VoteOptionDetailResponseDto::getContent)
+                .containsExactly("새 옵션");
         verify(voteRepository).saveAndFlush(vote);
         assertThat(vote.getVoteOptions())
                 .extracting(VoteOption::getContent)
@@ -196,12 +189,9 @@ class AdminVoteServiceTest {
     void closeVote_success() {
         when(voteRepository.findById(1L)).thenReturn(Optional.of(vote));
 
-        VoteDetailResponseDto expected = mock(VoteDetailResponseDto.class);
-        when(voteMapper.toDetailDto(vote)).thenReturn(expected);
-
         VoteDetailResponseDto result = adminVoteService.closeVote(1L);
 
-        assertThat(result).isNotNull();
+        assertThat(result.getStatus()).isEqualTo(VoteStatus.CLOSED);
         assertThat(vote.getVoteStatus()).isEqualTo(VoteStatus.CLOSED);
     }
 

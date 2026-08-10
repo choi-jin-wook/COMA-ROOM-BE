@@ -4,7 +4,6 @@ import com.coma.comaroom.BusinessException;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.utils.SecurityUtils;
 import com.coma.comaroom.vote.VoteError;
-import com.coma.comaroom.vote.component.VoteMapper;
 import com.coma.comaroom.vote.dto.AddVoteOptionRequestDto;
 import com.coma.comaroom.vote.dto.request.CreateNewVoteRequestDto;
 import com.coma.comaroom.vote.dto.request.ParticipateVoteRequestDto;
@@ -34,7 +33,6 @@ public class VoteService {
     private final VoteOptionRepository voteOptionRepository;
     private final VoteResultRepository voteResultRepository;
 
-    private final VoteMapper voteMapper;
     private final SecurityUtils securityUtils;
 
     // - 사용자
@@ -47,7 +45,7 @@ public class VoteService {
 
         return votes.stream()
                 .map(vote -> {
-                    VoteDetailResponseDto dto = voteMapper.toDetailDto(vote);
+                    VoteDetailResponseDto dto = VoteDetailResponseDto.from(vote);
                     dto.setVoted(voteResultRepository.existsByVoterAndVoteOption_Vote_VoteId(member, vote.getVoteId()));
                     return dto;
                 })
@@ -61,7 +59,7 @@ public class VoteService {
         member.setXp(member.getXp() + 2);
 
         vote.participate(participateVoteRequestDto.getVoteOptionId(), member);
-        VoteDetailResponseDto dto = voteMapper.toDetailDto(vote);
+        VoteDetailResponseDto dto = VoteDetailResponseDto.from(vote);
         dto.setVoted(true);
         return dto;
     }
