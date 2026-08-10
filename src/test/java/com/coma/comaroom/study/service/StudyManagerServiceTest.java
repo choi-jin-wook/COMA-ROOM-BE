@@ -220,8 +220,7 @@ class StudyManagerServiceTest {
     @Test
     @DisplayName("스터디 일정 추가 성공")
     void addStudyActivity_success() {
-        AddStudyActivityRequest request = mock(AddStudyActivityRequest.class);
-        when(request.getActivityName()).thenReturn("1주차 발표");
+        AddStudyActivityRequest request = new AddStudyActivityRequest("1주차 발표");
         when(studyRepository.findById(1L)).thenReturn(Optional.of(study));
         when(studyActivityRepository.save(any(StudyActivity.class))).thenReturn(studyActivity);
 
@@ -229,13 +228,17 @@ class StudyManagerServiceTest {
 
         assertThat(result).isNotNull();
         assertThat(result.activityName()).isEqualTo("1주차 발표");
-        verify(studyActivityRepository).save(any(StudyActivity.class));
+
+        ArgumentCaptor<StudyActivity> captor = ArgumentCaptor.forClass(StudyActivity.class);
+        verify(studyActivityRepository).save(captor.capture());
+        assertThat(captor.getValue().getActivityName()).isEqualTo("1주차 발표");
+        assertThat(captor.getValue().getStudy()).isSameAs(study);
     }
 
     @Test
     @DisplayName("스터디 일정 추가 실패 - 스터디 없음")
     void addStudyActivity_studyNotFound() {
-        AddStudyActivityRequest request = mock(AddStudyActivityRequest.class);
+        AddStudyActivityRequest request = new AddStudyActivityRequest("1주차 발표");
         when(studyRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> studyManagerService.addStudyActivity(99L, request))

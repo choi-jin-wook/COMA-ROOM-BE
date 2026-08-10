@@ -62,10 +62,7 @@ public class StudyManagerService {
     public StudyActivityResponse addStudyActivity(Long studyId, AddStudyActivityRequest request) {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new BusinessException(StudyError.STUDY_NOT_FOUND));
-        StudyActivity activity = StudyActivity.builder()
-                .activityName(request.getActivityName())
-                .study(study)
-                .build();
+        StudyActivity activity = request.toEntity(study);
         return StudyActivityResponse.from(studyActivityRepository.save(activity));
     }
 
