@@ -33,10 +33,7 @@ public class StudyManagerService {
     public StudyResponse createStudy(CreateStudyRequest request) {
         Member manager = memberRepository.findById(request.getManagerId())
                 .orElseThrow(() -> new BusinessException(StudyError.MEMBER_NOT_FOUND));
-        Study study = Study.builder()
-                .studyName(request.getStudyName())
-                .studyManager(manager)
-                .build();
+        Study study = request.toEntity(manager);
         return StudyResponse.from(studyRepository.save(study));
     }
 
@@ -49,7 +46,7 @@ public class StudyManagerService {
         if (studyMemberRepository.existsByStudyIdAndMemberMemberId(studyId, request.getMemberId())) {
             throw new BusinessException(StudyError.ALREADY_STUDY_MEMBER);
         }
-        studyMemberRepository.save(StudyMember.builder().study(study).member(member).build());
+        studyMemberRepository.save(request.toEntity(study, member));
     }
 
     // 스터디 멤버 삭제
@@ -65,10 +62,7 @@ public class StudyManagerService {
     public StudyActivityResponse addStudyActivity(Long studyId, AddStudyActivityRequest request) {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new BusinessException(StudyError.STUDY_NOT_FOUND));
-        StudyActivity activity = StudyActivity.builder()
-                .activityName(request.getActivityName())
-                .study(study)
-                .build();
+        StudyActivity activity = request.toEntity(study);
         return StudyActivityResponse.from(studyActivityRepository.save(activity));
     }
 

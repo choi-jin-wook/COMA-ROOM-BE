@@ -1,5 +1,6 @@
 package com.coma.comaroom.member.dto.response;
 
+import com.coma.comaroom.member.entity.Member;
 import lombok.Getter;
 import lombok.Builder;
 import java.util.List;
@@ -19,4 +20,28 @@ public class MainAttendanceResponseDto {
 
     // 3. 하단 출석 내역 (리스트)
     private List<AttendanceHistoryDto> attendanceHistory;
+
+    public static MainAttendanceResponseDto of(
+            Member member,
+            Long rank,
+            Long eventCount,
+            Long attendanceCount,
+            List<AttendanceHistoryDto> history
+    ) {
+        Long attendanceRate = 0L;
+        if (eventCount > 0) {
+            // 100을 먼저 곱해서 소수점 손실 없이 퍼센트 계산
+            attendanceRate = (attendanceCount * 100) / eventCount;
+        }
+
+        return MainAttendanceResponseDto.builder()
+                .totalEventCount(eventCount)
+                .attendanceCount(attendanceCount)
+                .absenceCount(eventCount - attendanceCount)
+                .attendanceRate(attendanceRate)
+                .totalEarnedXp(member.getXp())
+                .attendanceRank(rank)
+                .attendanceHistory(history)
+                .build();
+    }
 }

@@ -11,8 +11,6 @@ import com.coma.comaroom.event.dto.response.AttendanceItemResponseDto;
 import com.coma.comaroom.event.dto.response.EventResponse;
 import com.coma.comaroom.event.entity.Event;
 import com.coma.comaroom.event.entity.EventParticipant;
-import com.coma.comaroom.event.mapper.AttendanceMapper;
-import com.coma.comaroom.event.mapper.EventMapper;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.event.repository.EventRepository;
 import com.coma.comaroom.member.AuthError;
@@ -36,7 +34,6 @@ public class AdminEventService {
     private final SecurityUtils securityUtils;
     private final EventRepository eventRepository;
     private StringRedisTemplate redisTemplate;
-    private final EventMapper eventMapper;
     private final EventParticipateRepository eventParticipateRepository;
     private final MemberRepository memberRepository;
 
@@ -61,7 +58,7 @@ public class AdminEventService {
             request.setRewardXp(request.getEventCategory().getDefaultXp());
         }
 
-        Event event = eventMapper.toEntity(request, currentUser);
+        Event event = request.toEntity(currentUser);
 
         Event savedEvent = eventRepository.save(event);
 

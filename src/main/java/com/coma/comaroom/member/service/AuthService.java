@@ -5,13 +5,11 @@ import com.coma.comaroom.auth.jwt.JwtTokenProvider;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.event.repository.EventRepository;
 import com.coma.comaroom.member.AuthError;
-import com.coma.comaroom.member.MemberMapper;
 import com.coma.comaroom.member.dto.request.LoginRequestDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
 import com.coma.comaroom.member.dto.response.LoginResponse;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.member.entity.MemberStatus;
-import com.coma.comaroom.member.entity.Role;
 import com.coma.comaroom.member.repository.MemberRepository;
 import com.coma.comaroom.notice.repository.NoticeRepository;
 import com.coma.comaroom.utils.SecurityUtils;
@@ -35,7 +33,6 @@ public class AuthService {
     private final EventRepository eventRepository;
     private final EventParticipateRepository eventParticipateRepository;
     private final PasswordEncoder passwordEncoder;
-    private final MemberMapper memberMapper;
     private final SecurityUtils securityUtils;
     private final VoteRepository voteRepository;
     private final JwtTokenProvider jwtTokenProvider;
@@ -46,14 +43,8 @@ public class AuthService {
             throw new BusinessException(MEMBER_ALREADY_EXISTS);
         }
 
-        Member member = Member.builder()
-                .studentId(registerMemberRequestDto.getStudentId())
-                .name(registerMemberRequestDto.getName())
-                .role(Role.USER)
-                .password(passwordEncoder.encode(registerMemberRequestDto.getPassword()))
-                .xp(0L)
-                .major(registerMemberRequestDto.getMajor())
-                .build();
+        Member member = registerMemberRequestDto.toEntity(
+                passwordEncoder.encode(registerMemberRequestDto.getPassword()));
 
         memberRepository.saveAndFlush(member);
     }
@@ -63,12 +54,15 @@ public class AuthService {
         if (!jwtTokenProvider.validateToken(refreshToken)) {
             throw new BusinessException(INVALID_TOKEN);
         }
+        if (!"refresh".equals(jwtTokenProvider.getTokenType(refreshToken))) {
+            throw new BusinessException(INVALID_TOKEN);
+        }
 
         Long memberId = jwtTokenProvider.getMemberId(refreshToken);
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(MEMBER_NOT_FOUND));
 
-        return jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name());
+        return jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name(), member.getStudentId());
     }
 
     // 회원 탈퇴
@@ -88,8 +82,7 @@ public class AuthService {
             throw new BusinessException(LOGIN_FAIL);
         }
 
-        // 3. 토큰 생성 (지금은 placeholder – 실제로는 JWT 라이브러리 써서 만들어)
-        String accessToken = jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name());
+        String accessToken = jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name(), member.getStudentId());
         String refreshToken = jwtTokenProvider.createRefreshToken(member.getMemberId());
 
         // 4. 응답 빌드 (Lombok @AllArgsConstructor 썼으니 이렇게)

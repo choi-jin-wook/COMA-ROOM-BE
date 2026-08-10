@@ -34,12 +34,12 @@ public class AuthController {
         return Response.ok(new ReissueTokenResponseDto(newAccessToken), HttpStatus.OK).toResponseEntity();
     }
 
-    // 로그인 (테스트 완료)
-    @PostMapping("/login")
-    public ResponseEntity<Response<LoginResponse>> login(@RequestBody LoginRequestDto loginRequestDto) {
-        LoginResponse response = authService.login(loginRequestDto);
-        return Response.ok(response, HttpStatus.OK).toResponseEntity();
-    }
+    // 로그인 (SecurityConfig의 formLogin + LoginSuccessHandler/LoginFailureHandler로 대체됨)
+    // @PostMapping("/login")
+    // public ResponseEntity<Response<LoginResponse>> login(@RequestBody LoginRequestDto loginRequestDto) {
+    //     LoginResponse response = authService.login(loginRequestDto);
+    //     return Response.ok(response, HttpStatus.OK).toResponseEntity();
+    // }
 
     // 회원 탈퇴
     @DeleteMapping("/withdraw")

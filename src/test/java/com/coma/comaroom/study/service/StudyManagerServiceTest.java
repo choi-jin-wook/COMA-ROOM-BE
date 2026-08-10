@@ -21,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -89,9 +90,7 @@ class StudyManagerServiceTest {
     @Test
     @DisplayName("스터디 생성 성공")
     void createStudy_success() {
-        CreateStudyRequest request = mock(CreateStudyRequest.class);
-        when(request.getManagerId()).thenReturn(1L);
-        when(request.getStudyName()).thenReturn("알고리즘 스터디");
+        CreateStudyRequest request = new CreateStudyRequest("알고리즘 스터디", 1L);
         when(memberRepository.findById(1L)).thenReturn(Optional.of(manager));
         when(studyRepository.save(any(Study.class))).thenReturn(study);
 
@@ -100,14 +99,17 @@ class StudyManagerServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.studyName()).isEqualTo("알고리즘 스터디");
         assertThat(result.managerName()).isEqualTo("스터디장");
-        verify(studyRepository).save(any(Study.class));
+
+        ArgumentCaptor<Study> captor = ArgumentCaptor.forClass(Study.class);
+        verify(studyRepository).save(captor.capture());
+        assertThat(captor.getValue().getStudyName()).isEqualTo("알고리즘 스터디");
+        assertThat(captor.getValue().getStudyManager()).isSameAs(manager);
     }
 
     @Test
     @DisplayName("스터디 생성 실패 - 매니저 없음")
     void createStudy_managerNotFound() {
-        CreateStudyRequest request = mock(CreateStudyRequest.class);
-        when(request.getManagerId()).thenReturn(99L);
+        CreateStudyRequest request = new CreateStudyRequest("알고리즘 스터디", 99L);
         when(memberRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> studyManagerService.createStudy(request))
@@ -122,20 +124,23 @@ class StudyManagerServiceTest {
     @Test
     @DisplayName("스터디 멤버 추가 성공")
     void addStudyMember_success() {
-        AddStudyMemberRequest request = mock(AddStudyMemberRequest.class);
-        when(request.getMemberId()).thenReturn(2L);
+        AddStudyMemberRequest request = new AddStudyMemberRequest(2L);
         when(studyRepository.findById(1L)).thenReturn(Optional.of(study));
         when(memberRepository.findById(2L)).thenReturn(Optional.of(newMember));
         when(studyMemberRepository.existsByStudyIdAndMemberMemberId(1L, 2L)).thenReturn(false);
 
         assertThatNoException().isThrownBy(() -> studyManagerService.addStudyMember(1L, request));
-        verify(studyMemberRepository).save(any(StudyMember.class));
+
+        ArgumentCaptor<StudyMember> captor = ArgumentCaptor.forClass(StudyMember.class);
+        verify(studyMemberRepository).save(captor.capture());
+        assertThat(captor.getValue().getStudy()).isSameAs(study);
+        assertThat(captor.getValue().getMember()).isSameAs(newMember);
     }
 
     @Test
     @DisplayName("스터디 멤버 추가 실패 - 스터디 없음")
     void addStudyMember_studyNotFound() {
-        AddStudyMemberRequest request = mock(AddStudyMemberRequest.class);
+        AddStudyMemberRequest request = new AddStudyMemberRequest(2L);
         when(studyRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> studyManagerService.addStudyMember(99L, request))
@@ -146,8 +151,7 @@ class StudyManagerServiceTest {
     @Test
     @DisplayName("스터디 멤버 추가 실패 - 멤버 없음")
     void addStudyMember_memberNotFound() {
-        AddStudyMemberRequest request = mock(AddStudyMemberRequest.class);
-        when(request.getMemberId()).thenReturn(99L);
+        AddStudyMemberRequest request = new AddStudyMemberRequest(99L);
         when(studyRepository.findById(1L)).thenReturn(Optional.of(study));
         when(memberRepository.findById(99L)).thenReturn(Optional.empty());
 
@@ -159,8 +163,7 @@ class StudyManagerServiceTest {
     @Test
     @DisplayName("스터디 멤버 추가 실패 - 이미 스터디 멤버")
     void addStudyMember_alreadyMember() {
-        AddStudyMemberRequest request = mock(AddStudyMemberRequest.class);
-        when(request.getMemberId()).thenReturn(2L);
+        AddStudyMemberRequest request = new AddStudyMemberRequest(2L);
         when(studyRepository.findById(1L)).thenReturn(Optional.of(study));
         when(memberRepository.findById(2L)).thenReturn(Optional.of(newMember));
         when(studyMemberRepository.existsByStudyIdAndMemberMemberId(1L, 2L)).thenReturn(true);
@@ -217,8 +220,7 @@ class StudyManagerServiceTest {
     @Test
     @DisplayName("스터디 일정 추가 성공")
     void addStudyActivity_success() {
-        AddStudyActivityRequest request = mock(AddStudyActivityRequest.class);
-        when(request.getActivityName()).thenReturn("1주차 발표");
+        AddStudyActivityRequest request = new AddStudyActivityRequest("1주차 발표");
         when(studyRepository.findById(1L)).thenReturn(Optional.of(study));
         when(studyActivityRepository.save(any(StudyActivity.class))).thenReturn(studyActivity);
 
@@ -226,13 +228,17 @@ class StudyManagerServiceTest {
 
         assertThat(result).isNotNull();
         assertThat(result.activityName()).isEqualTo("1주차 발표");
-        verify(studyActivityRepository).save(any(StudyActivity.class));
+
+        ArgumentCaptor<StudyActivity> captor = ArgumentCaptor.forClass(StudyActivity.class);
+        verify(studyActivityRepository).save(captor.capture());
+        assertThat(captor.getValue().getActivityName()).isEqualTo("1주차 발표");
+        assertThat(captor.getValue().getStudy()).isSameAs(study);
     }
 
     @Test
     @DisplayName("스터디 일정 추가 실패 - 스터디 없음")
     void addStudyActivity_studyNotFound() {
-        AddStudyActivityRequest request = mock(AddStudyActivityRequest.class);
+        AddStudyActivityRequest request = new AddStudyActivityRequest("1주차 발표");
         when(studyRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> studyManagerService.addStudyActivity(99L, request))

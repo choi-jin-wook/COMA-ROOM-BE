@@ -1,7 +1,7 @@
 package com.coma.comaroom.vote.dto.response;
 
 
-import com.coma.comaroom.vote.dto.request.CreateNewVoteRequestDto;
+import com.coma.comaroom.vote.entity.Vote;
 import com.coma.comaroom.vote.entity.VoteStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,4 +21,18 @@ public class VoteDetailResponseDto {
     private Boolean isMultiple;
     private List<VoteOptionDetailResponseDto> options;
     private Boolean voted;
+
+    public static VoteDetailResponseDto from(Vote vote) {
+        return VoteDetailResponseDto.builder()
+                .voteId(vote.getVoteId())
+                .title(vote.getTitle())
+                .isMultiple(vote.isMultiVote())
+                .status(vote.getVoteStatus())
+                .options(
+                        vote.getVoteOptions().stream()
+                                .map(VoteOptionDetailResponseDto::from)
+                                .toList()
+                )
+                .build();
+    }
 }

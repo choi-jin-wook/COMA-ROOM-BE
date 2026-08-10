@@ -17,4 +17,18 @@ public class XpManagementMainResponseDto {
     private Long rejectedCount;
 
     private List<RecentActivityLogDto> recentActivityLogs;
+
+    public static XpManagementMainResponseDto of(
+            long approvedCount,
+            long rejectedCount,
+            long pendingCount,
+            List<RecentActivityLogDto> recentActivityLogs
+    ) {
+        return XpManagementMainResponseDto.builder()
+                .approvedCount(approvedCount)
+                .rejectedCount(rejectedCount)
+                .pendingCount(pendingCount)
+                .recentActivityLogs(recentActivityLogs)
+                .build();
+    }
 }

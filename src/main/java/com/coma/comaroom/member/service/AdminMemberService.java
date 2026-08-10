@@ -5,9 +5,7 @@ import com.coma.comaroom.event.EventError;
 import com.coma.comaroom.event.dto.*;
 import com.coma.comaroom.event.entity.ApprovalStatus;
 import com.coma.comaroom.event.entity.EventApproval;
-import com.coma.comaroom.event.mapper.EventApprovalMapper;
 import com.coma.comaroom.member.AuthError;
-import com.coma.comaroom.member.XpManagementMapper;
 import com.coma.comaroom.event.entity.EventCategory;
 import com.coma.comaroom.event.repository.EventApprovalRepository;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
@@ -34,8 +32,6 @@ public class AdminMemberService {
     private final EventApprovalRepository eventApprovalRepository;
     private final EventParticipateRepository eventParticipateRepository;
     private final SecurityUtils securityUtils;
-    private final EventApprovalMapper eventApprovalMapper;
-    private final XpManagementMapper xpManagementMapper;
 
     private static final int PAGE_SIZE = 5;
 
