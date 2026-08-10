@@ -7,7 +7,6 @@ import com.coma.comaroom.vote.dto.request.CreateNewVoteRequestDto;
 import com.coma.comaroom.vote.dto.request.UpdateVoteRequestDto;
 import com.coma.comaroom.vote.dto.response.VoteDetailResponseDto;
 import com.coma.comaroom.vote.entity.Vote;
-import com.coma.comaroom.vote.entity.VoteOption;
 import com.coma.comaroom.vote.repository.VoteOptionRepository;
 import com.coma.comaroom.vote.repository.VoteRepository;
 import com.coma.comaroom.vote.repository.VoteResultRepository;
@@ -51,11 +50,7 @@ public class AdminVoteService {
     // 3. 옵션 추가 (커밋 완료)
     public VoteDetailResponseDto addVoteOption(AddVoteOptionRequestDto addVoteOptionRequestDto, Long voteId) {
         Vote vote = voteRepository.findById(voteId).orElseThrow(() -> new EntityNotFoundException());
-        vote.addOption(
-                VoteOption.builder()
-                        .content(addVoteOptionRequestDto.getContent())
-                        .build()
-        );
+        vote.addOption(addVoteOptionRequestDto.toEntity());
         voteRepository.saveAndFlush(vote);
 
         return voteMapper.toDetailDto(vote);

@@ -134,8 +134,9 @@ class AdminVoteServiceTest {
     @Test
     @DisplayName("투표 옵션 추가 성공")
     void addVoteOption_success() {
-        AddVoteOptionRequestDto dto = mock(AddVoteOptionRequestDto.class);
-        when(dto.getContent()).thenReturn("새 옵션");
+        AddVoteOptionRequestDto dto = AddVoteOptionRequestDto.builder()
+                .content("새 옵션")
+                .build();
         when(voteRepository.findById(1L)).thenReturn(Optional.of(vote));
         when(voteRepository.saveAndFlush(vote)).thenReturn(vote);
 
@@ -146,12 +147,18 @@ class AdminVoteServiceTest {
 
         assertThat(result).isNotNull();
         verify(voteRepository).saveAndFlush(vote);
+        assertThat(vote.getVoteOptions())
+                .extracting(VoteOption::getContent)
+                .containsExactly("새 옵션");
+        assertThat(vote.getVoteOptions().get(0).getVote()).isSameAs(vote);
     }
 
     @Test
     @DisplayName("투표 옵션 추가 실패 - 투표 없음")
     void addVoteOption_notFound() {
-        AddVoteOptionRequestDto dto = mock(AddVoteOptionRequestDto.class);
+        AddVoteOptionRequestDto dto = AddVoteOptionRequestDto.builder()
+                .content("새 옵션")
+                .build();
         when(voteRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> adminVoteService.addVoteOption(dto, 99L))
