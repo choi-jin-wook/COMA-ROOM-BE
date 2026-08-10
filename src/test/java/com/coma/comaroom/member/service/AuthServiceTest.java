@@ -5,7 +5,6 @@ import com.coma.comaroom.auth.jwt.JwtTokenProvider;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.event.repository.EventRepository;
 import com.coma.comaroom.member.AuthError;
-import com.coma.comaroom.member.MemberMapper;
 import com.coma.comaroom.member.dto.request.LoginRequestDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
 import com.coma.comaroom.member.dto.response.LoginResponse;
@@ -42,7 +41,6 @@ class AuthServiceTest {
     @Mock private EventRepository eventRepository;
     @Mock private EventParticipateRepository eventParticipateRepository;
     @Mock private PasswordEncoder passwordEncoder;
-    @Mock private MemberMapper memberMapper;
     @Mock private SecurityUtils securityUtils;
     @Mock private VoteRepository voteRepository;
     @Mock private JwtTokenProvider jwtTokenProvider;

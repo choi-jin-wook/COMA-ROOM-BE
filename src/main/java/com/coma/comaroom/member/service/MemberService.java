@@ -10,7 +10,6 @@ import com.coma.comaroom.event.entity.*;
 import com.coma.comaroom.event.repository.EventApprovalRepository;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.event.repository.EventRepository;
-import com.coma.comaroom.member.MemberMapper;
 import com.coma.comaroom.member.dto.request.LeaderboardResponseDto;
 import com.coma.comaroom.member.dto.request.MyRankingDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
@@ -46,7 +45,6 @@ public class MemberService {
     private final EventRepository eventRepository;
     private final EventParticipateRepository eventParticipateRepository;
     private final PasswordEncoder passwordEncoder;
-    private final MemberMapper memberMapper;
     private final SecurityUtils securityUtils;
     private final VoteRepository voteRepository;
     private final EventApprovalRepository eventApprovalRepository;
@@ -70,9 +68,9 @@ public class MemberService {
         final Integer pageNumber = 0;
         final Integer pageSize = 10;
         Member member = securityUtils.getCurrentMember();
-        MyRankingDto myRankingDto = memberMapper.memberToMyRankingDto(member, memberRepository.findRankByMember(member));
+        MyRankingDto myRankingDto = MyRankingDto.of(member, memberRepository.findRankByMember(member));
         List<Member> memberList = memberRepository.findAllByOrderByXpDescMemberIdAsc(PageRequest.of(pageNumber, pageSize));
-        LeaderboardResponseDto leaderboardResponseDto = memberMapper.MyRankingDtoAndMemberListToLeaderboardResponseDto(memberList, myRankingDto);
+        LeaderboardResponseDto leaderboardResponseDto = LeaderboardResponseDto.of(memberList, myRankingDto);
 
         return leaderboardResponseDto;
     }
@@ -96,7 +94,7 @@ public class MemberService {
         // 진행중인 투표
         Optional<Vote> vote = voteRepository.findFirstByVoteStatusOrderByCreatedAtDesc(VoteStatus.IN_PROGRESS);
 
-        MainDashboardResponse mainDashboardResponse = memberMapper.createMainDashboardResponse(member, event, notice, rank, statAttendanceCount, statEventCount, vote);
+        MainDashboardResponse mainDashboardResponse = MainDashboardResponse.of(member, event, notice, rank, statAttendanceCount, statEventCount, vote);
         return mainDashboardResponse;
     }
 
@@ -111,10 +109,9 @@ public class MemberService {
 
         // 참여한 행사의 목록
         List<EventParticipant> eventParticipants = eventParticipateRepository.findTop5ByParticipantMemberOrderByEventParticipantIdDesc(member);
-        List<RecentActivityDto> recentActivityDtoList = memberMapper.createRecentActivityDto(eventParticipants);
+        List<RecentActivityDto> recentActivityDtoList = RecentActivityDto.listOf(eventParticipants);
 
-        // mapper을 통한 dto 생성
-        ProfileResponseDto profileResponseDto = memberMapper.createProfileResponseDto(member, rank, attendanceCount, eventCount, recentActivityDtoList);
+        ProfileResponseDto profileResponseDto = ProfileResponseDto.of(member, rank, attendanceCount, eventCount, recentActivityDtoList);
         return profileResponseDto;
     }
 
@@ -132,12 +129,12 @@ public class MemberService {
         );
 
         List<AttendanceHistoryDto> history = eventList.stream()
-                .map(event -> memberMapper.createAttendanceHistoryDto(event, attendedEventIds))
+                .map(event -> AttendanceHistoryDto.of(event, attendedEventIds))
                 // 여기서 날짜 내림차순(최신순) 정렬 추가
                 .sorted(Comparator.comparing(AttendanceHistoryDto::getScheduledDate).reversed())
                 .collect(Collectors.toList());
 
-        MainAttendanceResponseDto mainAttendanceResponseDto = memberMapper.createMainAttendanceResponseDto(member, rank, eventCount, attendanceCount, history);
+        MainAttendanceResponseDto mainAttendanceResponseDto = MainAttendanceResponseDto.of(member, rank, eventCount, attendanceCount, history);
         return mainAttendanceResponseDto;
     }
 

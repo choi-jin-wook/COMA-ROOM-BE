@@ -5,7 +5,6 @@ import com.coma.comaroom.auth.jwt.JwtTokenProvider;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.event.repository.EventRepository;
 import com.coma.comaroom.member.AuthError;
-import com.coma.comaroom.member.MemberMapper;
 import com.coma.comaroom.member.dto.request.LoginRequestDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
 import com.coma.comaroom.member.dto.response.LoginResponse;
@@ -34,7 +33,6 @@ public class AuthService {
     private final EventRepository eventRepository;
     private final EventParticipateRepository eventParticipateRepository;
     private final PasswordEncoder passwordEncoder;
-    private final MemberMapper memberMapper;
     private final SecurityUtils securityUtils;
     private final VoteRepository voteRepository;
     private final JwtTokenProvider jwtTokenProvider;
