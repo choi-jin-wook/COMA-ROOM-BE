@@ -8,7 +8,6 @@ import com.coma.comaroom.vote.dto.request.UpdateVoteRequestDto;
 import com.coma.comaroom.vote.dto.response.VoteDetailResponseDto;
 import com.coma.comaroom.vote.entity.Vote;
 import com.coma.comaroom.vote.entity.VoteOption;
-import com.coma.comaroom.vote.entity.VoteStatus;
 import com.coma.comaroom.vote.repository.VoteOptionRepository;
 import com.coma.comaroom.vote.repository.VoteRepository;
 import com.coma.comaroom.vote.repository.VoteResultRepository;
@@ -30,21 +29,8 @@ public class AdminVoteService {
 
     // 1. 투표 생성 (커밋 완료)
     public VoteDetailResponseDto createNewVote(CreateNewVoteRequestDto dto) {
-        // 엔티티 객체로 변환
-        Vote vote = Vote.builder()
-                .title(dto.getTitle())
-                .isMultiVote(dto.getIsMultiple())
-                .voteStatus(VoteStatus.IN_PROGRESS)
-                .deadline(dto.getDeadline())
-                .build();
-
-        // 옵션 추가
-        dto.getOptions().stream()
-                .map(optionDto -> VoteOption.builder()
-                        .content(optionDto.getContent())
-                        .build())
-                .forEach(vote::addOption);
-
+        // 엔티티 객체로 변환 (옵션 포함)
+        Vote vote = dto.toEntity();
 
         // 저장
         voteRepository.save(vote);

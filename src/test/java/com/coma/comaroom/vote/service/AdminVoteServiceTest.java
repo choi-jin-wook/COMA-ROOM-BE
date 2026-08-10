@@ -8,6 +8,7 @@ import com.coma.comaroom.vote.dto.request.CreateVoteOptionRequestDto;
 import com.coma.comaroom.vote.dto.request.UpdateVoteRequestDto;
 import com.coma.comaroom.vote.dto.response.VoteDetailResponseDto;
 import com.coma.comaroom.vote.entity.Vote;
+import com.coma.comaroom.vote.entity.VoteOption;
 import com.coma.comaroom.vote.entity.VoteStatus;
 import com.coma.comaroom.vote.repository.VoteOptionRepository;
 import com.coma.comaroom.vote.repository.VoteRepository;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -61,16 +63,15 @@ class AdminVoteServiceTest {
     @Test
     @DisplayName("투표 생성 성공")
     void createNewVote_success() {
-        CreateVoteOptionRequestDto option1 = mock(CreateVoteOptionRequestDto.class);
-        when(option1.getContent()).thenReturn("짜장면");
-        CreateVoteOptionRequestDto option2 = mock(CreateVoteOptionRequestDto.class);
-        when(option2.getContent()).thenReturn("짬뽕");
-
-        CreateNewVoteRequestDto dto = mock(CreateNewVoteRequestDto.class);
-        when(dto.getTitle()).thenReturn("점심 메뉴 투표");
-        when(dto.getIsMultiple()).thenReturn(false);
-        when(dto.getDeadline()).thenReturn(LocalDateTime.now().plusDays(3));
-        when(dto.getOptions()).thenReturn(List.of(option1, option2));
+        CreateNewVoteRequestDto dto = CreateNewVoteRequestDto.builder()
+                .title("점심 메뉴 투표")
+                .isMultiple(false)
+                .deadline(LocalDateTime.now().plusDays(3))
+                .options(List.of(
+                        CreateVoteOptionRequestDto.builder().content("짜장면").build(),
+                        CreateVoteOptionRequestDto.builder().content("짬뽕").build()
+                ))
+                .build();
 
         when(voteRepository.save(any(Vote.class))).thenReturn(vote);
 
@@ -80,7 +81,18 @@ class AdminVoteServiceTest {
         VoteDetailResponseDto result = adminVoteService.createNewVote(dto);
 
         assertThat(result).isNotNull();
-        verify(voteRepository).save(any(Vote.class));
+
+        ArgumentCaptor<Vote> captor = ArgumentCaptor.forClass(Vote.class);
+        verify(voteRepository).save(captor.capture());
+
+        Vote saved = captor.getValue();
+        assertThat(saved.getTitle()).isEqualTo("점심 메뉴 투표");
+        assertThat(saved.getVoteStatus()).isEqualTo(VoteStatus.IN_PROGRESS);
+        assertThat(saved.getVoteOptions())
+                .extracting(VoteOption::getContent)
+                .containsExactly("짜장면", "짬뽕");
+        assertThat(saved.getVoteOptions()).allSatisfy(option ->
+                assertThat(option.getVote()).isSameAs(saved));
     }
 
     // ─────────────────────────────────────────────
