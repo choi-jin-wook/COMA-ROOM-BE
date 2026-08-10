@@ -96,7 +96,14 @@ public enum AuthError implements ErrorCode {
 
 ### Admin vs 일반 API
 
-컨트롤러가 도메인별로 `Admin*Controller` / `*Controller` 두 개로 분리. 현재 URL 레벨 권한 분리는 `SecurityConfig`에서 `.authenticated()` 수준이며, 관리자 여부는 서비스 레이어에서 `Role.ADMIN` 검사로 처리.
+컨트롤러가 도메인별로 `Admin*Controller` / `*Controller` 두 개로 분리. 관리자 권한은 `SecurityConfig`에서 URL 레벨로 처리한다.
+
+```java
+.requestMatchers("/api/admin/**").hasRole("ADMIN")
+.requestMatchers("/api/**").authenticated()
+```
+
+`CustomUserDetails.getAuthorities()`가 `"ROLE_" + role.name()` 형태로 권한을 부여하므로 `hasRole("ADMIN")`과 맞물린다. 따라서 관리자 API의 서비스 레이어에서는 `Role.ADMIN`을 다시 검사하지 않는다. 단, 작성자 본인 확인처럼 리소스 소유권을 따지는 검증은 서비스 레이어에 둔다 (예: `AdminEventPostService.validateAuthor`).
 
 ## Git 워크플로우
 

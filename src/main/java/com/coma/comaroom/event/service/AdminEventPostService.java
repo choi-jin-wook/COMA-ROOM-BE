@@ -7,9 +7,7 @@ import com.coma.comaroom.event.dto.request.EventPostStatusRequest;
 import com.coma.comaroom.event.dto.response.EventPostResponse;
 import com.coma.comaroom.event.entity.EventPost;
 import com.coma.comaroom.event.repository.EventPostRepository;
-import com.coma.comaroom.member.AuthError;
 import com.coma.comaroom.member.entity.Member;
-import com.coma.comaroom.member.entity.Role;
 import com.coma.comaroom.utils.SecurityUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,14 +20,13 @@ public class AdminEventPostService {
     private EventPostRepository eventPostRepository;
     private SecurityUtils securityUtils;
 
+    // 관리자 권한 확인은 SecurityConfig의 "/api/admin/**" hasRole("ADMIN")에서 처리한다.
     public EventPostResponse updatePostStatus(Integer postId, EventPostStatusRequest request) {
-        // 1. 현재 사용자 조회 및 관리자 권한 확인
-
-        // 2. 게시글 조회
+        // 1. 게시글 조회
         EventPost post = eventPostRepository.findById(postId)
                 .orElseThrow(() -> new BusinessException(EventPostError.POST_NOT_FOUND));
 
-        // 3. 상태 업데이트 (도메인 메서드 호출)
+        // 2. 상태 업데이트 (도메인 메서드 호출)
         post.updateStatus(request.approvalStatus());
 
         return EventPostResponse.from(post);
