@@ -72,17 +72,27 @@ class AuthServiceTest {
     @Test
     @DisplayName("회원가입 성공")
     void registerMember_success() {
-        RegisterMemberRequestDto dto = mock(RegisterMemberRequestDto.class);
-        when(dto.getStudentId()).thenReturn("20210001");
-        when(dto.getName()).thenReturn("테스터");
-        when(dto.getPassword()).thenReturn("rawPassword");
-        when(dto.getMajor()).thenReturn(Major.COMPUTER_INFO);
+        RegisterMemberRequestDto dto = RegisterMemberRequestDto.builder()
+                .studentId("20210001")
+                .name("테스터")
+                .password("rawPassword")
+                .major(Major.COMPUTER_INFO)
+                .build();
         when(passwordEncoder.encode("rawPassword")).thenReturn("$2a$10$encoded");
         when(memberRepository.saveAndFlush(any(Member.class))).thenReturn(member);
 
         assertThatNoException().isThrownBy(() -> authService.registerMember(dto));
-        verify(memberRepository).saveAndFlush(any(Member.class));
         verify(passwordEncoder).encode("rawPassword");
+
+        ArgumentCaptor<Member> captor = ArgumentCaptor.forClass(Member.class);
+        verify(memberRepository).saveAndFlush(captor.capture());
+
+        Member saved = captor.getValue();
+        assertThat(saved.getStudentId()).isEqualTo("20210001");
+        assertThat(saved.getName()).isEqualTo("테스터");
+        assertThat(saved.getPassword()).isEqualTo("$2a$10$encoded");
+        assertThat(saved.getMajor()).isEqualTo(Major.COMPUTER_INFO);
+        assertThat(saved.getXp()).isZero();
     }
 
     @Test

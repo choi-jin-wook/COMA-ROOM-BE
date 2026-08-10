@@ -18,7 +18,6 @@ import com.coma.comaroom.member.dto.request.MyRankingDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
 import com.coma.comaroom.member.dto.response.*;
 import com.coma.comaroom.member.entity.Member;
-import com.coma.comaroom.member.entity.Role;
 import com.coma.comaroom.member.repository.MemberRepository;
 import com.coma.comaroom.notice.entity.Notice;
 import com.coma.comaroom.notice.exception.NoticeError;
@@ -57,13 +56,8 @@ public class MemberService {
     private final EventApprovalRepository eventApprovalRepository;
 
     public void registerMember(RegisterMemberRequestDto registerMemberRequestDto) {
-        Member member = Member.builder()
-                .studentId(registerMemberRequestDto.getStudentId())
-                .name(registerMemberRequestDto.getName())
-                .role(Role.USER)
-                .password(passwordEncoder.encode(registerMemberRequestDto.getPassword()))
-                .xp(0L)
-                .build();
+        Member member = registerMemberRequestDto.toEntity(
+                passwordEncoder.encode(registerMemberRequestDto.getPassword()));
 
         memberRepository.saveAndFlush(member);
     }

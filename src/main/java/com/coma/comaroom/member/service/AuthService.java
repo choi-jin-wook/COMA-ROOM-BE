@@ -11,7 +11,6 @@ import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
 import com.coma.comaroom.member.dto.response.LoginResponse;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.member.entity.MemberStatus;
-import com.coma.comaroom.member.entity.Role;
 import com.coma.comaroom.member.repository.MemberRepository;
 import com.coma.comaroom.notice.repository.NoticeRepository;
 import com.coma.comaroom.utils.SecurityUtils;
@@ -46,14 +45,8 @@ public class AuthService {
             throw new BusinessException(MEMBER_ALREADY_EXISTS);
         }
 
-        Member member = Member.builder()
-                .studentId(registerMemberRequestDto.getStudentId())
-                .name(registerMemberRequestDto.getName())
-                .role(Role.USER)
-                .password(passwordEncoder.encode(registerMemberRequestDto.getPassword()))
-                .xp(0L)
-                .major(registerMemberRequestDto.getMajor())
-                .build();
+        Member member = registerMemberRequestDto.toEntity(
+                passwordEncoder.encode(registerMemberRequestDto.getPassword()));
 
         memberRepository.saveAndFlush(member);
     }
