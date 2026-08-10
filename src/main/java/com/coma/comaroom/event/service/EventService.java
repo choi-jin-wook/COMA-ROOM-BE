@@ -11,7 +11,6 @@ import com.coma.comaroom.event.dto.response.EventResponse;
 import com.coma.comaroom.event.entity.Event;
 import com.coma.comaroom.event.entity.EventCategory;
 import com.coma.comaroom.event.entity.EventParticipant;
-import com.coma.comaroom.event.mapper.AttendanceMapper;
 import com.coma.comaroom.event.mapper.EventMapper;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.event.repository.EventRepository;
@@ -36,7 +35,6 @@ public class EventService {
     private final EventRepository eventRepository;
     private StringRedisTemplate redisTemplate;
     private final EventParticipateRepository eventParticipateRepository;
-    private final AttendanceMapper attendanceMapper;
     private final EventMapper eventMapper;
 
 

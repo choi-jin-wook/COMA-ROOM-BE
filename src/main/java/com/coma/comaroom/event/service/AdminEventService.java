@@ -11,7 +11,6 @@ import com.coma.comaroom.event.dto.response.AttendanceItemResponseDto;
 import com.coma.comaroom.event.dto.response.EventResponse;
 import com.coma.comaroom.event.entity.Event;
 import com.coma.comaroom.event.entity.EventParticipant;
-import com.coma.comaroom.event.mapper.AttendanceMapper;
 import com.coma.comaroom.event.mapper.EventMapper;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.event.repository.EventRepository;
