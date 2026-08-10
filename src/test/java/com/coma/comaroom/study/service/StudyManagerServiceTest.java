@@ -21,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -89,9 +90,7 @@ class StudyManagerServiceTest {
     @Test
     @DisplayName("스터디 생성 성공")
     void createStudy_success() {
-        CreateStudyRequest request = mock(CreateStudyRequest.class);
-        when(request.getManagerId()).thenReturn(1L);
-        when(request.getStudyName()).thenReturn("알고리즘 스터디");
+        CreateStudyRequest request = new CreateStudyRequest("알고리즘 스터디", 1L);
         when(memberRepository.findById(1L)).thenReturn(Optional.of(manager));
         when(studyRepository.save(any(Study.class))).thenReturn(study);
 
@@ -100,14 +99,17 @@ class StudyManagerServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.studyName()).isEqualTo("알고리즘 스터디");
         assertThat(result.managerName()).isEqualTo("스터디장");
-        verify(studyRepository).save(any(Study.class));
+
+        ArgumentCaptor<Study> captor = ArgumentCaptor.forClass(Study.class);
+        verify(studyRepository).save(captor.capture());
+        assertThat(captor.getValue().getStudyName()).isEqualTo("알고리즘 스터디");
+        assertThat(captor.getValue().getStudyManager()).isSameAs(manager);
     }
 
     @Test
     @DisplayName("스터디 생성 실패 - 매니저 없음")
     void createStudy_managerNotFound() {
-        CreateStudyRequest request = mock(CreateStudyRequest.class);
-        when(request.getManagerId()).thenReturn(99L);
+        CreateStudyRequest request = new CreateStudyRequest("알고리즘 스터디", 99L);
         when(memberRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> studyManagerService.createStudy(request))
