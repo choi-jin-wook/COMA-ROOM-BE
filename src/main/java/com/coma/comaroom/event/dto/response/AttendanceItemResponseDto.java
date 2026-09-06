@@ -18,10 +18,10 @@ public class AttendanceItemResponseDto {
 
     public static AttendanceItemResponseDto from(EventParticipant participant) {
         return AttendanceItemResponseDto.builder()
-                .memberId(participant.getParticipantMember().getMemberId())
-                .name(participant.getParticipantMember().getName())
-                .studentId(participant.getParticipantMember().getStudentId())
-                .major(participant.getParticipantMember().getMajor())
+                .memberId(participant.getParticipantMember() != null ? participant.getParticipantMember().getMemberId() : null)
+                .name(participant.getParticipantMember() != null ? participant.getParticipantMember().getName() : "탈퇴한 회원")
+                .studentId(participant.getParticipantMember() != null ? participant.getParticipantMember().getStudentId() : "-")
+                .major(participant.getParticipantMember() != null ? participant.getParticipantMember().getMajor() : null)
                 .attendedAt(participant.getCreatedAt())
                 .build();
     }

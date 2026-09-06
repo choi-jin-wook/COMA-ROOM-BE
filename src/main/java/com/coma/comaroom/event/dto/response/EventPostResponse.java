@@ -18,7 +18,7 @@ public record EventPostResponse(
         return new EventPostResponse(
                 post.getPostId(),
                 post.getTitle(),
-                post.getAuthor().getName(), // Member 엔티티에 nickname이 있다고 가정
+                post.getAuthor() != null ? post.getAuthor().getName() : "탈퇴한 회원",
                 post.getApprovalStatus().name(),
                 post.getEventPhotos().stream()
                         .map(EventPhoto::getPhotoUrl)

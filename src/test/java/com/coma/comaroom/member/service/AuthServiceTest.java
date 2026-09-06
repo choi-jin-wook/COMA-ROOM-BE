@@ -30,7 +30,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -102,7 +101,7 @@ class AuthServiceTest {
                 .password("pw")
                 .major(Major.COMPUTER_INFO)
                 .build();
-        when(memberRepository.existsByStudentId("20210002")).thenReturn(false);
+        when(memberRepository.countByStudentIdIncludingWithdrawn("20210002")).thenReturn(0L);
         when(passwordEncoder.encode("pw")).thenReturn("$2a$10$encoded");
 
         ArgumentCaptor<Member> captor = ArgumentCaptor.forClass(Member.class);
@@ -122,7 +121,7 @@ class AuthServiceTest {
                 .password("pw")
                 .major(Major.COMPUTER_INFO)
                 .build();
-        when(memberRepository.existsByStudentId("20210001")).thenReturn(true);
+        when(memberRepository.countByStudentIdIncludingWithdrawn("20210001")).thenReturn(1L);
 
         assertThatThrownBy(() -> authService.registerMember(dto))
                 .isInstanceOf(BusinessException.class)

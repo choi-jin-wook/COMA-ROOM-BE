@@ -1,9 +1,7 @@
 package com.coma.comaroom.member.service;
 
-import com.coma.comaroom.BusinessException;
 import com.coma.comaroom.event.dto.AskXpRequestDto;
 import com.coma.comaroom.event.dto.AskXpResponseDto;
-import com.coma.comaroom.event.dto.RecentActivityLogDto;
 import com.coma.comaroom.event.dto.XpManagementMainResponseDto;
 import com.coma.comaroom.event.entity.*;
 import com.coma.comaroom.member.dto.response.XpHistoryResponseDto;
@@ -13,7 +11,6 @@ import com.coma.comaroom.event.repository.EventRepository;
 import com.coma.comaroom.member.dto.request.LeaderboardResponseDto;
 import com.coma.comaroom.member.dto.request.MyRankingDto;
 import com.coma.comaroom.member.dto.request.RankingItemDto;
-import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
 import com.coma.comaroom.member.dto.response.*;
 import com.coma.comaroom.member.entity.Major;
 import com.coma.comaroom.member.entity.Member;
@@ -23,7 +20,6 @@ import com.coma.comaroom.notice.entity.Notice;
 import com.coma.comaroom.notice.entity.NoticePriority;
 import com.coma.comaroom.notice.repository.NoticeRepository;
 import com.coma.comaroom.utils.SecurityUtils;
-import com.coma.comaroom.vote.entity.Vote;
 import com.coma.comaroom.vote.entity.VoteStatus;
 import com.coma.comaroom.vote.repository.VoteRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +31,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
@@ -55,7 +50,6 @@ class MemberServiceTest {
     @Mock private NoticeRepository noticeRepository;
     @Mock private EventRepository eventRepository;
     @Mock private EventParticipateRepository eventParticipateRepository;
-    @Mock private PasswordEncoder passwordEncoder;
     @Mock private SecurityUtils securityUtils;
     @Mock private VoteRepository voteRepository;
     @Mock private EventApprovalRepository eventApprovalRepository;
@@ -91,26 +85,6 @@ class MemberServiceTest {
         // @CreatedDate는 JPA Auditing이 채우므로 단위 테스트에서는 직접 주입한다
         ReflectionTestUtils.setField(member, "createdAt", LocalDateTime.of(2026, 3, 1, 9, 0));
         ReflectionTestUtils.setField(notice, "createdAt", LocalDateTime.of(2026, 3, 2, 9, 0));
-    }
-
-    // ─────────────────────────────────────────────
-    // registerMember
-    // ─────────────────────────────────────────────
-
-    @Test
-    @DisplayName("회원가입 성공 - USER 역할 고정")
-    void registerMember_success() {
-        RegisterMemberRequestDto dto = RegisterMemberRequestDto.builder()
-                .studentId("20210001")
-                .name("테스터")
-                .password("rawPassword")
-                .major(Major.COMPUTER_INFO)
-                .build();
-        when(passwordEncoder.encode("rawPassword")).thenReturn("$2a$10$encoded");
-        when(memberRepository.saveAndFlush(any(Member.class))).thenReturn(member);
-
-        assertThatNoException().isThrownBy(() -> memberService.registerMember(dto));
-        verify(memberRepository).saveAndFlush(argThat(m -> m.getRole() == Role.USER));
     }
 
     // ─────────────────────────────────────────────

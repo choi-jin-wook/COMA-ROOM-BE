@@ -58,7 +58,7 @@ public class AdminEventPostService {
 
 
     private void validateAuthor(EventPost post, Member member) {
-        if (!post.getAuthor().getMemberId().equals(member.getMemberId())) {
+        if (post.getAuthor() == null || !post.getAuthor().getMemberId().equals(member.getMemberId())) {
             throw new BusinessException(EventPostError.UNAUTHORIZED_ACCESS);
         }
     }

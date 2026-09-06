@@ -28,7 +28,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,17 +43,9 @@ public class MemberService {
     private final NoticeRepository noticeRepository;
     private final EventRepository eventRepository;
     private final EventParticipateRepository eventParticipateRepository;
-    private final PasswordEncoder passwordEncoder;
     private final SecurityUtils securityUtils;
     private final VoteRepository voteRepository;
     private final EventApprovalRepository eventApprovalRepository;
-
-    public void registerMember(RegisterMemberRequestDto registerMemberRequestDto) {
-        Member member = registerMemberRequestDto.toEntity(
-                passwordEncoder.encode(registerMemberRequestDto.getPassword()));
-
-        memberRepository.saveAndFlush(member);
-    }
 
     public AskXpResponseDto askProvisionXp(AskXpRequestDto xpPetitionRequestDto) {
         Member currentUser = securityUtils.getCurrentMember();
@@ -251,14 +242,4 @@ public class MemberService {
                 .build();
     }
 
-//    public AttendanceMainResponse getAttendanceMainPage() {
-//        Member member = securityUtils.getCurrentMember();
-//        Long rank = memberRepository.findRankByMember(member);
-//
-//        Long attendanceCount = eventParticipateRepository.countByParticipantMember(member);
-//        Long eventCount = eventRepository.count();
-//        List<Event> eventList = eventParticipateRepository.findAllEventsByMember(member);
-//
-////        List<AttendanceHistoryDto> attendanceHistoryDtoList = memberMapper.createAttendanceHistoryDtoList();
-//    }
 }

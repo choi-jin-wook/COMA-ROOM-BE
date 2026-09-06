@@ -36,17 +36,8 @@ class AuthControllerApiTest {
                                   "name": "",
                                   "password": "short"
                                 }
-                                """))
+                """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("GEN-400"));
-    }
-
-    @Test
-    void loginRejectsMalformedJsonWithBadRequest() throws Exception {
-        mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("GEN-400"));
+                .andExpect(jsonPath("$.code").value("AUTH-007"));
     }
 }

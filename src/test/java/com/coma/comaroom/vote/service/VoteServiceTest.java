@@ -9,12 +9,12 @@ import com.coma.comaroom.vote.VoteError;
 import com.coma.comaroom.vote.dto.request.ParticipateVoteRequestDto;
 import com.coma.comaroom.vote.dto.response.VoteDetailResponseDto;
 import com.coma.comaroom.vote.entity.Vote;
+import com.coma.comaroom.vote.entity.VoteOption;
 import com.coma.comaroom.vote.entity.VoteResult;
 import com.coma.comaroom.vote.entity.VoteStatus;
 import com.coma.comaroom.vote.repository.VoteOptionRepository;
 import com.coma.comaroom.vote.repository.VoteRepository;
 import com.coma.comaroom.vote.repository.VoteResultRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,6 +24,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,6 +38,7 @@ class VoteServiceTest {
     @Mock private VoteRepository voteRepository;
     @Mock private VoteOptionRepository voteOptionRepository;
     @Mock private VoteResultRepository voteResultRepository;
+    @Mock private com.coma.comaroom.member.repository.MemberRepository memberRepository;
     @Mock private SecurityUtils securityUtils;
 
     @InjectMocks
@@ -64,6 +66,17 @@ class VoteServiceTest {
                 .voteStatus(VoteStatus.IN_PROGRESS)
                 .deadline(LocalDateTime.now().plusDays(3))
                 .build();
+
+        vote.addOption(VoteOption.builder()
+                .voteOptionId(1L)
+                .content("옵션1")
+                .voteResults(new ArrayList<>())
+                .build());
+        vote.addOption(VoteOption.builder()
+                .voteOptionId(2L)
+                .content("옵션2")
+                .voteResults(new ArrayList<>())
+                .build());
     }
 
     // ─────────────────────────────────────────────
@@ -104,11 +117,71 @@ class VoteServiceTest {
         when(dto.getVoteOptionId()).thenReturn(List.of(1L));
         when(voteRepository.findById(1L)).thenReturn(Optional.of(vote));
         when(securityUtils.getCurrentMember()).thenReturn(member);
+        when(voteResultRepository.existsByVoterAndVoteOption_Vote_VoteId(member, 1L)).thenReturn(false);
 
         VoteDetailResponseDto result = voteService.participateVote(dto, 1L);
 
+        assertThat(result).isNotNull();
         assertThat(result.getVoteId()).isEqualTo(1L);
         assertThat(result.getVoted()).isTrue();
+        // XP 는 엔티티 setXp 가 아니라 DB 원자적 증가(incrementXp)로 갱신되어야 한다 (lost update 방지)
+        verify(memberRepository).incrementXp(member.getMemberId(), 2L);
+    }
+
+    @Test
+    @DisplayName("투표 참여 실패 - 이미 참여한 투표")
+    void participateVote_alreadyVoted() {
+        ParticipateVoteRequestDto dto = mock(ParticipateVoteRequestDto.class);
+        when(voteRepository.findById(1L)).thenReturn(Optional.of(vote));
+        when(securityUtils.getCurrentMember()).thenReturn(member);
+        when(voteResultRepository.existsByVoterAndVoteOption_Vote_VoteId(member, 1L)).thenReturn(true);
+
+        assertThatThrownBy(() -> voteService.participateVote(dto, 1L))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(VoteError.ALREADY_VOTED.getMessage());
+        assertThat(member.getXp()).isZero();
+    }
+
+    @Test
+    @DisplayName("투표 참여 실패 - 마감된 투표")
+    void participateVote_closed() {
+        vote.setVoteStatus(VoteStatus.CLOSED);
+        ParticipateVoteRequestDto dto = mock(ParticipateVoteRequestDto.class);
+        when(voteRepository.findById(1L)).thenReturn(Optional.of(vote));
+        when(securityUtils.getCurrentMember()).thenReturn(member);
+
+        assertThatThrownBy(() -> voteService.participateVote(dto, 1L))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(VoteError.VOTE_CLOSED.getMessage());
+    }
+
+    @Test
+    @DisplayName("투표 참여 실패 - 단일 선택 투표에 복수 옵션 요청")
+    void participateVote_multiVoteNotAllowed() {
+        ParticipateVoteRequestDto dto = mock(ParticipateVoteRequestDto.class);
+        when(dto.getVoteOptionId()).thenReturn(List.of(1L, 2L));
+        when(voteRepository.findById(1L)).thenReturn(Optional.of(vote));
+        when(securityUtils.getCurrentMember()).thenReturn(member);
+        when(voteResultRepository.existsByVoterAndVoteOption_Vote_VoteId(member, 1L)).thenReturn(false);
+
+        assertThatThrownBy(() -> voteService.participateVote(dto, 1L))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(VoteError.MULTI_VOTE_NOT_ALLOWED.getMessage());
+    }
+
+    @Test
+    @DisplayName("투표 참여 실패 - 존재하지 않는 투표 항목")
+    void participateVote_optionNotFound() {
+        ParticipateVoteRequestDto dto = mock(ParticipateVoteRequestDto.class);
+        when(dto.getVoteOptionId()).thenReturn(List.of(99L));
+        when(voteRepository.findById(1L)).thenReturn(Optional.of(vote));
+        when(securityUtils.getCurrentMember()).thenReturn(member);
+        when(voteResultRepository.existsByVoterAndVoteOption_Vote_VoteId(member, 1L)).thenReturn(false);
+
+        assertThatThrownBy(() -> voteService.participateVote(dto, 1L))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(VoteError.VOTE_OPTION_NOT_FOUND.getMessage());
+        assertThat(member.getXp()).isZero();
     }
 
     @Test

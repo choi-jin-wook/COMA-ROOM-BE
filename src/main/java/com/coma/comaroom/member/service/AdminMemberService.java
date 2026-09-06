@@ -79,8 +79,8 @@ public class AdminMemberService {
         List<EventApprovalResponseDto> dtoList = approvalPage.getContent().stream()
                 .map(approval -> EventApprovalResponseDto.builder()
                         .requestId(approval.getId())
-                        .requester(approval.getRequester().getName())
-                        .studentId(approval.getRequester().getStudentId())
+                        .requester(approval.getRequester() != null ? approval.getRequester().getName() : "탈퇴한 회원")
+                        .studentId(approval.getRequester() != null ? approval.getRequester().getStudentId() : "-")
                         .rewardXp(approval.getGrantedXp())
                         .reason(approval.getReason())
                         .localDateTime(approval.getCreatedAt())
@@ -108,8 +108,19 @@ public class AdminMemberService {
     public void decideProvision(ProvisionApprovalRequestDto provisionApprovalRequestDto, Long requestId) {
         EventApproval eventApproval = eventApprovalRepository.findById(requestId)
                 .orElseThrow(() -> new BusinessException(EventError.APPROVAL_NOT_FOUND));
-        eventApproval.setApprovalStatus(provisionApprovalRequestDto.getApprovalStatus());
+
+        // 이미 처리된 요청을 다시 승인하면 XP가 중복 지급되므로 PENDING 상태만 처리 가능
+        if (eventApproval.getApprovalStatus() != ApprovalStatus.PENDING) {
+            throw new BusinessException(EventError.APPROVAL_ALREADY_DECIDED);
+        }
+
         Member requester = eventApproval.getRequester();
+        if (requester == null) {
+            // 탈퇴한 회원의 요청은 처리 불가
+            throw new BusinessException(AuthError.MEMBER_NOT_FOUND);
+        }
+
+        eventApproval.setApprovalStatus(provisionApprovalRequestDto.getApprovalStatus());
         if (provisionApprovalRequestDto.getApprovalStatus() == ApprovalStatus.APPROVED) {
             requester.setXp(requester.getXp() + eventApproval.getGrantedXp());
         }

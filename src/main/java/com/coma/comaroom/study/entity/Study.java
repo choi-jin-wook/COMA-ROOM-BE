@@ -3,6 +3,8 @@ package com.coma.comaroom.study.entity;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.utils.BaseEntity;
 import jakarta.persistence.*;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -23,6 +25,7 @@ public class Study extends BaseEntity {
     @Column(name = "study_name", nullable = false)
     private String studyName;
 
+    @NotFound(action = NotFoundAction.IGNORE)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "manager_id")
     private Member studyManager;

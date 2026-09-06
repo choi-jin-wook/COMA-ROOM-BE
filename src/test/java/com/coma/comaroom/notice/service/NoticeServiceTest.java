@@ -42,6 +42,9 @@ class NoticeServiceTest {
     @InjectMocks
     private NoticeService noticeService;
 
+    @InjectMocks
+    private AdminNoticeService adminNoticeService;
+
     private Member member;
     private Notice notice;
 
@@ -83,7 +86,7 @@ class NoticeServiceTest {
                 .build();
         when(securityUtils.getCurrentMember()).thenReturn(member);
 
-        CreateNoticeResponseDto result = noticeService.createNotice(dto);
+        CreateNoticeResponseDto result = adminNoticeService.createNotice(dto);
 
         assertThat(result.getTitle()).isEqualTo("공지사항 제목");
         assertThat(result.getContent()).isEqualTo("공지사항 내용");
@@ -104,7 +107,7 @@ class NoticeServiceTest {
     @Test
     @DisplayName("공지 삭제 성공")
     void deleteNotice_success() {
-        assertThatNoException().isThrownBy(() -> noticeService.deleteNotice(1L));
+        assertThatNoException().isThrownBy(() -> adminNoticeService.deleteNotice(1L));
         verify(noticeRepository).deleteById(1L);
     }
 
@@ -120,7 +123,7 @@ class NoticeServiceTest {
                 .build();
         when(noticeRepository.findById(1L)).thenReturn(Optional.of(notice));
 
-        UpdateNoticeResponseDto result = noticeService.updateNotice(1L, dto);
+        UpdateNoticeResponseDto result = adminNoticeService.updateNotice(1L, dto);
 
         assertThat(result.getTitle()).isEqualTo("수정된 제목");
         // 요청에 없는 필드는 기존 값이 유지된다
@@ -134,7 +137,7 @@ class NoticeServiceTest {
         UpdateNoticeRequestDto dto = mock(UpdateNoticeRequestDto.class);
         when(noticeRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> noticeService.updateNotice(99L, dto))
+        assertThatThrownBy(() -> adminNoticeService.updateNotice(99L, dto))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(NoticeErrorCode.NOTICE_NOT_FOUND.getMessage());
     }
@@ -182,7 +185,7 @@ class NoticeServiceTest {
 
         when(noticeRepository.findById(1L)).thenReturn(Optional.of(pinnedNotice));
 
-        assertThatNoException().isThrownBy(() -> noticeService.pinnedNotice(1L));
+        assertThatNoException().isThrownBy(() -> adminNoticeService.pinnedNotice(1L));
         assertThat(pinnedNotice.isPinned()).isFalse();
     }
 
@@ -192,7 +195,7 @@ class NoticeServiceTest {
         when(noticeRepository.findById(1L)).thenReturn(Optional.of(notice));
         when(noticeRepository.countByPinnedTrueAndHiddenFalse()).thenReturn(2L);
 
-        assertThatNoException().isThrownBy(() -> noticeService.pinnedNotice(1L));
+        assertThatNoException().isThrownBy(() -> adminNoticeService.pinnedNotice(1L));
         assertThat(notice.isPinned()).isTrue();
     }
 
@@ -202,7 +205,7 @@ class NoticeServiceTest {
         when(noticeRepository.findById(1L)).thenReturn(Optional.of(notice));
         when(noticeRepository.countByPinnedTrueAndHiddenFalse()).thenReturn(3L);
 
-        assertThatThrownBy(() -> noticeService.pinnedNotice(1L))
+        assertThatThrownBy(() -> adminNoticeService.pinnedNotice(1L))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(NoticeErrorCode.EXCEEDED_PINNED_LIMIT.getMessage());
     }
@@ -212,7 +215,7 @@ class NoticeServiceTest {
     void pinnedNotice_notFound() {
         when(noticeRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> noticeService.pinnedNotice(99L))
+        assertThatThrownBy(() -> adminNoticeService.pinnedNotice(99L))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(NoticeErrorCode.NOTICE_NOT_FOUND.getMessage());
     }
@@ -226,7 +229,7 @@ class NoticeServiceTest {
     void hiddenNotice_success() {
         when(noticeRepository.findById(1L)).thenReturn(Optional.of(notice));
 
-        assertThatNoException().isThrownBy(() -> noticeService.hiddenNotice(1L));
+        assertThatNoException().isThrownBy(() -> adminNoticeService.hiddenNotice(1L));
         assertThat(notice.isHidden()).isTrue();
     }
 
@@ -235,7 +238,7 @@ class NoticeServiceTest {
     void hiddenNotice_notFound() {
         when(noticeRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> noticeService.hiddenNotice(99L))
+        assertThatThrownBy(() -> adminNoticeService.hiddenNotice(99L))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(NoticeErrorCode.NOTICE_NOT_FOUND.getMessage());
     }

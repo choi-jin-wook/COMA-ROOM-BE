@@ -293,4 +293,18 @@ class AdminMemberServiceTest {
                 .satisfies(ex -> assertThat(((BusinessException) ex).getErrorCode())
                         .isEqualTo(EventError.APPROVAL_NOT_FOUND));
     }
+
+    @Test
+    @DisplayName("XP 승인 결정 실패 - 이미 처리된 요청은 재처리 불가 (XP 중복 지급 방지)")
+    void decideProvision_alreadyDecided() {
+        pendingApproval.setApprovalStatus(ApprovalStatus.APPROVED);
+        ProvisionApprovalRequestDto dto = mock(ProvisionApprovalRequestDto.class);
+        when(eventApprovalRepository.findById(1L)).thenReturn(Optional.of(pendingApproval));
+
+        assertThatThrownBy(() -> adminMemberService.decideProvision(dto, 1L))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(ex -> assertThat(((BusinessException) ex).getErrorCode())
+                        .isEqualTo(EventError.APPROVAL_ALREADY_DECIDED));
+        assertThat(member.getXp()).isEqualTo(100L); // XP 변화 없음
+    }
 }

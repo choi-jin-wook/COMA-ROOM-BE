@@ -51,8 +51,12 @@ public class EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(EventError.EVENT_NOT_FOUND));
 
+        if (eventParticipateRepository.existsByParticipantMemberAndEvent(currentUser, event)) {
+            throw new BusinessException(EventError.ALREADY_ATTENDED);
+        }
+
         event.addParticipant(currentUser);
-        currentUser.setXp(currentUser.getXp() + 3);
+        currentUser.setXp(currentUser.getXp() + event.getRewardXp());
     }
 
     // 1. 이달의 이벤트 조회

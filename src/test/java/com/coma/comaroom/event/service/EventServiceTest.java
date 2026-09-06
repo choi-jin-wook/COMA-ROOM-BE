@@ -6,8 +6,6 @@ import com.coma.comaroom.event.dto.CreateAttendanceRequestDto;
 import com.coma.comaroom.event.dto.response.EventResponse;
 import com.coma.comaroom.event.entity.Event;
 import com.coma.comaroom.event.entity.EventCategory;
-import com.coma.comaroom.event.entity.EventParticipant;
-import com.coma.comaroom.event.entity.EventPost;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.event.repository.EventRepository;
 import com.coma.comaroom.member.entity.Major;
@@ -89,6 +87,24 @@ class EventServiceTest {
 
         assertThatNoException().isThrownBy(() -> eventService.createAttendance(dto));
         verify(eventRepository).findById(1L);
+        assertThat(member.getXp()).isEqualTo(event.getRewardXp());
+    }
+
+    @Test
+    @DisplayName("출석 실패 - 이미 출석한 이벤트는 중복 출석 불가")
+    void createAttendance_alreadyAttended() {
+        CreateAttendanceRequestDto dto = mock(CreateAttendanceRequestDto.class);
+        when(dto.getQrCodeId()).thenReturn("validQrCode");
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get("validQrCode")).thenReturn("1");
+        when(securityUtils.getCurrentMember()).thenReturn(member);
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(event));
+        when(eventParticipateRepository.existsByParticipantMemberAndEvent(member, event)).thenReturn(true);
+
+        assertThatThrownBy(() -> eventService.createAttendance(dto))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(EventError.ALREADY_ATTENDED.getMessage());
+        assertThat(member.getXp()).isZero();
     }
 
     @Test

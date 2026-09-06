@@ -13,7 +13,8 @@ import com.coma.comaroom.vote.entity.VoteStatus;
 import com.coma.comaroom.vote.repository.VoteOptionRepository;
 import com.coma.comaroom.vote.repository.VoteRepository;
 import com.coma.comaroom.vote.repository.VoteResultRepository;
-import jakarta.persistence.EntityNotFoundException;
+import com.coma.comaroom.BusinessException;
+import com.coma.comaroom.vote.entity.VoteOption;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -118,7 +119,7 @@ class AdminVoteServiceTest {
         when(voteRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> adminVoteService.updateVote(dto, 99L))
-                .isInstanceOf(EntityNotFoundException.class);
+                .isInstanceOf(BusinessException.class);
     }
 
     // ─────────────────────────────────────────────
@@ -155,7 +156,7 @@ class AdminVoteServiceTest {
         when(voteRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> adminVoteService.addVoteOption(dto, 99L))
-                .isInstanceOf(EntityNotFoundException.class);
+                .isInstanceOf(BusinessException.class);
     }
 
     // ─────────────────────────────────────────────
@@ -165,8 +166,22 @@ class AdminVoteServiceTest {
     @Test
     @DisplayName("투표 옵션 삭제 성공")
     void deleteVoteOption_success() {
+        VoteOption option = VoteOption.builder().voteOptionId(1L).content("옵션1").vote(vote).build();
+        when(voteOptionRepository.findById(1L)).thenReturn(Optional.of(option));
+
         assertThatNoException().isThrownBy(() -> adminVoteService.deleteVoteOption(1L, 1L));
-        verify(voteOptionRepository).deleteById(1L);
+        verify(voteOptionRepository).delete(option);
+    }
+
+    @Test
+    @DisplayName("투표 옵션 삭제 실패 - 다른 투표의 옵션은 삭제 불가")
+    void deleteVoteOption_wrongVote() {
+        VoteOption option = VoteOption.builder().voteOptionId(1L).content("옵션1").vote(vote).build();
+        when(voteOptionRepository.findById(1L)).thenReturn(Optional.of(option));
+
+        assertThatThrownBy(() -> adminVoteService.deleteVoteOption(1L, 99L))
+                .isInstanceOf(BusinessException.class);
+        verify(voteOptionRepository, never()).delete(any(VoteOption.class));
     }
 
     // ─────────────────────────────────────────────
@@ -201,6 +216,6 @@ class AdminVoteServiceTest {
         when(voteRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> adminVoteService.closeVote(99L))
-                .isInstanceOf(EntityNotFoundException.class);
+                .isInstanceOf(BusinessException.class);
     }
 }

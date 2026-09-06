@@ -3,6 +3,8 @@ package com.coma.comaroom.event.entity;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.utils.BaseEntity;
 import jakarta.persistence.*;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -37,6 +39,8 @@ public class EventApproval extends BaseEntity {
     @Column(name = "reason")
     private String reason;
 
+    // 탈퇴 회원은 @SQLRestriction으로 조회가 차단되어 프록시 초기화시 예외가 발생하므로 null로 대체
+    @NotFound(action = NotFoundAction.IGNORE)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requester_id")
     private Member requester;
