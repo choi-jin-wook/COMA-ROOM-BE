@@ -1,7 +1,10 @@
 package com.coma.comaroom.member.dto.response;
 
+import com.coma.comaroom.event.entity.Event;
 import lombok.Getter;
 import lombok.Builder;
+
+import java.util.Set;
 
 @Getter
 @Builder
@@ -13,4 +16,16 @@ public class AttendanceHistoryDto {
 
     private String status;           // 출석 상태 (예: "출석", "결석")
     private Long rewardXp;        // 획득 XP (예: 3) - 결석 시 null 혹은 0
+
+    public static AttendanceHistoryDto of(Event event, Set<Long> attendedEventIds) {
+        boolean isAttended = attendedEventIds.contains(event.getEventId());
+
+        return AttendanceHistoryDto.builder()
+                .title(event.getTitle())
+                .status(isAttended ? "출석" : "결석")
+                .scheduledDate(event.getEventDate().toString())
+                .location(event.getLocation())
+                .rewardXp(isAttended ? event.getRewardXp() : 0L)
+                .build();
+    }
 }

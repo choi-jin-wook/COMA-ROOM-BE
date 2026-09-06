@@ -8,7 +8,6 @@ import com.coma.comaroom.notice.dto.response.CreateNoticeResponseDto;
 import com.coma.comaroom.notice.dto.response.UpdateNoticeResponseDto;
 import com.coma.comaroom.notice.entity.Notice;
 import com.coma.comaroom.notice.exception.NoticeErrorCode;
-import com.coma.comaroom.notice.mapper.NoticeMapper;
 import com.coma.comaroom.notice.repository.NoticeRepository;
 import com.coma.comaroom.utils.SecurityUtils;
 import lombok.AllArgsConstructor;
@@ -20,15 +19,14 @@ import org.springframework.transaction.annotation.Transactional;
 @AllArgsConstructor
 public class AdminNoticeService {
     private final NoticeRepository noticeRepository;
-    private final NoticeMapper noticeMapper;
     private final SecurityUtils securityUtils;
 
 
     public CreateNoticeResponseDto createNotice(CreateNoticeRequestDto createNoticeRequestDto) {
         Member author = securityUtils.getCurrentMember();
-        Notice newNotice = noticeMapper.createNotice(createNoticeRequestDto, author);
+        Notice newNotice = createNoticeRequestDto.toEntity(author);
         noticeRepository.save(newNotice);
-        return noticeMapper.toCreateResponseDto(newNotice);
+        return CreateNoticeResponseDto.from(newNotice);
 
     }
 
@@ -40,7 +38,7 @@ public class AdminNoticeService {
         Notice notice = noticeRepository.findById(noticeId).orElseThrow(() -> new BusinessException(NoticeErrorCode.NOTICE_NOT_FOUND));
         notice.update(updateNoticeRequestDto);
         noticeRepository.saveAndFlush(notice);
-        return noticeMapper.toUpdateResponseDto(notice);
+        return UpdateNoticeResponseDto.from(notice);
     }
 
 

@@ -5,7 +5,6 @@ import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.member.repository.MemberRepository;
 import com.coma.comaroom.utils.SecurityUtils;
 import com.coma.comaroom.vote.VoteError;
-import com.coma.comaroom.vote.component.VoteMapper;
 import com.coma.comaroom.vote.dto.AddVoteOptionRequestDto;
 import com.coma.comaroom.vote.dto.request.CreateNewVoteRequestDto;
 import com.coma.comaroom.vote.dto.request.ParticipateVoteRequestDto;
@@ -39,7 +38,6 @@ public class VoteService {
     private final VoteResultRepository voteResultRepository;
     private final MemberRepository memberRepository;
 
-    private final VoteMapper voteMapper;
     private final SecurityUtils securityUtils;
 
     // - 사용자
@@ -52,7 +50,7 @@ public class VoteService {
 
         return votes.stream()
                 .map(vote -> {
-                    VoteDetailResponseDto dto = voteMapper.toDetailDto(vote);
+                    VoteDetailResponseDto dto = VoteDetailResponseDto.from(vote);
                     dto.setVoted(voteResultRepository.existsByVoterAndVoteOption_Vote_VoteId(member, vote.getVoteId()));
                     return dto;
                 })
@@ -98,7 +96,7 @@ public class VoteService {
         // XP 는 애플리케이션 레벨 read-modify-write 대신 DB 원자적 증가로 갱신해 lost update 를 방지한다.
         memberRepository.incrementXp(member.getMemberId(), 2L);
 
-        VoteDetailResponseDto dto = voteMapper.toDetailDto(vote);
+        VoteDetailResponseDto dto = VoteDetailResponseDto.from(vote);
         dto.setVoted(true);
         return dto;
     }

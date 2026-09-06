@@ -5,14 +5,12 @@ import com.coma.comaroom.event.dto.AskXpResponseDto;
 import com.coma.comaroom.event.dto.XpManagementMainResponseDto;
 import com.coma.comaroom.event.entity.*;
 import com.coma.comaroom.member.dto.response.XpHistoryResponseDto;
-import com.coma.comaroom.event.mapper.EventApprovalMapper;
 import com.coma.comaroom.event.repository.EventApprovalRepository;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.event.repository.EventRepository;
-import com.coma.comaroom.member.MemberMapper;
-import com.coma.comaroom.member.XpManagementMapper;
 import com.coma.comaroom.member.dto.request.LeaderboardResponseDto;
 import com.coma.comaroom.member.dto.request.MyRankingDto;
+import com.coma.comaroom.member.dto.request.RankingItemDto;
 import com.coma.comaroom.member.dto.response.*;
 import com.coma.comaroom.member.entity.Major;
 import com.coma.comaroom.member.entity.Member;
@@ -33,8 +31,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,12 +50,8 @@ class MemberServiceTest {
     @Mock private NoticeRepository noticeRepository;
     @Mock private EventRepository eventRepository;
     @Mock private EventParticipateRepository eventParticipateRepository;
-    @Mock private PasswordEncoder passwordEncoder;
-    @Mock private MemberMapper memberMapper;
     @Mock private SecurityUtils securityUtils;
     @Mock private VoteRepository voteRepository;
-    @Mock private EventApprovalMapper eventApprovalMapper;
-    @Mock private XpManagementMapper xpManagementMapper;
     @Mock private EventApprovalRepository eventApprovalRepository;
 
     @InjectMocks
@@ -86,6 +81,10 @@ class MemberServiceTest {
                 .noticePriority(NoticePriority.NORMAL)
                 .author(member)
                 .build();
+
+        // @CreatedDate는 JPA Auditing이 채우므로 단위 테스트에서는 직접 주입한다
+        ReflectionTestUtils.setField(member, "createdAt", LocalDateTime.of(2026, 3, 1, 9, 0));
+        ReflectionTestUtils.setField(notice, "createdAt", LocalDateTime.of(2026, 3, 2, 9, 0));
     }
 
     // ─────────────────────────────────────────────
@@ -126,15 +125,19 @@ class MemberServiceTest {
         when(memberRepository.findRankByMember(member)).thenReturn(3L);
         when(memberRepository.findAllByOrderByXpDescMemberIdAsc(any())).thenReturn(List.of(member));
 
-        MyRankingDto myRankingDto = mock(MyRankingDto.class);
-        when(memberMapper.memberToMyRankingDto(member, 3L)).thenReturn(myRankingDto);
-
-        LeaderboardResponseDto expected = mock(LeaderboardResponseDto.class);
-        when(memberMapper.MyRankingDtoAndMemberListToLeaderboardResponseDto(anyList(), eq(myRankingDto))).thenReturn(expected);
-
         LeaderboardResponseDto result = memberService.getLeaderboardData();
 
-        assertThat(result).isNotNull();
+        MyRankingDto myRanking = result.getMyRanking();
+        assertThat(myRanking.getName()).isEqualTo("테스터");
+        assertThat(myRanking.getRank()).isEqualTo(3L);
+        assertThat(myRanking.getXp()).isEqualTo(500L);
+
+        assertThat(result.getAllRankings()).hasSize(1);
+        RankingItemDto first = result.getAllRankings().get(0);
+        assertThat(first.getRank()).isEqualTo(1);
+        assertThat(first.getName()).isEqualTo("테*터"); // 가운데 마스킹
+        assertThat(first.getIsMe()).isTrue();
+        assertThat(result.getTopThreeRankings()).hasSize(1);
         verify(memberRepository).findAllByOrderByXpDescMemberIdAsc(any());
     }
 
@@ -153,12 +156,17 @@ class MemberServiceTest {
         when(eventParticipateRepository.countByParticipantMemberAndEvent_EventCategory(member, EventCategory.EVENT)).thenReturn(2L);
         when(voteRepository.findFirstByVoteStatusOrderByCreatedAtDesc(VoteStatus.IN_PROGRESS)).thenReturn(Optional.empty());
 
-        MainDashboardResponse expected = mock(MainDashboardResponse.class);
-        when(memberMapper.createMainDashboardResponse(any(), any(), any(), any(), any(), any(), any())).thenReturn(expected);
-
         MainDashboardResponse result = memberService.getMainDashboard();
 
-        assertThat(result).isNotNull();
+        assertThat(result.getUserName()).isEqualTo("테스터");
+        assertThat(result.getCurrentXp()).isEqualTo(500L);
+        assertThat(result.getRemainingXp()).isZero(); // 목표 XP를 이미 넘김
+        assertThat(result.getStatAttendanceCount()).isEqualTo(5L);
+        assertThat(result.getStatEventCount()).isEqualTo(2L);
+        assertThat(result.getMyRank()).isEqualTo(1L);
+        assertThat(result.getNotice().getTitle()).isEqualTo("공지사항");
+        assertThat(result.getUpcomingEvent()).isNull();
+        assertThat(result.getVotePoll()).isNull();
     }
 
     @Test
@@ -172,13 +180,10 @@ class MemberServiceTest {
         when(eventParticipateRepository.countByParticipantMemberAndEvent_EventCategory(member, EventCategory.EVENT)).thenReturn(0L);
         when(voteRepository.findFirstByVoteStatusOrderByCreatedAtDesc(VoteStatus.IN_PROGRESS)).thenReturn(Optional.empty());
 
-        MainDashboardResponse expected = mock(MainDashboardResponse.class);
-        when(memberMapper.createMainDashboardResponse(any(), any(), isNull(), any(), any(), any(), any())).thenReturn(expected);
-
         MainDashboardResponse result = memberService.getMainDashboard();
 
-        assertThat(result).isNotNull();
-        verify(memberMapper).createMainDashboardResponse(any(), any(), isNull(), any(), any(), any(), any());
+        assertThat(result.getNotice()).isNull();
+        assertThat(result.getUserName()).isEqualTo("테스터");
     }
 
     // ─────────────────────────────────────────────
@@ -194,15 +199,15 @@ class MemberServiceTest {
         when(eventParticipateRepository.countByParticipantMemberAndEvent_EventCategory(member, EventCategory.EVENT)).thenReturn(1L);
         when(eventParticipateRepository.findTop5ByParticipantMemberOrderByEventParticipantIdDesc(member)).thenReturn(List.of());
 
-        List<RecentActivityDto> recentActivityDtos = List.of();
-        when(memberMapper.createRecentActivityDto(anyList())).thenReturn(recentActivityDtos);
-
-        ProfileResponseDto expected = mock(ProfileResponseDto.class);
-        when(memberMapper.createProfileResponseDto(eq(member), eq(2L), eq(3L), eq(1L), anyList())).thenReturn(expected);
-
         ProfileResponseDto result = memberService.getMemberProfile();
 
-        assertThat(result).isNotNull();
+        assertThat(result.getName()).isEqualTo("테스터");
+        assertThat(result.getStudentId()).isEqualTo("20210001");
+        assertThat(result.getRanking()).isEqualTo(2L);
+        assertThat(result.getAttendanceCount()).isEqualTo(3L);
+        assertThat(result.getEventCount()).isEqualTo(1L);
+        assertThat(result.getJoinedDate()).isEqualTo(LocalDate.of(2026, 3, 1));
+        assertThat(result.getRecentActivities()).isEmpty();
     }
 
     // ─────────────────────────────────────────────
@@ -219,12 +224,14 @@ class MemberServiceTest {
         when(eventRepository.findAllByOrderByEventDateDesc()).thenReturn(List.of());
         when(eventParticipateRepository.findAllEventIdsByMember(member)).thenReturn(List.of());
 
-        MainAttendanceResponseDto expected = mock(MainAttendanceResponseDto.class);
-        when(memberMapper.createMainAttendanceResponseDto(any(), any(), any(), any(), anyList())).thenReturn(expected);
-
         MainAttendanceResponseDto result = memberService.getMainAttendance();
 
-        assertThat(result).isNotNull();
+        assertThat(result.getTotalEventCount()).isEqualTo(10L);
+        assertThat(result.getAttendanceCount()).isEqualTo(5L);
+        assertThat(result.getAbsenceCount()).isEqualTo(5L);
+        assertThat(result.getAttendanceRate()).isEqualTo(50L);
+        assertThat(result.getAttendanceRank()).isEqualTo(1L);
+        assertThat(result.getAttendanceHistory()).isEmpty();
     }
 
     // ─────────────────────────────────────────────
@@ -240,14 +247,12 @@ class MemberServiceTest {
         when(eventApprovalRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.APPROVED)).thenReturn(5L);
         when(eventApprovalRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.REJECTED)).thenReturn(2L);
         when(eventApprovalRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.PENDING)).thenReturn(3L);
-        when(eventApprovalMapper.toRecentActivityLogDtos(anyList())).thenReturn(List.of());
-
-        XpManagementMainResponseDto expected = mock(XpManagementMainResponseDto.class);
-        when(xpManagementMapper.toMainDto(5L, 2L, 3L, List.of())).thenReturn(expected);
-
         XpManagementMainResponseDto result = memberService.getXpManagementMainData(null, 0L);
 
-        assertThat(result).isNotNull();
+        assertThat(result.getApprovedCount()).isEqualTo(5L);
+        assertThat(result.getRejectedCount()).isEqualTo(2L);
+        assertThat(result.getPendingCount()).isEqualTo(3L);
+        assertThat(result.getRecentActivityLogs()).isEmpty();
         verify(eventApprovalRepository).findByRequesterOrderByCreatedAtDesc(eq(member), any());
     }
 
@@ -260,14 +265,12 @@ class MemberServiceTest {
         when(eventApprovalRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.APPROVED)).thenReturn(5L);
         when(eventApprovalRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.REJECTED)).thenReturn(2L);
         when(eventApprovalRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.PENDING)).thenReturn(3L);
-        when(eventApprovalMapper.toRecentActivityLogDtos(anyList())).thenReturn(List.of());
-
-        XpManagementMainResponseDto expected = mock(XpManagementMainResponseDto.class);
-        when(xpManagementMapper.toMainDto(5L, 2L, 3L, List.of())).thenReturn(expected);
-
         XpManagementMainResponseDto result = memberService.getXpManagementMainData(ApprovalStatus.PENDING, 0L);
 
-        assertThat(result).isNotNull();
+        assertThat(result.getApprovedCount()).isEqualTo(5L);
+        assertThat(result.getRejectedCount()).isEqualTo(2L);
+        assertThat(result.getPendingCount()).isEqualTo(3L);
+        assertThat(result.getRecentActivityLogs()).isEmpty();
         verify(eventApprovalRepository).findByRequesterAndApprovalStatusOrderByCreatedAtDesc(eq(member), eq(ApprovalStatus.PENDING), any());
     }
 

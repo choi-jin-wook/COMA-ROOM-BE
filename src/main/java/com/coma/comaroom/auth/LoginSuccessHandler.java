@@ -2,9 +2,11 @@ package com.coma.comaroom.auth;
 
 import com.coma.comaroom.member.dto.response.LoginResponse;
 import com.coma.comaroom.auth.jwt.JwtTokenProvider;
+import com.coma.comaroom.utils.Response;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -22,7 +24,7 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        String accessToken = jwtTokenProvider.createAccessToken(userDetails.getMemberId(), userDetails.getRole().name());
+        String accessToken = jwtTokenProvider.createAccessToken(userDetails.getMemberId(), userDetails.getRole().name(), userDetails.getStudentId());
         String refreshToken = jwtTokenProvider.createRefreshToken(userDetails.getMemberId());
         LoginResponse loginResponse = LoginResponse.builder()
                 .accessToken(accessToken)
@@ -35,7 +37,7 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        String json = objectMapper.writeValueAsString(loginResponse);
+        String json = objectMapper.writeValueAsString(Response.ok(loginResponse, HttpStatus.OK));
         response.getWriter().write(json);
     }
 }

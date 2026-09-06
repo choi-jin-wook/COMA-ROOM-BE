@@ -1,5 +1,7 @@
 package com.coma.comaroom.vote.dto.request;
 
+import com.coma.comaroom.vote.entity.Vote;
+import com.coma.comaroom.vote.entity.VoteStatus;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,7 +9,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Data
 @Builder
@@ -26,4 +30,21 @@ public class CreateNewVoteRequestDto {
 
     @NotEmpty(message = "마감일은 필수입니다")
     private LocalDateTime deadline;
+
+    public Vote toEntity() {
+        Vote vote = Vote.builder()
+                .title(title)
+                .isMultiVote(isMultiple)
+                .voteStatus(VoteStatus.IN_PROGRESS)
+                .deadline(deadline)
+                .build();
+
+        Optional.ofNullable(options)
+                .orElseGet(Collections::emptyList)
+                .stream()
+                .map(CreateVoteOptionRequestDto::toEntity)
+                .forEach(vote::addOption);
+
+        return vote;
+    }
 }

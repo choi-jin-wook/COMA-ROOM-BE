@@ -2,7 +2,6 @@ package com.coma.comaroom.notice.service;
 
 import com.coma.comaroom.BusinessException;
 import com.coma.comaroom.member.entity.Member;
-import com.coma.comaroom.notice.mapper.NoticeMapper;
 import com.coma.comaroom.notice.dto.request.CreateNoticeRequestDto;
 import com.coma.comaroom.notice.dto.request.UpdateNoticeRequestDto;
 import com.coma.comaroom.notice.dto.response.CreateNoticeResponseDto;
@@ -26,7 +25,6 @@ import java.util.List;
 @AllArgsConstructor
 public class NoticeService {
     private final NoticeRepository noticeRepository;
-    private final NoticeMapper noticeMapper;
     private final SecurityUtils securityUtils;
 
     public GetNoticeResponseDto getNotices(int page) {
@@ -35,7 +33,7 @@ public class NoticeService {
         List<Notice> pinnedNotices = noticeRepository.findByPinnedTrueAndHiddenFalse();
         Page<Notice> openedNoticePage = noticeRepository.findByPinnedFalseAndHiddenFalse(pageable);
         
-        return noticeMapper.getNoticeResponseDtoMapper(pinnedNotices, openedNoticePage);
+        return GetNoticeResponseDto.of(pinnedNotices, openedNoticePage);
     }
 
 }

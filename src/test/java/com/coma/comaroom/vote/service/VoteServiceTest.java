@@ -6,7 +6,6 @@ import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.member.entity.Role;
 import com.coma.comaroom.utils.SecurityUtils;
 import com.coma.comaroom.vote.VoteError;
-import com.coma.comaroom.vote.component.VoteMapper;
 import com.coma.comaroom.vote.dto.request.ParticipateVoteRequestDto;
 import com.coma.comaroom.vote.dto.response.VoteDetailResponseDto;
 import com.coma.comaroom.vote.entity.Vote;
@@ -40,7 +39,6 @@ class VoteServiceTest {
     @Mock private VoteOptionRepository voteOptionRepository;
     @Mock private VoteResultRepository voteResultRepository;
     @Mock private com.coma.comaroom.member.repository.MemberRepository memberRepository;
-    @Mock private VoteMapper voteMapper;
     @Mock private SecurityUtils securityUtils;
 
     @InjectMocks
@@ -90,12 +88,11 @@ class VoteServiceTest {
     void voteDashboard_success() {
         when(voteRepository.findAllByVoteStatusOrderByCreatedAtDesc(eq(VoteStatus.IN_PROGRESS), any())).thenReturn(List.of(vote));
 
-        VoteDetailResponseDto responseDto = mock(VoteDetailResponseDto.class);
-        when(voteMapper.toDetailDto(vote)).thenReturn(responseDto);
-
         List<VoteDetailResponseDto> result = voteService.voteDashboard(0, VoteStatus.IN_PROGRESS);
 
         assertThat(result).hasSize(1);
+        assertThat(result.get(0).getVoteId()).isEqualTo(1L);
+        assertThat(result.get(0).getTitle()).isEqualTo("점심 메뉴 투표");
         verify(voteRepository).findAllByVoteStatusOrderByCreatedAtDesc(eq(VoteStatus.IN_PROGRESS), any());
     }
 
@@ -122,12 +119,11 @@ class VoteServiceTest {
         when(securityUtils.getCurrentMember()).thenReturn(member);
         when(voteResultRepository.existsByVoterAndVoteOption_Vote_VoteId(member, 1L)).thenReturn(false);
 
-        VoteDetailResponseDto expected = mock(VoteDetailResponseDto.class);
-        when(voteMapper.toDetailDto(vote)).thenReturn(expected);
-
         VoteDetailResponseDto result = voteService.participateVote(dto, 1L);
 
         assertThat(result).isNotNull();
+        assertThat(result.getVoteId()).isEqualTo(1L);
+        assertThat(result.getVoted()).isTrue();
         // XP 는 엔티티 setXp 가 아니라 DB 원자적 증가(incrementXp)로 갱신되어야 한다 (lost update 방지)
         verify(memberRepository).incrementXp(member.getMemberId(), 2L);
     }

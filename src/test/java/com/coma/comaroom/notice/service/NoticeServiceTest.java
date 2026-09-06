@@ -8,17 +8,18 @@ import com.coma.comaroom.notice.dto.request.CreateNoticeRequestDto;
 import com.coma.comaroom.notice.dto.request.UpdateNoticeRequestDto;
 import com.coma.comaroom.notice.dto.response.CreateNoticeResponseDto;
 import com.coma.comaroom.notice.dto.response.GetNoticeResponseDto;
+import com.coma.comaroom.notice.dto.response.NoticeResponseDto;
 import com.coma.comaroom.notice.dto.response.UpdateNoticeResponseDto;
 import com.coma.comaroom.notice.entity.Notice;
 import com.coma.comaroom.notice.entity.NoticePriority;
 import com.coma.comaroom.notice.exception.NoticeErrorCode;
-import com.coma.comaroom.notice.mapper.NoticeMapper;
 import com.coma.comaroom.notice.repository.NoticeRepository;
 import com.coma.comaroom.utils.SecurityUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -36,7 +37,6 @@ import static org.mockito.Mockito.*;
 class NoticeServiceTest {
 
     @Mock private NoticeRepository noticeRepository;
-    @Mock private NoticeMapper noticeMapper;
     @Mock private SecurityUtils securityUtils;
 
     @InjectMocks
@@ -78,18 +78,26 @@ class NoticeServiceTest {
     @Test
     @DisplayName("공지 생성 성공")
     void createNotice_success() {
-        CreateNoticeRequestDto dto = mock(CreateNoticeRequestDto.class);
+        CreateNoticeRequestDto dto = CreateNoticeRequestDto.builder()
+                .title("공지사항 제목")
+                .content("공지사항 내용")
+                .pinned(true)
+                .noticePriority(NoticePriority.NORMAL)
+                .build();
         when(securityUtils.getCurrentMember()).thenReturn(member);
-        when(noticeMapper.createNotice(dto, member)).thenReturn(notice);
-        when(noticeRepository.save(notice)).thenReturn(notice);
-
-        CreateNoticeResponseDto expected = mock(CreateNoticeResponseDto.class);
-        when(noticeMapper.toCreateResponseDto(notice)).thenReturn(expected);
 
         CreateNoticeResponseDto result = adminNoticeService.createNotice(dto);
 
-        assertThat(result).isNotNull();
-        verify(noticeRepository).save(notice);
+        assertThat(result.getTitle()).isEqualTo("공지사항 제목");
+        assertThat(result.getContent()).isEqualTo("공지사항 내용");
+        assertThat(result.isPinned()).isTrue();
+        // hidden은 요청에 없었으므로 false로 채워진다
+        assertThat(result.isHidden()).isFalse();
+        assertThat(result.getAuthorName()).isEqualTo("작성자");
+
+        ArgumentCaptor<Notice> captor = ArgumentCaptor.forClass(Notice.class);
+        verify(noticeRepository).save(captor.capture());
+        assertThat(captor.getValue().getAuthor()).isSameAs(member);
     }
 
     // ─────────────────────────────────────────────
@@ -110,16 +118,16 @@ class NoticeServiceTest {
     @Test
     @DisplayName("공지 수정 성공")
     void updateNotice_success() {
-        UpdateNoticeRequestDto dto = mock(UpdateNoticeRequestDto.class);
+        UpdateNoticeRequestDto dto = UpdateNoticeRequestDto.builder()
+                .title("수정된 제목")
+                .build();
         when(noticeRepository.findById(1L)).thenReturn(Optional.of(notice));
-        when(noticeRepository.saveAndFlush(notice)).thenReturn(notice);
-
-        UpdateNoticeResponseDto expected = mock(UpdateNoticeResponseDto.class);
-        when(noticeMapper.toUpdateResponseDto(notice)).thenReturn(expected);
 
         UpdateNoticeResponseDto result = adminNoticeService.updateNotice(1L, dto);
 
-        assertThat(result).isNotNull();
+        assertThat(result.getTitle()).isEqualTo("수정된 제목");
+        // 요청에 없는 필드는 기존 값이 유지된다
+        assertThat(result.getContent()).isEqualTo("공지사항 내용");
         verify(noticeRepository).saveAndFlush(notice);
     }
 
@@ -145,12 +153,15 @@ class NoticeServiceTest {
         Page<Notice> noticePage = new PageImpl<>(List.of(notice));
         when(noticeRepository.findByPinnedFalseAndHiddenFalse(any())).thenReturn(noticePage);
 
-        GetNoticeResponseDto expected = mock(GetNoticeResponseDto.class);
-        when(noticeMapper.getNoticeResponseDtoMapper(anyList(), any())).thenReturn(expected);
-
         GetNoticeResponseDto result = noticeService.getNotices(0);
 
-        assertThat(result).isNotNull();
+        assertThat(result.getPinnedNoticeCount()).isZero();
+        assertThat(result.getOpenedNoticeCount()).isEqualTo(1L);
+        assertThat(result.getTotalNoticeCount()).isEqualTo(1L);
+        assertThat(result.getPinnedNoticeList()).isEmpty();
+        assertThat(result.getOpenedNoticeList())
+                .extracting(NoticeResponseDto::getNoticeTitle)
+                .containsExactly("공지사항 제목");
         verify(noticeRepository).findByPinnedTrueAndHiddenFalse();
         verify(noticeRepository).findByPinnedFalseAndHiddenFalse(any());
     }

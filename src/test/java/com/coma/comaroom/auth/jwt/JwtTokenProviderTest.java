@@ -26,17 +26,18 @@ class JwtTokenProviderTest {
     @Test
     @DisplayName("액세스 토큰 생성 및 검증 성공")
     void createAccessToken_validToken() {
-        String token = provider.createAccessToken(1L, "USER");
+        String token = provider.createAccessToken(1L, "USER", "202012345");
 
         assertThat(provider.validateToken(token)).isTrue();
         assertThat(provider.getMemberId(token)).isEqualTo(1L);
         assertThat(provider.getRole(token)).isEqualTo("USER");
+        assertThat(provider.getStudentId(token)).isEqualTo("202012345");
     }
 
     @Test
     @DisplayName("[보안] 액세스 토큰 유효기간은 정확히 30분(1800초)이다")
     void createAccessToken_expiresIn30Minutes() {
-        String token = provider.createAccessToken(1L, "USER");
+        String token = provider.createAccessToken(1L, "USER", "202012345");
 
         // JWT payload는 서명 없이 Base64 디코딩 가능
         String payload = new String(Base64.getUrlDecoder().decode(token.split("\\.")[1]));

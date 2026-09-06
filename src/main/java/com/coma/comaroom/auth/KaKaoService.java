@@ -45,7 +45,11 @@ public class KaKaoService extends SimpleUrlAuthenticationSuccessHandler {
         }
 
         LoginResponse loginResponse = LoginResponse.builder()
-                .accessToken(jwtTokenProvider.createAccessToken(member.getMemberId(), member.getRole().name()))
+                .accessToken(jwtTokenProvider.createAccessToken(
+                        member.getMemberId(),
+                        member.getRole().name(),
+                        member.getStudentId()
+                ))
                 .refreshToken(jwtTokenProvider.createRefreshToken(member.getMemberId()))
                 .message("로그인 성공")
                 .role(member.getRole())

@@ -24,15 +24,12 @@ public class JwtTokenProvider {
         this.key = Keys.hmacShaKeyFor(secretKeyString.getBytes(StandardCharsets.UTF_8));
     }
 
-    // 액세스 토큰 발급 (30분)
-    public String createAccessToken(Long memberId, String role) {
-        return createToken(memberId, role, 30 * 60 * 1000L);
+    public String createAccessToken(Long memberId, String role, String studentId) {
+        return createToken(memberId, role, studentId, 30 * 60 * 1000L);
     }
 
-    // 리프레시 토큰 발급 (14일)
     public String createRefreshToken(Long memberId) {
-        // 리프레시는 권한 정보를 넣지 않는 것이 일반적입니다.
-        return createToken(memberId, null, 14 * 24 * 60 * 60 * 1000L);
+        return createToken(memberId, null, null, 14 * 24 * 60 * 60 * 1000L);
     }
 
     public boolean validateToken(String token) {
@@ -52,6 +49,14 @@ public class JwtTokenProvider {
         return getClaims(token).get("role", String.class);
     }
 
+    public String getTokenType(String token) {
+        return getClaims(token).get("tokenType", String.class);
+    }
+
+    public String getStudentId(String token) {
+        return getClaims(token).get("studentId", String.class);
+    }
+
     private Claims getClaims(String token) {
         return Jwts.parser()
                 .verifyWith(key)
@@ -60,7 +65,7 @@ public class JwtTokenProvider {
                 .getPayload();
     }
 
-    private String createToken(Long memberId, String role, long validity) {
+    private String createToken(Long memberId, String role, String studentId, long validity) {
         Date now = new Date();
         var builder = Jwts.builder()
                 .subject(String.valueOf(memberId))
@@ -68,7 +73,13 @@ public class JwtTokenProvider {
                 .expiration(new Date(now.getTime() + validity))
                 .signWith(key);
 
-        if (role != null) builder.claim("role", role);
+        if (role != null) {
+            builder.claim("tokenType", "access");
+            builder.claim("role", role);
+            builder.claim("studentId", studentId);
+        } else {
+            builder.claim("tokenType", "refresh");
+        }
 
         return builder.compact();
     }

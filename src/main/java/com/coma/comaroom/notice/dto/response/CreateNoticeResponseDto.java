@@ -28,4 +28,19 @@ public class CreateNoticeResponseDto {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    public static CreateNoticeResponseDto from(Notice notice) {
+        return CreateNoticeResponseDto.builder()
+                .noticeId(notice.getNoticeId())
+                .title(notice.getTitle())
+                .content(notice.getContent())
+                .pinned(notice.isPinned())
+                .hidden(notice.isHidden())
+                .authorId(notice.getAuthor().getMemberId())
+                .authorName(notice.getAuthor().getName())
+                .noticePriority(notice.getNoticePriority())
+                .createdAt(notice.getCreatedAt())
+                .updatedAt(notice.getUpdatedAt())
+                .build();
+    }
 }

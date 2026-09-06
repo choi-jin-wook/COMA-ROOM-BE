@@ -27,4 +27,25 @@ public class ProfileResponseDto {
     private Long eventCount;       // 2
 
     private List<RecentActivityDto> recentActivities;
+
+    public static ProfileResponseDto of(
+            Member member,
+            Long rank,
+            Long attendanceCount,
+            Long eventCount,
+            List<RecentActivityDto> recentActivities
+    ) {
+        return ProfileResponseDto.builder()
+                .name(member.getName())
+                .major(member.getMajor())
+                .studentId(member.getStudentId())
+                .ranking(rank)
+                .currentXp(member.getXp())
+                .joinedDate(member.getCreatedAt().toLocalDate())
+                .memberStatus(member.getRole())
+                .attendanceCount(attendanceCount)
+                .eventCount(eventCount)
+                .recentActivities(recentActivities)
+                .build();
+    }
 }
