@@ -1,0 +1,24 @@
+# 동시성 통합 테스트 전용 프로파일
+# - 운영 DB(comaroom_db)와 동일한 MySQL 엔진(InnoDB)에서 돌려 락/동시성 동작을 실제와 동일하게 재현
+# - 단, 운영 데이터를 오염시키지 않도록 별도 스키마(comaroom_concurrency_test)를 사용하고 매 실행마다 재생성
+# - Redis 는 이 테스트 경로에서 쓰이지 않으므로 자동 구성에서 제외(StringRedisTemplate 은 테스트에서 목으로 주입)
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/comaroom_concurrency_test
+    username: root
+    password: jinwook219
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+    show-sql: false
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
+jwt:
+  secret: "test-only-secret-key-that-is-at-least-32-characters-long"

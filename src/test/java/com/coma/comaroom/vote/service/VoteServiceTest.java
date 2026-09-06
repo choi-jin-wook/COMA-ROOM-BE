@@ -16,7 +16,6 @@ import com.coma.comaroom.vote.entity.VoteStatus;
 import com.coma.comaroom.vote.repository.VoteOptionRepository;
 import com.coma.comaroom.vote.repository.VoteRepository;
 import com.coma.comaroom.vote.repository.VoteResultRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,6 +39,7 @@ class VoteServiceTest {
     @Mock private VoteRepository voteRepository;
     @Mock private VoteOptionRepository voteOptionRepository;
     @Mock private VoteResultRepository voteResultRepository;
+    @Mock private com.coma.comaroom.member.repository.MemberRepository memberRepository;
     @Mock private VoteMapper voteMapper;
     @Mock private SecurityUtils securityUtils;
 
@@ -128,7 +128,8 @@ class VoteServiceTest {
         VoteDetailResponseDto result = voteService.participateVote(dto, 1L);
 
         assertThat(result).isNotNull();
-        assertThat(member.getXp()).isEqualTo(2L);
+        // XP 는 엔티티 setXp 가 아니라 DB 원자적 증가(incrementXp)로 갱신되어야 한다 (lost update 방지)
+        verify(memberRepository).incrementXp(member.getMemberId(), 2L);
     }
 
     @Test

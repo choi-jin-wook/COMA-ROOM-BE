@@ -1,9 +1,7 @@
 package com.coma.comaroom.member.service;
 
-import com.coma.comaroom.BusinessException;
 import com.coma.comaroom.event.dto.AskXpRequestDto;
 import com.coma.comaroom.event.dto.AskXpResponseDto;
-import com.coma.comaroom.event.dto.RecentActivityLogDto;
 import com.coma.comaroom.event.dto.XpManagementMainResponseDto;
 import com.coma.comaroom.event.entity.*;
 import com.coma.comaroom.member.dto.response.XpHistoryResponseDto;
@@ -15,7 +13,6 @@ import com.coma.comaroom.member.MemberMapper;
 import com.coma.comaroom.member.XpManagementMapper;
 import com.coma.comaroom.member.dto.request.LeaderboardResponseDto;
 import com.coma.comaroom.member.dto.request.MyRankingDto;
-import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
 import com.coma.comaroom.member.dto.response.*;
 import com.coma.comaroom.member.entity.Major;
 import com.coma.comaroom.member.entity.Member;
@@ -25,7 +22,6 @@ import com.coma.comaroom.notice.entity.Notice;
 import com.coma.comaroom.notice.entity.NoticePriority;
 import com.coma.comaroom.notice.repository.NoticeRepository;
 import com.coma.comaroom.utils.SecurityUtils;
-import com.coma.comaroom.vote.entity.Vote;
 import com.coma.comaroom.vote.entity.VoteStatus;
 import com.coma.comaroom.vote.repository.VoteRepository;
 import org.junit.jupiter.api.BeforeEach;

@@ -2,6 +2,7 @@ package com.coma.comaroom.vote.service;
 
 import com.coma.comaroom.BusinessException;
 import com.coma.comaroom.member.entity.Member;
+import com.coma.comaroom.member.repository.MemberRepository;
 import com.coma.comaroom.utils.SecurityUtils;
 import com.coma.comaroom.vote.VoteError;
 import com.coma.comaroom.vote.component.VoteMapper;
@@ -20,6 +21,7 @@ import com.coma.comaroom.vote.repository.VoteResultRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -35,6 +37,7 @@ public class VoteService {
     private final VoteRepository voteRepository;
     private final VoteOptionRepository voteOptionRepository;
     private final VoteResultRepository voteResultRepository;
+    private final MemberRepository memberRepository;
 
     private final VoteMapper voteMapper;
     private final SecurityUtils securityUtils;
@@ -82,7 +85,18 @@ public class VoteService {
         }
 
         vote.participate(voteOptionIds, member);
-        member.setXp(member.getXp() + 2);
+
+        // exists() 체크와 저장 사이의 경쟁(check-then-act)으로 중복 저장이 시도될 수 있다.
+        // vote_result 의 유니크 제약(uk_voter_option)에 기대되, 커밋 시점이 아닌 지금 flush 해
+        // 제약 위반을 잡아 500 대신 명확한 ALREADY_VOTED(409)로 변환한다.
+        try {
+            voteResultRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new BusinessException(VoteError.ALREADY_VOTED);
+        }
+
+        // XP 는 애플리케이션 레벨 read-modify-write 대신 DB 원자적 증가로 갱신해 lost update 를 방지한다.
+        memberRepository.incrementXp(member.getMemberId(), 2L);
 
         VoteDetailResponseDto dto = voteMapper.toDetailDto(vote);
         dto.setVoted(true);

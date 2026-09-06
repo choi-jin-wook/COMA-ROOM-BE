@@ -7,10 +7,8 @@ import com.coma.comaroom.utils.BaseEntity;
 import com.coma.comaroom.vote.entity.VoteResult;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLRestriction;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,8 +33,11 @@ public class Member extends BaseEntity {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "password", nullable = false)
+    @Column(name = "password", nullable = true)
     private String password;
+
+    @Column(name = "phone_number", nullable = false, unique = true)
+    private String phoneNumber;
 
     @Column(name = "xp", nullable = false)
     private Long xp;

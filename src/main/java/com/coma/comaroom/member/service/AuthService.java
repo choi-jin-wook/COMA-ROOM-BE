@@ -2,7 +2,6 @@ package com.coma.comaroom.member.service;
 
 import com.coma.comaroom.BusinessException;
 import com.coma.comaroom.auth.jwt.JwtTokenProvider;
-import com.coma.comaroom.member.AuthError;
 import com.coma.comaroom.member.dto.request.LoginRequestDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
 import com.coma.comaroom.member.dto.response.LoginResponse;
@@ -41,6 +40,7 @@ public class AuthService {
                 .name(registerMemberRequestDto.getName())
                 .role(Role.USER)
                 .password(passwordEncoder.encode(registerMemberRequestDto.getPassword()))
+                .phoneNumber(registerMemberRequestDto.getPhoneNumber())
                 .xp(0L)
                 .major(registerMemberRequestDto.getMajor())
                 .build();

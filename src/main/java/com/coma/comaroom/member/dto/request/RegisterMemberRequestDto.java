@@ -24,6 +24,9 @@ public class RegisterMemberRequestDto {
     @Size(min = 8, max = 64)
     private String password;
 
+    @NotBlank
+    private String phoneNumber;
+
     @NotNull
     private Major major;
 }

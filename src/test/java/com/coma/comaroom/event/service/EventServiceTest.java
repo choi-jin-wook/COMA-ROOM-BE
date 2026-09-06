@@ -6,8 +6,6 @@ import com.coma.comaroom.event.dto.CreateAttendanceRequestDto;
 import com.coma.comaroom.event.dto.response.EventResponse;
 import com.coma.comaroom.event.entity.Event;
 import com.coma.comaroom.event.entity.EventCategory;
-import com.coma.comaroom.event.entity.EventParticipant;
-import com.coma.comaroom.event.entity.EventPost;
 import com.coma.comaroom.event.mapper.AttendanceMapper;
 import com.coma.comaroom.event.mapper.EventMapper;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
