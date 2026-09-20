@@ -3,6 +3,8 @@ package com.coma.comaroom.vote.entity;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.utils.BaseEntity;
 import jakarta.persistence.*;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,6 +29,7 @@ public class VoteResult extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long voteResultId;
 
+    @NotFound(action = NotFoundAction.IGNORE)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "voter_id", nullable = false)
     private Member voter;

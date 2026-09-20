@@ -20,9 +20,7 @@ public class AdminEventPostController {
     public ResponseEntity<Response<EventPostResponse>> updateStatus(
             @PathVariable Integer postId,
             @RequestBody EventPostStatusRequest request) {
-
-        EventPostResponse data = adminEventPostService.updatePostStatus(postId, request);
-        return Response.ok(data, HttpStatus.OK).toResponseEntity();
+        return Response.ok(adminEventPostService.updatePostStatus(postId, request), HttpStatus.OK).toResponseEntity();
     }
 
 
@@ -31,8 +29,7 @@ public class AdminEventPostController {
     public ResponseEntity<Response<EventPostResponse>> update(
             @PathVariable Integer postId,
             @RequestBody EventPostRequest request) {
-        EventPostResponse data = adminEventPostService.updatePost(postId, request);
-        return Response.ok(data, HttpStatus.OK).toResponseEntity();
+        return Response.ok(adminEventPostService.updatePost(postId, request), HttpStatus.OK).toResponseEntity();
     }
 
     // DELETE (테스트 완료)

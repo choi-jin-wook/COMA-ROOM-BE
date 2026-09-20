@@ -9,7 +9,6 @@ import com.coma.comaroom.event.entity.ApprovalStatus;
 import com.coma.comaroom.event.entity.Event;
 import com.coma.comaroom.event.entity.EventCategory;
 import com.coma.comaroom.event.entity.EventPost;
-import com.coma.comaroom.event.mapper.EventPostMapper;
 import com.coma.comaroom.event.repository.EventPostRepository;
 import com.coma.comaroom.event.repository.EventRepository;
 import com.coma.comaroom.member.entity.Major;
@@ -23,6 +22,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +41,6 @@ class EventPostServiceTest {
     @Mock private EventPostRepository eventPostRepository;
     @Mock private EventRepository eventRepository;
     @Mock private SecurityUtils securityUtils;
-    @Mock private EventPostMapper eventPostMapper;
 
     @InjectMocks
     private EventPostService eventPostService;
@@ -89,14 +91,13 @@ class EventPostServiceTest {
         EventPostRequest request = new EventPostRequest("후기 게시글", 1L, List.of());
         when(securityUtils.getCurrentMember()).thenReturn(member);
         when(eventRepository.findById(1L)).thenReturn(Optional.of(event));
-        when(eventPostMapper.toEntity(request, member, event)).thenReturn(eventPost);
-        when(eventPostRepository.save(eventPost)).thenReturn(eventPost);
+        when(eventPostRepository.save(any(EventPost.class))).thenReturn(eventPost);
 
         EventPostResponse result = eventPostService.createPost(request);
 
         assertThat(result).isNotNull();
         assertThat(result.title()).isEqualTo("후기 게시글");
-        verify(eventPostRepository).save(eventPost);
+        verify(eventPostRepository).save(any(EventPost.class));
     }
 
     @Test
@@ -143,20 +144,22 @@ class EventPostServiceTest {
     @Test
     @DisplayName("게시글 전체 조회 성공")
     void getAllPosts_success() {
-        when(eventPostRepository.findAll()).thenReturn(List.of(eventPost));
+        Pageable pageable = PageRequest.of(0, 10);
+        when(eventPostRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(eventPost)));
 
-        List<EventPostResponse> result = eventPostService.getAllPosts();
+        Page<EventPostResponse> result = eventPostService.getAllPosts(pageable);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).title()).isEqualTo("후기 게시글");
+        assertThat(result.getContent().get(0).title()).isEqualTo("후기 게시글");
     }
 
     @Test
     @DisplayName("게시글 전체 조회 - 게시글 없음")
     void getAllPosts_empty() {
-        when(eventPostRepository.findAll()).thenReturn(List.of());
+        Pageable pageable = PageRequest.of(0, 10);
+        when(eventPostRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of()));
 
-        List<EventPostResponse> result = eventPostService.getAllPosts();
+        Page<EventPostResponse> result = eventPostService.getAllPosts(pageable);
 
         assertThat(result).isEmpty();
     }

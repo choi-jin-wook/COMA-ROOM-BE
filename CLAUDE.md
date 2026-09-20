@@ -96,4 +96,71 @@ public enum AuthError implements ErrorCode {
 
 ### Admin vs 일반 API
 
-컨트롤러가 도메인별로 `Admin*Controller` / `*Controller` 두 개로 분리. 현재 URL 레벨 권한 분리는 `SecurityConfig`에서 `.authenticated()` 수준이며, 관리자 여부는 서비스 레이어에서 `Role.ADMIN` 검사로 처리.
+컨트롤러가 도메인별로 `Admin*Controller` / `*Controller` 두 개로 분리. 관리자 권한은 `SecurityConfig`에서 URL 레벨로 처리한다.
+
+```java
+.requestMatchers("/api/admin/**").hasRole("ADMIN")
+.requestMatchers("/api/**").authenticated()
+```
+
+`CustomUserDetails.getAuthorities()`가 `"ROLE_" + role.name()` 형태로 권한을 부여하므로 `hasRole("ADMIN")`과 맞물린다. 따라서 관리자 API의 서비스 레이어에서는 `Role.ADMIN`을 다시 검사하지 않는다. 단, 작성자 본인 확인처럼 리소스 소유권을 따지는 검증은 서비스 레이어에 둔다 (예: `AdminEventPostService.validateAuthor`).
+
+## Git 워크플로우
+
+Vincent Driessen의 Git Flow 브랜치 모델 + Conventional Commits 규칙을 따른다.
+
+### 브랜치 전략
+
+| 브랜치 | 역할 |
+|---|---|
+| `main` | 항상 배포 가능한 상태 유지. 실제 운영(production)에 올라가는 코드 |
+| `develop` | 다음 릴리스를 위한 개발이 통합되는 브랜치. 평소 개발은 이 브랜치 기준 |
+| `feature/*` | 새 기능 개발 시 `develop`에서 분기. 완료 후 `develop`으로 merge |
+| `release/*` | 배포 준비를 위해 `develop`에서 분기. 버그 수정·문서화만 진행 (새 기능 X). 완료 시 `main`, `develop` 양쪽에 merge |
+| `hotfix/*` | 운영 중 긴급 버그 발견 시 `main`에서 바로 분기. 수정 후 `main`, `develop` 양쪽에 merge |
+
+기능 개발·배포 준비·긴급 수정이 서로 섞이지 않도록 브랜치를 역할별로 분리하는 것이 핵심이다.
+
+### 커밋 메시지 규칙 (Conventional Commits)
+
+```
+<타입>(<범위>): <제목>
+
+<본문(선택)>
+
+<꼬리말(선택)>
+```
+
+**타입 종류**
+
+| 타입 | 설명 |
+|---|---|
+| `feat` | 새로운 기능 추가 |
+| `fix` | 버그 수정 |
+| `docs` | 문서 수정 |
+| `style` | 코드 포맷팅, 세미콜론 누락 등 (로직 변경 없음) |
+| `refactor` | 코드 리팩토링 (기능 변화 없음) |
+| `test` | 테스트 코드 추가/수정 |
+| `chore` | 빌드 설정, 패키지 매니저 설정 등 |
+| `perf` | 성능 개선 |
+
+**예시**
+
+```
+feat(login): 소셜 로그인 기능 추가
+
+- 카카오 OAuth2 연동
+- 로그인 성공 시 JWT 발급 로직 구현
+
+Resolves: #23
+```
+
+```
+fix(auth): 토큰 만료 시 재발급 오류 수정
+```
+
+**브랜치별 주로 쓰는 타입**
+
+- `feature/*` — `feat`, `refactor`, `test` 위주
+- `release/*` — `fix`, `docs`, `chore` 위주 (새 기능 X)
+- `hotfix/*` — `fix` 타입 사용, 긴급성을 나타내기 위해 본문에 원인과 영향 범위 명시

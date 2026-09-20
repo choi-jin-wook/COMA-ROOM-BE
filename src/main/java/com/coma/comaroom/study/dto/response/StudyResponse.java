@@ -11,7 +11,7 @@ public record StudyResponse(
         return new StudyResponse(
                 study.getId(),
                 study.getStudyName(),
-                study.getStudyManager().getName()
+                study.getStudyManager() != null ? study.getStudyManager().getName() : "탈퇴한 회원"
         );
     }
 }

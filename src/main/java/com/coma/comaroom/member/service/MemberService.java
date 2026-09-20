@@ -7,18 +7,14 @@ import com.coma.comaroom.event.dto.AskXpResponseDto;
 import com.coma.comaroom.event.dto.RecentActivityLogDto;
 import com.coma.comaroom.event.dto.XpManagementMainResponseDto;
 import com.coma.comaroom.event.entity.*;
-import com.coma.comaroom.event.mapper.EventApprovalMapper;
 import com.coma.comaroom.event.repository.EventApprovalRepository;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.event.repository.EventRepository;
-import com.coma.comaroom.member.MemberMapper;
-import com.coma.comaroom.member.XpManagementMapper;
 import com.coma.comaroom.member.dto.request.LeaderboardResponseDto;
 import com.coma.comaroom.member.dto.request.MyRankingDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
 import com.coma.comaroom.member.dto.response.*;
 import com.coma.comaroom.member.entity.Member;
-import com.coma.comaroom.member.entity.Role;
 import com.coma.comaroom.member.repository.MemberRepository;
 import com.coma.comaroom.notice.entity.Notice;
 import com.coma.comaroom.notice.exception.NoticeError;
@@ -32,7 +28,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,25 +43,9 @@ public class MemberService {
     private final NoticeRepository noticeRepository;
     private final EventRepository eventRepository;
     private final EventParticipateRepository eventParticipateRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final MemberMapper memberMapper;
     private final SecurityUtils securityUtils;
     private final VoteRepository voteRepository;
-    private final EventApprovalMapper eventApprovalMapper;
-    private final XpManagementMapper xpManagementMapper;
     private final EventApprovalRepository eventApprovalRepository;
-
-    public void registerMember(RegisterMemberRequestDto registerMemberRequestDto) {
-        Member member = Member.builder()
-                .studentId(registerMemberRequestDto.getStudentId())
-                .name(registerMemberRequestDto.getName())
-                .role(Role.USER)
-                .password(passwordEncoder.encode(registerMemberRequestDto.getPassword()))
-                .xp(0L)
-                .build();
-
-        memberRepository.saveAndFlush(member);
-    }
 
     public AskXpResponseDto askProvisionXp(AskXpRequestDto xpPetitionRequestDto) {
         Member currentUser = securityUtils.getCurrentMember();
@@ -80,9 +59,9 @@ public class MemberService {
         final Integer pageNumber = 0;
         final Integer pageSize = 10;
         Member member = securityUtils.getCurrentMember();
-        MyRankingDto myRankingDto = memberMapper.memberToMyRankingDto(member, memberRepository.findRankByMember(member));
+        MyRankingDto myRankingDto = MyRankingDto.of(member, memberRepository.findRankByMember(member));
         List<Member> memberList = memberRepository.findAllByOrderByXpDescMemberIdAsc(PageRequest.of(pageNumber, pageSize));
-        LeaderboardResponseDto leaderboardResponseDto = memberMapper.MyRankingDtoAndMemberListToLeaderboardResponseDto(memberList, myRankingDto);
+        LeaderboardResponseDto leaderboardResponseDto = LeaderboardResponseDto.of(memberList, myRankingDto);
 
         return leaderboardResponseDto;
     }
@@ -106,7 +85,7 @@ public class MemberService {
         // 진행중인 투표
         Optional<Vote> vote = voteRepository.findFirstByVoteStatusOrderByCreatedAtDesc(VoteStatus.IN_PROGRESS);
 
-        MainDashboardResponse mainDashboardResponse = memberMapper.createMainDashboardResponse(member, event, notice, rank, statAttendanceCount, statEventCount, vote);
+        MainDashboardResponse mainDashboardResponse = MainDashboardResponse.of(member, event, notice, rank, statAttendanceCount, statEventCount, vote);
         return mainDashboardResponse;
     }
 
@@ -121,10 +100,9 @@ public class MemberService {
 
         // 참여한 행사의 목록
         List<EventParticipant> eventParticipants = eventParticipateRepository.findTop5ByParticipantMemberOrderByEventParticipantIdDesc(member);
-        List<RecentActivityDto> recentActivityDtoList = memberMapper.createRecentActivityDto(eventParticipants);
+        List<RecentActivityDto> recentActivityDtoList = RecentActivityDto.listOf(eventParticipants);
 
-        // mapper을 통한 dto 생성
-        ProfileResponseDto profileResponseDto = memberMapper.createProfileResponseDto(member, rank, attendanceCount, eventCount, recentActivityDtoList);
+        ProfileResponseDto profileResponseDto = ProfileResponseDto.of(member, rank, attendanceCount, eventCount, recentActivityDtoList);
         return profileResponseDto;
     }
 
@@ -142,12 +120,12 @@ public class MemberService {
         );
 
         List<AttendanceHistoryDto> history = eventList.stream()
-                .map(event -> memberMapper.createAttendanceHistoryDto(event, attendedEventIds))
+                .map(event -> AttendanceHistoryDto.of(event, attendedEventIds))
                 // 여기서 날짜 내림차순(최신순) 정렬 추가
                 .sorted(Comparator.comparing(AttendanceHistoryDto::getScheduledDate).reversed())
                 .collect(Collectors.toList());
 
-        MainAttendanceResponseDto mainAttendanceResponseDto = memberMapper.createMainAttendanceResponseDto(member, rank, eventCount, attendanceCount, history);
+        MainAttendanceResponseDto mainAttendanceResponseDto = MainAttendanceResponseDto.of(member, rank, eventCount, attendanceCount, history);
         return mainAttendanceResponseDto;
     }
 
@@ -160,9 +138,9 @@ public class MemberService {
                 : eventApprovalRepository.findByRequesterAndApprovalStatusOrderByCreatedAtDesc(currentMember, status, pageable);
 
         List<RecentActivityLogDto> recentActivityLogs =
-                eventApprovalMapper.toRecentActivityLogDtos(resultPage.getContent());
+                RecentActivityLogDto.listOf(resultPage.getContent());
 
-        return xpManagementMapper.toMainDto(
+        return XpManagementMainResponseDto.of(
                 eventApprovalRepository.countByRequesterAndApprovalStatus(currentMember, ApprovalStatus.APPROVED),
                 eventApprovalRepository.countByRequesterAndApprovalStatus(currentMember, ApprovalStatus.REJECTED),
                 eventApprovalRepository.countByRequesterAndApprovalStatus(currentMember, ApprovalStatus.PENDING),
@@ -264,14 +242,4 @@ public class MemberService {
                 .build();
     }
 
-//    public AttendanceMainResponse getAttendanceMainPage() {
-//        Member member = securityUtils.getCurrentMember();
-//        Long rank = memberRepository.findRankByMember(member);
-//
-//        Long attendanceCount = eventParticipateRepository.countByParticipantMember(member);
-//        Long eventCount = eventRepository.count();
-//        List<Event> eventList = eventParticipateRepository.findAllEventsByMember(member);
-//
-////        List<AttendanceHistoryDto> attendanceHistoryDtoList = memberMapper.createAttendanceHistoryDtoList();
-//    }
 }

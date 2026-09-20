@@ -10,7 +10,6 @@ import com.coma.comaroom.event.entity.Event;
 import com.coma.comaroom.event.entity.EventCategory;
 import com.coma.comaroom.event.entity.EventPost;
 import com.coma.comaroom.event.repository.EventPostRepository;
-import com.coma.comaroom.member.AuthError;
 import com.coma.comaroom.member.entity.Major;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.member.entity.Role;
@@ -39,7 +38,6 @@ class AdminEventPostServiceTest {
     @InjectMocks
     private AdminEventPostService adminEventPostService;
 
-    private Member adminMember;
     private Member authorMember;
     private Member otherMember;
     private Event event;
@@ -47,16 +45,6 @@ class AdminEventPostServiceTest {
 
     @BeforeEach
     void setUp() {
-        adminMember = Member.builder()
-                .memberId(1L)
-                .studentId("20210001")
-                .name("관리자")
-                .password("encoded")
-                .xp(0L)
-                .role(Role.ADMIN)
-                .major(Major.COMPUTER_INFO)
-                .build();
-
         authorMember = Member.builder()
                 .memberId(2L)
                 .studentId("20210002")
@@ -105,7 +93,6 @@ class AdminEventPostServiceTest {
     @DisplayName("게시글 상태 변경 성공 - 관리자 권한")
     void updatePostStatus_success() {
         EventPostStatusRequest request = new EventPostStatusRequest(ApprovalStatus.APPROVED);
-        when(securityUtils.getCurrentMember()).thenReturn(adminMember);
         when(eventPostRepository.findById(1)).thenReturn(Optional.of(eventPost));
 
         EventPostResponse result = adminEventPostService.updatePostStatus(1, request);
@@ -114,22 +101,13 @@ class AdminEventPostServiceTest {
         assertThat(result.approvalStatus()).isEqualTo(ApprovalStatus.APPROVED.name());
     }
 
-    @Test
-    @DisplayName("게시글 상태 변경 실패 - 관리자 아닌 경우")
-    void updatePostStatus_notAdmin() {
-        EventPostStatusRequest request = new EventPostStatusRequest(ApprovalStatus.APPROVED);
-        when(securityUtils.getCurrentMember()).thenReturn(authorMember);
-
-        assertThatThrownBy(() -> adminEventPostService.updatePostStatus(1, request))
-                .isInstanceOf(BusinessException.class)
-                .hasMessage(AuthError.NOT_ADMIN.getMessage());
-    }
+    // 관리자 권한 검사는 SecurityConfig의 "/api/admin/**" hasRole("ADMIN")에서 처리하므로
+    // 서비스 레이어 단위 테스트에서는 검증하지 않는다.
 
     @Test
     @DisplayName("게시글 상태 변경 실패 - 게시글 없음")
     void updatePostStatus_postNotFound() {
         EventPostStatusRequest request = new EventPostStatusRequest(ApprovalStatus.APPROVED);
-        when(securityUtils.getCurrentMember()).thenReturn(adminMember);
         when(eventPostRepository.findById(99)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> adminEventPostService.updatePostStatus(99, request))

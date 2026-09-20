@@ -5,7 +5,6 @@ import com.coma.comaroom.auth.jwt.JwtTokenProvider;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.event.repository.EventRepository;
 import com.coma.comaroom.member.AuthError;
-import com.coma.comaroom.member.MemberMapper;
 import com.coma.comaroom.member.dto.request.LoginRequestDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
 import com.coma.comaroom.member.dto.response.LoginResponse;
@@ -31,7 +30,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,7 +40,6 @@ class AuthServiceTest {
     @Mock private EventRepository eventRepository;
     @Mock private EventParticipateRepository eventParticipateRepository;
     @Mock private PasswordEncoder passwordEncoder;
-    @Mock private MemberMapper memberMapper;
     @Mock private SecurityUtils securityUtils;
     @Mock private VoteRepository voteRepository;
     @Mock private JwtTokenProvider jwtTokenProvider;
@@ -72,17 +69,27 @@ class AuthServiceTest {
     @Test
     @DisplayName("회원가입 성공")
     void registerMember_success() {
-        RegisterMemberRequestDto dto = mock(RegisterMemberRequestDto.class);
-        when(dto.getStudentId()).thenReturn("20210001");
-        when(dto.getName()).thenReturn("테스터");
-        when(dto.getPassword()).thenReturn("rawPassword");
-        when(dto.getMajor()).thenReturn(Major.COMPUTER_INFO);
+        RegisterMemberRequestDto dto = RegisterMemberRequestDto.builder()
+                .studentId("20210001")
+                .name("테스터")
+                .password("rawPassword")
+                .major(Major.COMPUTER_INFO)
+                .build();
         when(passwordEncoder.encode("rawPassword")).thenReturn("$2a$10$encoded");
         when(memberRepository.saveAndFlush(any(Member.class))).thenReturn(member);
 
         assertThatNoException().isThrownBy(() -> authService.registerMember(dto));
-        verify(memberRepository).saveAndFlush(any(Member.class));
         verify(passwordEncoder).encode("rawPassword");
+
+        ArgumentCaptor<Member> captor = ArgumentCaptor.forClass(Member.class);
+        verify(memberRepository).saveAndFlush(captor.capture());
+
+        Member saved = captor.getValue();
+        assertThat(saved.getStudentId()).isEqualTo("20210001");
+        assertThat(saved.getName()).isEqualTo("테스터");
+        assertThat(saved.getPassword()).isEqualTo("$2a$10$encoded");
+        assertThat(saved.getMajor()).isEqualTo(Major.COMPUTER_INFO);
+        assertThat(saved.getXp()).isZero();
     }
 
     @Test
@@ -94,7 +101,7 @@ class AuthServiceTest {
                 .password("pw")
                 .major(Major.COMPUTER_INFO)
                 .build();
-        when(memberRepository.existsByStudentId("20210002")).thenReturn(false);
+        when(memberRepository.countByStudentIdIncludingWithdrawn("20210002")).thenReturn(0L);
         when(passwordEncoder.encode("pw")).thenReturn("$2a$10$encoded");
 
         ArgumentCaptor<Member> captor = ArgumentCaptor.forClass(Member.class);
@@ -114,7 +121,7 @@ class AuthServiceTest {
                 .password("pw")
                 .major(Major.COMPUTER_INFO)
                 .build();
-        when(memberRepository.existsByStudentId("20210001")).thenReturn(true);
+        when(memberRepository.countByStudentIdIncludingWithdrawn("20210001")).thenReturn(1L);
 
         assertThatThrownBy(() -> authService.registerMember(dto))
                 .isInstanceOf(BusinessException.class)

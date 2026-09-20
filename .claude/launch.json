@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "frontend-dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "C:/Users/tempadmin/Desktop/comaroom_fe/COMA-ROOM-FE", "run", "dev"],
-      "port": 3000
+      "name": "coma-room-fe",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd /Users/macforjinwook/Desktop/COMA-ROOM-FE && npm run dev"],
+      "port": 5173
     }
   ]
 }

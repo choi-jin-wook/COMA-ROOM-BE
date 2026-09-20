@@ -1,9 +1,7 @@
 package com.coma.comaroom.auth;
 
 import com.coma.comaroom.auth.jwt.JwtTokenFilter;
-import com.coma.comaroom.auth.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,10 +24,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtTokenProvider jwtTokenProvider;
     private final JwtTokenFilter jwtTokenFilter;
-    private final LoginSuccessHandler loginSuccessHandler;
-    private final LoginFailureHandler loginFailureHandler;
+    private final KaKaoService kaKaoService;
+    private final SecurityExceptionHandler securityExceptionHandler;
 
     @Value("${app.security.cors.allowed-origins}")
     private List<String> allowedOrigins;
@@ -40,24 +37,22 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .formLogin(form -> form
-                        .loginProcessingUrl("/api/auth/login")
-                        .usernameParameter("studentId")
-                        .passwordParameter("password")
-                        .successHandler(loginSuccessHandler)
-                        .failureHandler(loginFailureHandler)
-                )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh").permitAll()
+                        .requestMatchers("/api/auth/register", "/api/auth/refresh").permitAll()
+                        .requestMatchers("/oauth2/authorization/kakao", "/login/oauth2/code/kakao").permitAll()
                         .requestMatchers("/error").permitAll()
+                        .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/**").authenticated()
+                        // 위 패턴에 해당하지 않는 경로(액추에이터 등)가 무방비로 열리지 않도록 기본 차단
+                        .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((request, response, e) ->
-                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
-                        .accessDeniedHandler((request, response, e) ->
-                                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden"))
+                        .authenticationEntryPoint(securityExceptionHandler)
+                        .accessDeniedHandler(securityExceptionHandler)
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(kaKaoService)
                 )
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

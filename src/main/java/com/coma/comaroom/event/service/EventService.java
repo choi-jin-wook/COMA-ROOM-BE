@@ -11,8 +11,6 @@ import com.coma.comaroom.event.dto.response.EventResponse;
 import com.coma.comaroom.event.entity.Event;
 import com.coma.comaroom.event.entity.EventCategory;
 import com.coma.comaroom.event.entity.EventParticipant;
-import com.coma.comaroom.event.mapper.AttendanceMapper;
-import com.coma.comaroom.event.mapper.EventMapper;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.event.repository.EventRepository;
 import com.coma.comaroom.member.entity.Member;
@@ -36,8 +34,6 @@ public class EventService {
     private final EventRepository eventRepository;
     private StringRedisTemplate redisTemplate;
     private final EventParticipateRepository eventParticipateRepository;
-    private final AttendanceMapper attendanceMapper;
-    private final EventMapper eventMapper;
 
 
 
@@ -55,8 +51,12 @@ public class EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(EventError.EVENT_NOT_FOUND));
 
+        if (eventParticipateRepository.existsByParticipantMemberAndEvent(currentUser, event)) {
+            throw new BusinessException(EventError.ALREADY_ATTENDED);
+        }
+
         event.addParticipant(currentUser);
-        currentUser.setXp(currentUser.getXp() + 3);
+        currentUser.setXp(currentUser.getXp() + event.getRewardXp());
     }
 
     // 1. 이달의 이벤트 조회

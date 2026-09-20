@@ -5,6 +5,8 @@ import com.coma.comaroom.notice.dto.request.CreateNoticeRequestDto;
 import com.coma.comaroom.notice.dto.request.UpdateNoticeRequestDto;
 import com.coma.comaroom.utils.BaseEntity;
 import jakarta.persistence.*;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -42,6 +44,7 @@ public class Notice extends BaseEntity {
     @Enumerated(EnumType.STRING)
     NoticePriority noticePriority;
 
+    @NotFound(action = NotFoundAction.IGNORE)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     private Member author;

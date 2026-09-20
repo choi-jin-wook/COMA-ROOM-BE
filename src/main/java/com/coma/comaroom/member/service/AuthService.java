@@ -2,27 +2,18 @@ package com.coma.comaroom.member.service;
 
 import com.coma.comaroom.BusinessException;
 import com.coma.comaroom.auth.jwt.JwtTokenProvider;
-import com.coma.comaroom.event.repository.EventParticipateRepository;
-import com.coma.comaroom.event.repository.EventRepository;
-import com.coma.comaroom.member.AuthError;
-import com.coma.comaroom.member.MemberMapper;
 import com.coma.comaroom.member.dto.request.LoginRequestDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
 import com.coma.comaroom.member.dto.response.LoginResponse;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.member.entity.MemberStatus;
-import com.coma.comaroom.member.entity.Role;
 import com.coma.comaroom.member.repository.MemberRepository;
-import com.coma.comaroom.notice.repository.NoticeRepository;
 import com.coma.comaroom.utils.SecurityUtils;
-import com.coma.comaroom.vote.repository.VoteRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
 
 import static com.coma.comaroom.member.AuthError.*;
 
@@ -31,29 +22,20 @@ import static com.coma.comaroom.member.AuthError.*;
 @AllArgsConstructor
 public class AuthService {
     private final MemberRepository memberRepository;
-    private final NoticeRepository noticeRepository;
-    private final EventRepository eventRepository;
-    private final EventParticipateRepository eventParticipateRepository;
     private final PasswordEncoder passwordEncoder;
-    private final MemberMapper memberMapper;
     private final SecurityUtils securityUtils;
-    private final VoteRepository voteRepository;
     private final JwtTokenProvider jwtTokenProvider;
 
     // 회원가입
     public void registerMember(RegisterMemberRequestDto registerMemberRequestDto) {
-        if (memberRepository.existsByStudentId(registerMemberRequestDto.getStudentId())){
+        // 탈퇴 회원은 @SQLRestriction으로 조회에서 제외되지만 student_id unique 제약은 남아있으므로
+        // 탈퇴 회원까지 포함해 중복을 확인해야 DB 제약 위반(500)을 막을 수 있다
+        if (memberRepository.countByStudentIdIncludingWithdrawn(registerMemberRequestDto.getStudentId()) > 0){
             throw new BusinessException(MEMBER_ALREADY_EXISTS);
         }
 
-        Member member = Member.builder()
-                .studentId(registerMemberRequestDto.getStudentId())
-                .name(registerMemberRequestDto.getName())
-                .role(Role.USER)
-                .password(passwordEncoder.encode(registerMemberRequestDto.getPassword()))
-                .xp(0L)
-                .major(registerMemberRequestDto.getMajor())
-                .build();
+        Member member = registerMemberRequestDto.toEntity(
+                passwordEncoder.encode(registerMemberRequestDto.getPassword()));
 
         memberRepository.saveAndFlush(member);
     }

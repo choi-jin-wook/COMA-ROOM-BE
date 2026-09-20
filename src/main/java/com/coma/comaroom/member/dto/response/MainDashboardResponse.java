@@ -1,7 +1,13 @@
 package com.coma.comaroom.member.dto.response;
 
+import com.coma.comaroom.event.entity.Event;
+import com.coma.comaroom.member.entity.Member;
+import com.coma.comaroom.notice.entity.Notice;
+import com.coma.comaroom.vote.entity.Vote;
 import lombok.Getter;
 import lombok.Builder;
+
+import java.util.Optional;
 
 @Getter
 @Builder
@@ -23,4 +29,31 @@ public class MainDashboardResponse {
     private UpcomingEventDto upcomingEvent;
     private NoticeDto notice;
     private VoteDto votePoll;
+
+    private static final Long XP_GOAL = 50L;
+
+    public static MainDashboardResponse of(
+            Member member,
+            Optional<Event> event,
+            Notice notice,
+            Long rank,
+            Long statAttendanceCount,
+            Long statEventCount,
+            Optional<Vote> vote
+    ) {
+        Long remainingXp = member.getXp() >= XP_GOAL ? 0L : XP_GOAL - member.getXp();
+
+        return MainDashboardResponse.builder()
+                .userName(member.getName())
+                .currentXp(member.getXp())
+                .remainingXp(remainingXp)
+                .semester("2026년 1학기")
+                .statAttendanceCount(statAttendanceCount)
+                .statEventCount(statEventCount)
+                .myRank(rank)
+                .upcomingEvent(event.map(UpcomingEventDto::from).orElse(null))
+                .notice(notice == null ? null : NoticeDto.from(notice))
+                .votePoll(vote.map(VoteDto::from).orElse(null))
+                .build();
+    }
 }
