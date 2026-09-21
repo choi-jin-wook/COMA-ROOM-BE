@@ -5,6 +5,7 @@ import com.coma.comaroom.member.AuthError;
 import com.coma.comaroom.member.dto.response.LoginResponse;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.member.repository.MemberRepository;
+import com.coma.comaroom.utils.PhoneNumberNormalizer;
 import com.coma.comaroom.utils.Response;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -33,7 +34,9 @@ public class KaKaoService extends SimpleUrlAuthenticationSuccessHandler {
             Authentication authentication
     ) throws IOException {
         OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
-        String phoneNumber = oauth2User.getAttribute("phone_number");
+        String phoneNumber = PhoneNumberNormalizer.toKoreanLocalFormat(
+                oauth2User.getAttribute("phone_number")
+        );
 
         Member member = memberRepository.findByPhoneNumber(phoneNumber).orElse(null);
         if (member == null) {
