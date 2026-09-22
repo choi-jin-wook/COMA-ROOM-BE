@@ -1,0 +1,77 @@
+
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  config:
+    import: optional:file:.env.${SPRING_PROFILES_ACTIVE:local}[.properties]
+  security:
+    cors:
+      allowed-origins: ${CORS_ALLOWED_ORIGINS}
+    oauth2:
+      client:
+        registration:
+          naver:
+            client-id: ${NAVER_CLIENT_ID}
+            client-secret: ${NAVER_CLIENT_SECRET}
+            client-authentication-method: client_secret_post
+            authorization-grant-type: authorization_code
+            redirect-uri: ${NAVER_REDIRECT_URI}
+            scope:
+              - name
+              - email
+              - mobile
+            client-name: Naver
+
+        provider:
+          naver:
+            authorization-uri: ${NAVER_AUTHORIZATION_URI}
+            token-uri: ${NAVER_TOKEN_URI}
+            user-info-uri: ${NAVER_USER_INFO_URI}
+            user-name-attribute: response
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    show-sql: ${JPA_SHOW_SQL:true}
+    properties:
+      hibernate:
+        format_sql: true # SQL을 예쁘게 보기 위해 권장
+  # Redis 설정 (이거 없어서 지금까지 삽질한 거다)
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      database: ${REDIS_DATABASE}
+      # password: yourpassword   # 비번 있으면 주석 풀어라
+
+  mvc:
+    throw-exception-if-no-handler-found: true
+  web:
+    resources:
+      add-mappings: false
+
+jwt:
+  secret: ${JWT_SECRET}
+
+app:
+  oauth:
+    frontend-success-url: ${FRONTEND_OAUTH_SUCCESS_URL}
+  security:
+    cors:
+      allowed-origins: ${CORS_ALLOWED_ORIGINS}
+
+study:
+  storage:
+    oci:
+      region: ${OCI_REGION}
+      namespace: ${OCI_NAMESPACE}
+      bucket: ${OCI_BUCKET}
+      object-base-url: ${OCI_OBJECT_BASE_URL}
+      auth: ${OCI_AUTH:CONFIG_FILE}
+      config-file: ${OCI_CONFIG_FILE:~/.oci/config}
+      profile: ${OCI_PROFILE:DEFAULT}

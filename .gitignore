@@ -35,13 +35,8 @@ out/
 
 ### VS Code ###
 .vscode/
-/src/main/resources/application.yaml
-
-
-src/main/resources/application.yml
-src/main/resources/application.yaml
-
 ### Claude Code ###
 .claude/settings.local.json
 CLAUDE.md
 .env
+.env.*
