@@ -34,7 +34,9 @@ public class StudyManagerService {
         Member manager = memberRepository.findById(request.getManagerId())
                 .orElseThrow(() -> new BusinessException(StudyError.MEMBER_NOT_FOUND));
         Study study = request.toEntity(manager);
-        return StudyResponse.from(studyRepository.save(study));
+        Study saved = studyRepository.save(study);
+        studyMemberRepository.save(StudyMember.builder().study(saved).member(manager).build());
+        return StudyResponse.from(saved);
     }
 
     // 스터디 멤버 추가

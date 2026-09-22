@@ -54,6 +54,11 @@ dependencies {
 
 	// 6. OAuth2
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
+	// 스터디 자료: Oracle Cloud Object Storage
+	implementation platform('com.oracle.oci.sdk:oci-java-sdk-bom:3.92.1')
+	implementation 'com.oracle.oci.sdk:oci-java-sdk-objectstorage'
+	implementation 'com.oracle.oci.sdk:oci-java-sdk-common-httpclient-jersey3'
 }
 
 

@@ -27,4 +27,8 @@ public class StudyMember extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "study_id")
     private Study study;
+
+    @Column(nullable = false, columnDefinition = "bigint default 0")
+    @Builder.Default
+    private Long earnedXp = 0L;
 }

@@ -11,7 +11,9 @@ public enum EventPostError implements ErrorCode {
     POST_NOT_FOUND("POST-001", HttpStatus.BAD_REQUEST, "게시글이 존재하지 않습니다."),
     UNAUTHORIZED_ACCESS("POST-002", HttpStatus.FORBIDDEN, "해당 게시글에 대한 권한이 없습니다."),
     INVALID_STATUS("POST-005", HttpStatus.BAD_REQUEST, "유효하지 않은 승인 상태값입니다."),
-    INVALID_TITLE("POST-003", HttpStatus.BAD_REQUEST, "게시글 제목이 유효하지 않습니다.");
+    INVALID_TITLE("POST-003", HttpStatus.BAD_REQUEST, "게시글 제목이 유효하지 않습니다."),
+    INVALID_IMAGE("POST-006", HttpStatus.BAD_REQUEST, "업로드할 이미지 형식이 유효하지 않습니다."),
+    IMAGE_UPLOAD_URL_CREATION_FAILED("POST-007", HttpStatus.INTERNAL_SERVER_ERROR, "이미지 업로드 주소 생성에 실패했습니다.");
 
     private final String code;
     private final HttpStatus httpStatus;
