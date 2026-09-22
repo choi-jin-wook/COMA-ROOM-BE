@@ -25,7 +25,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtTokenFilter jwtTokenFilter;
-    private final KaKaoService kaKaoService;
+    private final NaverService naverService;
     private final SecurityExceptionHandler securityExceptionHandler;
 
     @Value("${app.security.cors.allowed-origins}")
@@ -38,8 +38,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register", "/api/auth/refresh").permitAll()
-                        .requestMatchers("/oauth2/authorization/kakao", "/login/oauth2/code/kakao").permitAll()
+                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh", "/api/auth/oauth/exchange").permitAll()
+                        .requestMatchers("/oauth2/authorization/naver", "/login/oauth2/code/naver").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
@@ -52,7 +52,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(securityExceptionHandler)
                 )
                 .oauth2Login(oauth2 -> oauth2
-                        .successHandler(kaKaoService)
+                        .successHandler(naverService)
                 )
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

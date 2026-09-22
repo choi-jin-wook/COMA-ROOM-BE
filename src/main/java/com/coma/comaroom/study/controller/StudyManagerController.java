@@ -7,6 +7,7 @@ import com.coma.comaroom.study.dto.response.StudyActivityResponse;
 import com.coma.comaroom.study.dto.response.StudyResponse;
 import com.coma.comaroom.study.service.StudyManagerService;
 import com.coma.comaroom.utils.Response;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,7 @@ public class StudyManagerController {
 
     // 스터디 생성
     @PostMapping
-    public ResponseEntity<Response<StudyResponse>> createStudy(@RequestBody CreateStudyRequest request) {
+    public ResponseEntity<Response<StudyResponse>> createStudy(@Valid @RequestBody CreateStudyRequest request) {
         StudyResponse data = studyManagerService.createStudy(request);
         return Response.ok(data, HttpStatus.CREATED).toResponseEntity();
     }

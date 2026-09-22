@@ -17,7 +17,8 @@ public enum AuthError implements ErrorCode {
     METHOD_NOT_ALLOWED("AUTH-009", HttpStatus.METHOD_NOT_ALLOWED, "허용되지 않는 HTTP 메서드입니다."),
     SOCIAL_LOGIN_MEMBER_NOT_FOUND("AUTH-010", HttpStatus.UNAUTHORIZED, "등록된 전화번호와 일치하는 회원이 없습니다."),
     UNAUTHORIZED("AUTH-011", HttpStatus.UNAUTHORIZED, "인증이 필요합니다."),
-    ACCESS_DENIED("AUTH-012", HttpStatus.FORBIDDEN, "접근 권한이 없습니다.");
+    ACCESS_DENIED("AUTH-012", HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
+    OAUTH_LOGIN_CODE_INVALID("AUTH-013", HttpStatus.BAD_REQUEST, "로그인 코드가 만료되었거나 이미 사용되었습니다.");
 
 
     private final String code;

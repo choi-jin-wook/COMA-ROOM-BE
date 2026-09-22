@@ -5,12 +5,14 @@ import com.coma.comaroom.study.entity.Study;
 public record StudyResponse(
         Long studyId,
         String studyName,
+        Long managerId,
         String managerName
 ) {
     public static StudyResponse from(Study study) {
         return new StudyResponse(
                 study.getId(),
                 study.getStudyName(),
+                study.getStudyManager() != null ? study.getStudyManager().getMemberId() : null,
                 study.getStudyManager() != null ? study.getStudyManager().getName() : "탈퇴한 회원"
         );
     }

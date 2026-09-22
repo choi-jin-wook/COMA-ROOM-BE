@@ -5,6 +5,7 @@ import com.coma.comaroom.member.AuthError;
 import com.coma.comaroom.member.dto.response.LoginResponse;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.member.repository.MemberRepository;
+import com.coma.comaroom.utils.PhoneNumberNormalizer;
 import com.coma.comaroom.utils.Response;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,14 +18,19 @@ import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-public class KaKaoService extends SimpleUrlAuthenticationSuccessHandler {
+public class NaverService extends SimpleUrlAuthenticationSuccessHandler {
 
     private final MemberRepository memberRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final ObjectMapper objectMapper;
+    private final OAuthLoginCodeService oauthLoginCodeService;
+
+    @org.springframework.beans.factory.annotation.Value("${app.oauth.frontend-success-url}")
+    private String frontendSuccessUrl;
 
     @Override
     public void onAuthenticationSuccess(
@@ -33,7 +39,10 @@ public class KaKaoService extends SimpleUrlAuthenticationSuccessHandler {
             Authentication authentication
     ) throws IOException {
         OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
-        String phoneNumber = oauth2User.getAttribute("phone_number");
+        Map<String, Object> naverResponse = oauth2User.getAttribute("response");
+        String phoneNumber = PhoneNumberNormalizer.toKoreanLocalFormat(
+                naverResponse == null ? null : (String) naverResponse.get("mobile")
+        );
 
         Member member = memberRepository.findByPhoneNumber(phoneNumber).orElse(null);
         if (member == null) {
@@ -55,10 +64,7 @@ public class KaKaoService extends SimpleUrlAuthenticationSuccessHandler {
                 .role(member.getRole())
                 .build();
 
-        response.setStatus(HttpServletResponse.SC_OK);
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(objectMapper.writeValueAsString(Response.ok(loginResponse, HttpStatus.OK)));
+        String loginCode = oauthLoginCodeService.issue(loginResponse);
+        response.sendRedirect(frontendSuccessUrl + "#loginCode=" + loginCode);
     }
-
 }

@@ -99,6 +99,11 @@ class StudyManagerServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.studyName()).isEqualTo("알고리즘 스터디");
         assertThat(result.managerName()).isEqualTo("스터디장");
+        assertThat(result.managerId()).isEqualTo(1L);
+        ArgumentCaptor<StudyMember> membership = ArgumentCaptor.forClass(StudyMember.class);
+        verify(studyMemberRepository).save(membership.capture());
+        assertThat(membership.getValue().getStudy()).isSameAs(study);
+        assertThat(membership.getValue().getMember()).isSameAs(manager);
 
         ArgumentCaptor<Study> captor = ArgumentCaptor.forClass(Study.class);
         verify(studyRepository).save(captor.capture());
