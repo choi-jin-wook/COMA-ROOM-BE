@@ -52,9 +52,6 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
 
-	// 6. OAuth2
-	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-
 	// 스터디 자료: Oracle Cloud Object Storage
 	implementation platform('com.oracle.oci.sdk:oci-java-sdk-bom:3.92.1')
 	implementation 'com.oracle.oci.sdk:oci-java-sdk-objectstorage'

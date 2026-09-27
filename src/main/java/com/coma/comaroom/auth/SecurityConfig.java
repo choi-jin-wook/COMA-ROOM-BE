@@ -25,7 +25,8 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtTokenFilter jwtTokenFilter;
-    private final NaverService naverService;
+    private final LoginSuccessHandler loginSuccessHandler;
+    private final LoginFailureHandler loginFailureHandler;
     private final SecurityExceptionHandler securityExceptionHandler;
 
     @Value("${app.security.cors.allowed-origins}")
@@ -37,9 +38,15 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .formLogin(form -> form
+                        .loginProcessingUrl("/api/auth/login")
+                        .usernameParameter("studentId")
+                        .passwordParameter("password")
+                        .successHandler(loginSuccessHandler)
+                        .failureHandler(loginFailureHandler)
+                )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh", "/api/auth/oauth/exchange").permitAll()
-                        .requestMatchers("/oauth2/authorization/naver", "/login/oauth2/code/naver").permitAll()
+                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
@@ -47,12 +54,10 @@ public class SecurityConfig {
                         // 위 패턴에 해당하지 않는 경로(액추에이터 등)가 무방비로 열리지 않도록 기본 차단
                         .anyRequest().authenticated()
                 )
+
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(securityExceptionHandler)
                         .accessDeniedHandler(securityExceptionHandler)
-                )
-                .oauth2Login(oauth2 -> oauth2
-                        .successHandler(naverService)
                 )
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

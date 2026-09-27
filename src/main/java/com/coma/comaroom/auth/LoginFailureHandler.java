@@ -22,9 +22,7 @@ public class LoginFailureHandler implements AuthenticationFailureHandler {
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
-        ErrorCode errorCode = exception instanceof OAuth2LoginException oauth2LoginException
-                ? oauth2LoginException.getErrorCode()
-                : AuthError.LOGIN_FAIL;
+        ErrorCode errorCode = AuthError.LOGIN_FAIL;
 
         response.setStatus(errorCode.getHttpStatus().value());
         response.setContentType("application/json");

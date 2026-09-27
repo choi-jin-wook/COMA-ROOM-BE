@@ -1,9 +1,7 @@
 package com.coma.comaroom.member.controller;
 
-import com.coma.comaroom.member.dto.request.LoginRequestDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
 import com.coma.comaroom.member.dto.request.ReissueTokenRequestDto;
-import com.coma.comaroom.member.dto.response.LoginResponse;
 import com.coma.comaroom.member.dto.response.RegisterMemberResponseDto;
 import com.coma.comaroom.member.dto.response.ReissueTokenResponseDto;
 import com.coma.comaroom.member.service.AuthService;
@@ -33,13 +31,6 @@ public class AuthController {
     public ResponseEntity<?> refreshMember(@RequestBody @Valid ReissueTokenRequestDto request) {
         String newAccessToken = authService.reissue(request.getRefreshToken());
         return Response.ok(new ReissueTokenResponseDto(newAccessToken), HttpStatus.OK).toResponseEntity();
-    }
-
-    // 로그인
-    @PostMapping("/login")
-    public ResponseEntity<Response<LoginResponse>> login(@RequestBody @Valid LoginRequestDto loginRequestDto) {
-        LoginResponse response = authService.login(loginRequestDto);
-        return Response.ok(response, HttpStatus.OK).toResponseEntity();
     }
 
     // 회원 탈퇴
