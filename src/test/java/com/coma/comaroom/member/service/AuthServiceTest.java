@@ -26,7 +26,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -126,6 +128,79 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.registerMember(dto))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(AuthError.MEMBER_ALREADY_EXISTS.getMessage());
+    }
+
+    @Test
+    @DisplayName("여러 회원을 한 번에 가입한다")
+    void registerMembers_success() {
+        RegisterMemberRequestDto first = RegisterMemberRequestDto.builder()
+                .studentId("20210001")
+                .name("member1")
+                .password("password1")
+                .major(Major.COMPUTER_INFO)
+                .role(Role.USER)
+                .build();
+        RegisterMemberRequestDto second = RegisterMemberRequestDto.builder()
+                .studentId("20210002")
+                .name("member2")
+                .password("password2")
+                .major(Major.DATA_SCIENCE)
+                .role(Role.USER)
+                .build();
+        when(passwordEncoder.encode("password1")).thenReturn("encoded1");
+        when(passwordEncoder.encode("password2")).thenReturn("encoded2");
+
+        authService.registerMembers(List.of(first, second));
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Member>> captor = ArgumentCaptor.forClass(List.class);
+        verify(memberRepository).saveAllAndFlush(captor.capture());
+        assertThat(captor.getValue()).extracting(Member::getStudentId)
+                .containsExactly("20210001", "20210002");
+        assertThat(captor.getValue()).extracting(Member::getPassword)
+                .containsExactly("encoded1", "encoded2");
+    }
+
+    @Test
+    @DisplayName("한 요청에 같은 학번이 있으면 전체 가입을 거부한다")
+    void registerMembers_duplicateStudentIdInRequest() {
+        RegisterMemberRequestDto first = RegisterMemberRequestDto.builder()
+                .studentId("20210001")
+                .build();
+        RegisterMemberRequestDto duplicate = RegisterMemberRequestDto.builder()
+                .studentId("20210001")
+                .build();
+
+        assertThatThrownBy(() -> authService.registerMembers(List.of(first, duplicate)))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(AuthError.MEMBER_ALREADY_EXISTS.getMessage());
+
+        verify(memberRepository, never()).saveAllAndFlush(anyList());
+    }
+
+    @Test
+    @DisplayName("회원 100명을 한 번에 저장한다")
+    void registerMembers_oneHundredMembers() {
+        List<RegisterMemberRequestDto> requests = IntStream.rangeClosed(1, 100)
+                .mapToObj(i -> RegisterMemberRequestDto.builder()
+                        .studentId("%08d".formatted(i))
+                        .name("member" + i)
+                        .password("password" + i)
+                        .major(Major.COMPUTER_INFO)
+                        .role(Role.USER)
+                        .build())
+                .toList();
+        when(passwordEncoder.encode(anyString()))
+                .thenAnswer(invocation -> "encoded-" + invocation.getArgument(0));
+
+        authService.registerMembers(requests);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<Member>> captor = ArgumentCaptor.forClass(List.class);
+        verify(memberRepository).saveAllAndFlush(captor.capture());
+        assertThat(captor.getValue()).hasSize(100);
+        assertThat(captor.getValue().getFirst().getStudentId()).isEqualTo("00000001");
+        assertThat(captor.getValue().getLast().getStudentId()).isEqualTo("00000100");
     }
 
     // ─────────────────────────────────────────────

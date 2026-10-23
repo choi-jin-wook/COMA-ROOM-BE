@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 
 @RestController
 @AllArgsConstructor
@@ -21,9 +23,13 @@ public class AuthController {
 
     // 회원가입 (테스트 완료)
     @PostMapping("/register")
-    public ResponseEntity<?> joinMember(@RequestBody @Valid RegisterMemberRequestDto registerMemberRequestDto) {
-        authService.registerMember(registerMemberRequestDto);
-        return Response.ok(RegisterMemberResponseDto.from(registerMemberRequestDto), HttpStatus.CREATED).toResponseEntity();
+    public ResponseEntity<?> joinMember(@RequestBody List<RegisterMemberRequestDto> registerMemberRequests) {
+        authService.registerMembers(registerMemberRequests);
+
+        List<RegisterMemberResponseDto> response = registerMemberRequests.stream()
+                .map(RegisterMemberResponseDto::from)
+                .toList();
+        return Response.ok(response, HttpStatus.CREATED).toResponseEntity();
     }
 
     // 리프레시 토큰으로 액세스 토큰 재발급

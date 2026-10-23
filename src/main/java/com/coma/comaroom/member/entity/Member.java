@@ -35,10 +35,6 @@ public class Member extends BaseEntity {
 
     @Column(name = "password", nullable = true)
     private String password;
-
-    @Column(name = "phone_number", nullable = false, unique = true)
-    private String phoneNumber;
-
     @Column(name = "xp", nullable = false)
     private Long xp;
 
