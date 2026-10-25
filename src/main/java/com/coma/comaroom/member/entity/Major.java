@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum Major {
     FREE_MAJOR("자유전공학부"),
+    NATURAL_SCIENCE_AND_ENGINEERING("자연공학계열"),
+    HUMANITIES_AND_SOCIAL_SCIENCES("인문사회계열"),
 
     KOREAN_LANGUAGE_AND_LITERATURE("국어국문학과"),
     PHILOSOPHY("철학과"),

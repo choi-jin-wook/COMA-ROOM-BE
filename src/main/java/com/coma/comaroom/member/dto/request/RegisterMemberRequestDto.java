@@ -26,23 +26,18 @@ public class RegisterMemberRequestDto {
     @Size(min = 8, max = 64)
     private String password;
 
-    @NotBlank
-    private String phoneNumber;
-
     @NotNull
     private Major major;
 
-    /**
-     * 비밀번호는 서비스에서 인코딩한 값을 넘겨받는다. (DTO가 PasswordEncoder를 알지 않도록)
-     * 가입 시 역할은 항상 USER로 고정한다.
-     */
+    @NotNull
+    private Role role;
+
     public Member toEntity(String encodedPassword) {
         return Member.builder()
                 .studentId(studentId)
                 .name(name)
                 .password(encodedPassword)
-                .phoneNumber(phoneNumber)
-                .role(Role.USER)
+                .role(role)
                 .xp(0L)
                 .major(major)
                 .build();

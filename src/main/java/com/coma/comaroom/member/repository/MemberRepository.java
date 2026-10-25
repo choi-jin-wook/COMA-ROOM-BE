@@ -13,7 +13,6 @@ import java.util.Optional;
 
 public interface MemberRepository extends JpaRepository<Member, Long> {
     Optional<Member> findByStudentId(String studentId);
-    Optional<Member> findByPhoneNumber(String phoneNumber);
     void deleteByStudentId(String studentId);
 
     @Query("SELECT COUNT(m) + 1 FROM Member m " +
