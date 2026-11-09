@@ -1,4 +1,4 @@
-package com.coma.comaroom.study.storage;
+package com.coma.comaroom.storage;
 
 import com.coma.comaroom.study.StudyError;
 import com.oracle.bmc.model.BmcException;
@@ -12,6 +12,7 @@ import java.io.ByteArrayInputStream;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/** OCI 자료 저장소의 오류 변환과 크기 검증을 확인한다. */
 class OciStudyMaterialStorageTest {
     private final ObjectStorage client = mock(ObjectStorage.class);
     @SuppressWarnings("unchecked")

@@ -5,7 +5,7 @@ import com.coma.comaroom.event.dto.AskXpResponseDto;
 import com.coma.comaroom.event.dto.XpManagementMainResponseDto;
 import com.coma.comaroom.event.entity.*;
 import com.coma.comaroom.member.dto.response.XpHistoryResponseDto;
-import com.coma.comaroom.event.repository.EventApprovalRepository;
+import com.coma.comaroom.member.repository.XpProvisionRequestRepository;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.event.repository.EventRepository;
 import com.coma.comaroom.member.dto.request.LeaderboardResponseDto;
@@ -14,6 +14,7 @@ import com.coma.comaroom.member.dto.request.RankingItemDto;
 import com.coma.comaroom.member.dto.response.*;
 import com.coma.comaroom.member.entity.Major;
 import com.coma.comaroom.member.entity.Member;
+import com.coma.comaroom.member.entity.XpProvisionRequest;
 import com.coma.comaroom.member.entity.Role;
 import com.coma.comaroom.member.repository.MemberRepository;
 import com.coma.comaroom.notice.entity.Notice;
@@ -52,7 +53,7 @@ class MemberServiceTest {
     @Mock private EventParticipateRepository eventParticipateRepository;
     @Mock private SecurityUtils securityUtils;
     @Mock private VoteRepository voteRepository;
-    @Mock private EventApprovalRepository eventApprovalRepository;
+    @Mock private XpProvisionRequestRepository xpProvisionRequestRepository;
 
     @InjectMocks
     private MemberService memberService;
@@ -99,19 +100,19 @@ class MemberServiceTest {
         when(dto.getProvisionAmount()).thenReturn(50L);
         when(securityUtils.getCurrentMember()).thenReturn(member);
 
-        EventApproval savedApproval = EventApproval.builder()
+        XpProvisionRequest savedApproval = XpProvisionRequest.builder()
                 .id(1L)
                 .approvalStatus(ApprovalStatus.PENDING)
                 .grantedXp(50L)
                 .reason("스터디 참여")
                 .requester(member)
                 .build();
-        when(eventApprovalRepository.save(any(EventApproval.class))).thenReturn(savedApproval);
+        when(xpProvisionRequestRepository.save(any(XpProvisionRequest.class))).thenReturn(savedApproval);
 
         AskXpResponseDto result = memberService.askProvisionXp(dto);
 
         assertThat(result).isNotNull();
-        verify(eventApprovalRepository).save(any(EventApproval.class));
+        verify(xpProvisionRequestRepository).save(any(XpProvisionRequest.class));
     }
 
     // ─────────────────────────────────────────────
@@ -242,36 +243,36 @@ class MemberServiceTest {
     @DisplayName("XP 관리 데이터 조회 성공 - 상태 필터 없음")
     void getXpManagementMainData_withNullStatus() {
         when(securityUtils.getCurrentMember()).thenReturn(member);
-        Page<EventApproval> page = new PageImpl<>(List.of());
-        when(eventApprovalRepository.findByRequesterOrderByCreatedAtDesc(eq(member), any())).thenReturn(page);
-        when(eventApprovalRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.APPROVED)).thenReturn(5L);
-        when(eventApprovalRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.REJECTED)).thenReturn(2L);
-        when(eventApprovalRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.PENDING)).thenReturn(3L);
+        Page<XpProvisionRequest> page = new PageImpl<>(List.of());
+        when(xpProvisionRequestRepository.findByRequesterOrderByCreatedAtDesc(eq(member), any())).thenReturn(page);
+        when(xpProvisionRequestRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.APPROVED)).thenReturn(5L);
+        when(xpProvisionRequestRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.REJECTED)).thenReturn(2L);
+        when(xpProvisionRequestRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.PENDING)).thenReturn(3L);
         XpManagementMainResponseDto result = memberService.getXpManagementMainData(null, 0L);
 
         assertThat(result.getApprovedCount()).isEqualTo(5L);
         assertThat(result.getRejectedCount()).isEqualTo(2L);
         assertThat(result.getPendingCount()).isEqualTo(3L);
         assertThat(result.getRecentActivityLogs()).isEmpty();
-        verify(eventApprovalRepository).findByRequesterOrderByCreatedAtDesc(eq(member), any());
+        verify(xpProvisionRequestRepository).findByRequesterOrderByCreatedAtDesc(eq(member), any());
     }
 
     @Test
     @DisplayName("XP 관리 데이터 조회 성공 - 상태 필터 있음")
     void getXpManagementMainData_withStatus() {
         when(securityUtils.getCurrentMember()).thenReturn(member);
-        Page<EventApproval> page = new PageImpl<>(List.of());
-        when(eventApprovalRepository.findByRequesterAndApprovalStatusOrderByCreatedAtDesc(eq(member), eq(ApprovalStatus.PENDING), any())).thenReturn(page);
-        when(eventApprovalRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.APPROVED)).thenReturn(5L);
-        when(eventApprovalRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.REJECTED)).thenReturn(2L);
-        when(eventApprovalRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.PENDING)).thenReturn(3L);
+        Page<XpProvisionRequest> page = new PageImpl<>(List.of());
+        when(xpProvisionRequestRepository.findByRequesterAndApprovalStatusOrderByCreatedAtDesc(eq(member), eq(ApprovalStatus.PENDING), any())).thenReturn(page);
+        when(xpProvisionRequestRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.APPROVED)).thenReturn(5L);
+        when(xpProvisionRequestRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.REJECTED)).thenReturn(2L);
+        when(xpProvisionRequestRepository.countByRequesterAndApprovalStatus(member, ApprovalStatus.PENDING)).thenReturn(3L);
         XpManagementMainResponseDto result = memberService.getXpManagementMainData(ApprovalStatus.PENDING, 0L);
 
         assertThat(result.getApprovedCount()).isEqualTo(5L);
         assertThat(result.getRejectedCount()).isEqualTo(2L);
         assertThat(result.getPendingCount()).isEqualTo(3L);
         assertThat(result.getRecentActivityLogs()).isEmpty();
-        verify(eventApprovalRepository).findByRequesterAndApprovalStatusOrderByCreatedAtDesc(eq(member), eq(ApprovalStatus.PENDING), any());
+        verify(xpProvisionRequestRepository).findByRequesterAndApprovalStatusOrderByCreatedAtDesc(eq(member), eq(ApprovalStatus.PENDING), any());
     }
 
     // ─────────────────────────────────────────────
@@ -308,13 +309,13 @@ class MemberServiceTest {
         when(eventParticipateRepository.findByParticipantMemberOrderByEventParticipantIdDesc(memberWith18Xp))
                 .thenReturn(List.of(ep1, ep2));
 
-        EventApproval approval = mock(EventApproval.class);
+        XpProvisionRequest approval = mock(XpProvisionRequest.class);
         when(approval.getApprovalStatus()).thenReturn(ApprovalStatus.APPROVED);
         when(approval.getGrantedXp()).thenReturn(10L);
         when(approval.getReason()).thenReturn("특별 기여");
         when(approval.getCreatedAt()).thenReturn(LocalDateTime.of(2025, 12, 20, 10, 0));
 
-        when(eventApprovalRepository.findByRequesterOrderByCreatedAtDesc(memberWith18Xp))
+        when(xpProvisionRequestRepository.findByRequesterOrderByCreatedAtDesc(memberWith18Xp))
                 .thenReturn(List.of(approval));
 
         XpHistoryResponseDto result = memberService.getMemberXpHistory(0);
@@ -347,7 +348,7 @@ class MemberServiceTest {
         when(securityUtils.getCurrentMember()).thenReturn(emptyMember);
         when(eventParticipateRepository.findByParticipantMemberOrderByEventParticipantIdDesc(emptyMember))
                 .thenReturn(List.of());
-        when(eventApprovalRepository.findByRequesterOrderByCreatedAtDesc(emptyMember))
+        when(xpProvisionRequestRepository.findByRequesterOrderByCreatedAtDesc(emptyMember))
                 .thenReturn(List.of());
 
         XpHistoryResponseDto result = memberService.getMemberXpHistory(0);
@@ -382,7 +383,7 @@ class MemberServiceTest {
 
         when(eventParticipateRepository.findByParticipantMemberOrderByEventParticipantIdDesc(memberWithMany))
                 .thenReturn(participants);
-        when(eventApprovalRepository.findByRequesterOrderByCreatedAtDesc(memberWithMany))
+        when(xpProvisionRequestRepository.findByRequesterOrderByCreatedAtDesc(memberWithMany))
                 .thenReturn(List.of());
 
         XpHistoryResponseDto result = memberService.getMemberXpHistory(1);
@@ -400,13 +401,13 @@ class MemberServiceTest {
         when(eventParticipateRepository.findByParticipantMemberOrderByEventParticipantIdDesc(member))
                 .thenReturn(List.of());
 
-        EventApproval pending = mock(EventApproval.class);
+        XpProvisionRequest pending = mock(XpProvisionRequest.class);
         when(pending.getApprovalStatus()).thenReturn(ApprovalStatus.PENDING);
         when(pending.getGrantedXp()).thenReturn(10L);
         when(pending.getReason()).thenReturn("미승인 요청");
         when(pending.getCreatedAt()).thenReturn(LocalDateTime.now());
 
-        when(eventApprovalRepository.findByRequesterOrderByCreatedAtDesc(member))
+        when(xpProvisionRequestRepository.findByRequesterOrderByCreatedAtDesc(member))
                 .thenReturn(List.of(pending));
 
         XpHistoryResponseDto result = memberService.getMemberXpHistory(0);

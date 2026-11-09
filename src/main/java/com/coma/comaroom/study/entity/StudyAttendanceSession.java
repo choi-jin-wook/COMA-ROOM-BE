@@ -1,9 +1,10 @@
 package com.coma.comaroom.study.entity;
 
+import com.coma.comaroom.event.entity.Event;
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.Instant;
 
+/** 주차 계획과 기존 이벤트 출석을 연결한다. */
 @Entity
 @Table(name = "study_attendance_session")
 @Getter @Builder @NoArgsConstructor @AllArgsConstructor
@@ -13,8 +14,7 @@ public class StudyAttendanceSession {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "plan_id", nullable = false)
     private StudyWeek plan;
-    @Column(nullable = false, unique = true, length = 36)
-    private String qrCodeId;
-    @Column(nullable = false)
-    private Instant expiresAt;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_id")
+    private Event event;
 }

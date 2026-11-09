@@ -7,6 +7,7 @@ import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import lombok.*;
 
+/** 기존 스터디 참여자 테이블과 회원·스터디 관계를 매핑한다. */
 @Entity
 @Table(name = "study_participant")
 @Builder

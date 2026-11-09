@@ -4,21 +4,18 @@ import com.coma.comaroom.BusinessException;
 import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.member.repository.MemberRepository;
 import com.coma.comaroom.study.StudyError;
-import com.coma.comaroom.study.dto.request.AddStudyActivityRequest;
 import com.coma.comaroom.study.dto.request.AddStudyMemberRequest;
 import com.coma.comaroom.study.dto.request.CreateStudyRequest;
-import com.coma.comaroom.study.dto.response.StudyActivityResponse;
 import com.coma.comaroom.study.dto.response.StudyResponse;
 import com.coma.comaroom.study.entity.Study;
-import com.coma.comaroom.study.entity.StudyActivity;
 import com.coma.comaroom.study.entity.StudyMember;
-import com.coma.comaroom.study.repository.StudyActivityRepository;
 import com.coma.comaroom.study.repository.StudyMemberRepository;
 import com.coma.comaroom.study.repository.StudyRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/** 관리자의 스터디 생성 및 멤버 등록·삭제를 처리한다. */
 @Service
 @Transactional
 @AllArgsConstructor
@@ -26,10 +23,9 @@ public class StudyManagerService {
 
     private final StudyRepository studyRepository;
     private final StudyMemberRepository studyMemberRepository;
-    private final StudyActivityRepository studyActivityRepository;
     private final MemberRepository memberRepository;
 
-    // 스터디 생성
+    /** 스터디와 스터디장의 멤버십을 한 트랜잭션으로 생성한다. */
     public StudyResponse createStudy(CreateStudyRequest request) {
         Member manager = memberRepository.findById(request.getManagerId())
                 .orElseThrow(() -> new BusinessException(StudyError.MEMBER_NOT_FOUND));
@@ -39,7 +35,7 @@ public class StudyManagerService {
         return StudyResponse.from(saved);
     }
 
-    // 스터디 멤버 추가
+    /** 스터디와 회원의 존재 및 중복 등록 여부를 확인한다. */
     public void addStudyMember(Long studyId, AddStudyMemberRequest request) {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new BusinessException(StudyError.STUDY_NOT_FOUND));
@@ -51,32 +47,12 @@ public class StudyManagerService {
         studyMemberRepository.save(request.toEntity(study, member));
     }
 
-    // 스터디 멤버 삭제
+    /** 등록된 멤버십만 삭제한다. */
     public void removeStudyMember(Long studyId, Long memberId) {
         studyRepository.findById(studyId)
                 .orElseThrow(() -> new BusinessException(StudyError.STUDY_NOT_FOUND));
         StudyMember studyMember = studyMemberRepository.findByStudyIdAndMemberMemberId(studyId, memberId)
                 .orElseThrow(() -> new BusinessException(StudyError.NOT_STUDY_MEMBER));
         studyMemberRepository.delete(studyMember);
-    }
-
-    // 스터디 일정 추가
-    public StudyActivityResponse addStudyActivity(Long studyId, AddStudyActivityRequest request) {
-        Study study = studyRepository.findById(studyId)
-                .orElseThrow(() -> new BusinessException(StudyError.STUDY_NOT_FOUND));
-        StudyActivity activity = request.toEntity(study);
-        return StudyActivityResponse.from(studyActivityRepository.save(activity));
-    }
-
-    // 스터디 일정 삭제
-    public void removeStudyActivity(Long studyId, Long activityId) {
-        studyRepository.findById(studyId)
-                .orElseThrow(() -> new BusinessException(StudyError.STUDY_NOT_FOUND));
-        StudyActivity activity = studyActivityRepository.findById(activityId)
-                .orElseThrow(() -> new BusinessException(StudyError.ACTIVITY_NOT_FOUND));
-        if (!activity.getStudy().getId().equals(studyId)) {
-            throw new BusinessException(StudyError.ACTIVITY_NOT_IN_STUDY);
-        }
-        studyActivityRepository.delete(activity);
     }
 }

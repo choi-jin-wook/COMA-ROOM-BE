@@ -7,7 +7,7 @@ import com.coma.comaroom.study.dto.request.CreateStudyWeekRequest;
 import com.coma.comaroom.study.entity.*;
 import com.coma.comaroom.study.repository.*;
 import com.coma.comaroom.utils.SecurityUtils;
-import com.coma.comaroom.study.storage.OciStudyMaterialStorage;
+import com.coma.comaroom.storage.OciStudyMaterialStorage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.ArgumentMatchers.any;
 
+/** 주차 계획, 자료 업로드·다운로드 및 롤백 정리를 확인한다. */
 class StudyWeekServiceTest {
     private final StudyRepository studies = mock(StudyRepository.class);
     private final StudyMemberRepository memberships = mock(StudyMemberRepository.class);

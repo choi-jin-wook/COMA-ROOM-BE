@@ -2,12 +2,14 @@ package com.coma.comaroom.utils;
 
 import com.coma.comaroom.BusinessException;
 import com.coma.comaroom.member.AuthError;
+import com.coma.comaroom.study.StudyError;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
@@ -31,6 +33,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Response<Void>> handleValidationException(MethodArgumentNotValidException ex) {
         return handleBusinessException(new BusinessException(AuthError.INVALID_REQUEST_PARAM));
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<Response<Void>> handleMissingRequestPart(MissingServletRequestPartException ex) {
+        return handleBusinessException(new BusinessException(StudyError.INVALID_INPUT));
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)

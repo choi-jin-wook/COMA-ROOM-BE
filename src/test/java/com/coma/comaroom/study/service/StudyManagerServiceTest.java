@@ -6,15 +6,11 @@ import com.coma.comaroom.member.entity.Member;
 import com.coma.comaroom.member.entity.Role;
 import com.coma.comaroom.member.repository.MemberRepository;
 import com.coma.comaroom.study.StudyError;
-import com.coma.comaroom.study.dto.request.AddStudyActivityRequest;
 import com.coma.comaroom.study.dto.request.AddStudyMemberRequest;
 import com.coma.comaroom.study.dto.request.CreateStudyRequest;
-import com.coma.comaroom.study.dto.response.StudyActivityResponse;
 import com.coma.comaroom.study.dto.response.StudyResponse;
 import com.coma.comaroom.study.entity.Study;
-import com.coma.comaroom.study.entity.StudyActivity;
 import com.coma.comaroom.study.entity.StudyMember;
-import com.coma.comaroom.study.repository.StudyActivityRepository;
 import com.coma.comaroom.study.repository.StudyMemberRepository;
 import com.coma.comaroom.study.repository.StudyRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,12 +28,12 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/** 관리자 스터디 생성과 멤버 관리 시 저장 결과를 확인한다. */
 @ExtendWith(MockitoExtension.class)
 class StudyManagerServiceTest {
 
     @Mock private StudyRepository studyRepository;
     @Mock private StudyMemberRepository studyMemberRepository;
-    @Mock private StudyActivityRepository studyActivityRepository;
     @Mock private MemberRepository memberRepository;
 
     @InjectMocks
@@ -46,7 +42,6 @@ class StudyManagerServiceTest {
     private Member manager;
     private Member newMember;
     private Study study;
-    private StudyActivity studyActivity;
 
     @BeforeEach
     void setUp() {
@@ -76,11 +71,6 @@ class StudyManagerServiceTest {
                 .studyManager(manager)
                 .build();
 
-        studyActivity = StudyActivity.builder()
-                .id(1L)
-                .activityName("1주차 발표")
-                .study(study)
-                .build();
     }
 
     // ─────────────────────────────────────────────
@@ -90,7 +80,7 @@ class StudyManagerServiceTest {
     @Test
     @DisplayName("스터디 생성 성공")
     void createStudy_success() {
-        CreateStudyRequest request = new CreateStudyRequest("알고리즘 스터디", 1L);
+        CreateStudyRequest request = new CreateStudyRequest("알고리즘 스터디", 1L, " 알고리즘 ");
         when(memberRepository.findById(1L)).thenReturn(Optional.of(manager));
         when(studyRepository.save(any(Study.class))).thenReturn(study);
 
@@ -108,6 +98,7 @@ class StudyManagerServiceTest {
         ArgumentCaptor<Study> captor = ArgumentCaptor.forClass(Study.class);
         verify(studyRepository).save(captor.capture());
         assertThat(captor.getValue().getStudyName()).isEqualTo("알고리즘 스터디");
+        assertThat(captor.getValue().getTopic()).isEqualTo("알고리즘");
         assertThat(captor.getValue().getStudyManager()).isSameAs(manager);
     }
 
@@ -218,93 +209,4 @@ class StudyManagerServiceTest {
                 .hasMessage(StudyError.NOT_STUDY_MEMBER.getMessage());
     }
 
-    // ─────────────────────────────────────────────
-    // addStudyActivity
-    // ─────────────────────────────────────────────
-
-    @Test
-    @DisplayName("스터디 일정 추가 성공")
-    void addStudyActivity_success() {
-        AddStudyActivityRequest request = new AddStudyActivityRequest("1주차 발표");
-        when(studyRepository.findById(1L)).thenReturn(Optional.of(study));
-        when(studyActivityRepository.save(any(StudyActivity.class))).thenReturn(studyActivity);
-
-        StudyActivityResponse result = studyManagerService.addStudyActivity(1L, request);
-
-        assertThat(result).isNotNull();
-        assertThat(result.activityName()).isEqualTo("1주차 발표");
-
-        ArgumentCaptor<StudyActivity> captor = ArgumentCaptor.forClass(StudyActivity.class);
-        verify(studyActivityRepository).save(captor.capture());
-        assertThat(captor.getValue().getActivityName()).isEqualTo("1주차 발표");
-        assertThat(captor.getValue().getStudy()).isSameAs(study);
-    }
-
-    @Test
-    @DisplayName("스터디 일정 추가 실패 - 스터디 없음")
-    void addStudyActivity_studyNotFound() {
-        AddStudyActivityRequest request = new AddStudyActivityRequest("1주차 발표");
-        when(studyRepository.findById(99L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> studyManagerService.addStudyActivity(99L, request))
-                .isInstanceOf(BusinessException.class)
-                .hasMessage(StudyError.STUDY_NOT_FOUND.getMessage());
-    }
-
-    // ─────────────────────────────────────────────
-    // removeStudyActivity
-    // ─────────────────────────────────────────────
-
-    @Test
-    @DisplayName("스터디 일정 삭제 성공")
-    void removeStudyActivity_success() {
-        when(studyRepository.findById(1L)).thenReturn(Optional.of(study));
-        when(studyActivityRepository.findById(1L)).thenReturn(Optional.of(studyActivity));
-
-        assertThatNoException().isThrownBy(() -> studyManagerService.removeStudyActivity(1L, 1L));
-        verify(studyActivityRepository).delete(studyActivity);
-    }
-
-    @Test
-    @DisplayName("스터디 일정 삭제 실패 - 스터디 없음")
-    void removeStudyActivity_studyNotFound() {
-        when(studyRepository.findById(99L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> studyManagerService.removeStudyActivity(99L, 1L))
-                .isInstanceOf(BusinessException.class)
-                .hasMessage(StudyError.STUDY_NOT_FOUND.getMessage());
-    }
-
-    @Test
-    @DisplayName("스터디 일정 삭제 실패 - 일정 없음")
-    void removeStudyActivity_activityNotFound() {
-        when(studyRepository.findById(1L)).thenReturn(Optional.of(study));
-        when(studyActivityRepository.findById(99L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> studyManagerService.removeStudyActivity(1L, 99L))
-                .isInstanceOf(BusinessException.class)
-                .hasMessage(StudyError.ACTIVITY_NOT_FOUND.getMessage());
-    }
-
-    @Test
-    @DisplayName("스터디 일정 삭제 실패 - 해당 스터디의 일정이 아님")
-    void removeStudyActivity_activityNotInStudy() {
-        Study anotherStudy = Study.builder()
-                .id(2L)
-                .studyName("다른 스터디")
-                .studyManager(manager)
-                .build();
-        StudyActivity activityOfAnotherStudy = StudyActivity.builder()
-                .id(2L)
-                .activityName("다른 스터디 일정")
-                .study(anotherStudy)
-                .build();
-
-        when(studyRepository.findById(1L)).thenReturn(Optional.of(study));
-        when(studyActivityRepository.findById(2L)).thenReturn(Optional.of(activityOfAnotherStudy));
-
-        assertThatThrownBy(() -> studyManagerService.removeStudyActivity(1L, 2L))
-                .isInstanceOf(BusinessException.class)
-                .hasMessage(StudyError.ACTIVITY_NOT_IN_STUDY.getMessage());
-    }
 }

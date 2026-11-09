@@ -16,5 +16,5 @@ public class XpActivityItemDto {
     private String title;          // 활동 제목 or 요청 사유
     private LocalDateTime date;    // 활동 날짜
     private Long xp;               // 획득 XP
-    private String status;         // EventApproval일 경우: PENDING, APPROVED, REJECTED / 출석은 null
+    private String status;         // XpProvisionRequest일 경우: PENDING, APPROVED, REJECTED / 출석은 null
 }

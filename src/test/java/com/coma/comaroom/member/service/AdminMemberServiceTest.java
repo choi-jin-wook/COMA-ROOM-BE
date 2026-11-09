@@ -5,9 +5,9 @@ import com.coma.comaroom.event.EventError;
 import com.coma.comaroom.event.dto.ProvisionApprovalRequestDto;
 import com.coma.comaroom.event.dto.XpProvisionRequestDto;
 import com.coma.comaroom.event.entity.ApprovalStatus;
-import com.coma.comaroom.event.entity.EventApproval;
+import com.coma.comaroom.member.entity.XpProvisionRequest;
 import com.coma.comaroom.event.entity.EventCategory;
-import com.coma.comaroom.event.repository.EventApprovalRepository;
+import com.coma.comaroom.member.repository.XpProvisionRequestRepository;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.member.AuthError;
 import com.coma.comaroom.member.dto.response.MemberManagementPageRequestDto;
@@ -37,7 +37,7 @@ import static org.mockito.Mockito.*;
 class AdminMemberServiceTest {
 
     @Mock private MemberRepository memberRepository;
-    @Mock private EventApprovalRepository eventApprovalRepository;
+    @Mock private XpProvisionRequestRepository xpProvisionRequestRepository;
     @Mock private EventParticipateRepository eventParticipateRepository;
     @Mock private SecurityUtils securityUtils;
 
@@ -45,7 +45,7 @@ class AdminMemberServiceTest {
     private AdminMemberService adminMemberService;
 
     private Member member;
-    private EventApproval pendingApproval;
+    private XpProvisionRequest pendingApproval;
 
     @BeforeEach
     void setUp() {
@@ -59,7 +59,7 @@ class AdminMemberServiceTest {
                 .major(Major.COMPUTER_INFO)
                 .build();
 
-        pendingApproval = EventApproval.builder()
+        pendingApproval = XpProvisionRequest.builder()
                 .id(1L)
                 .approvalStatus(ApprovalStatus.PENDING)
                 .grantedXp(50L)
@@ -141,7 +141,7 @@ class AdminMemberServiceTest {
     @Test
     @DisplayName("XP 관리 페이지 조회 성공 - 카운트 및 목록 반환")
     void xpManagementPage_success() {
-        EventApproval approvedApproval = EventApproval.builder()
+        XpProvisionRequest approvedApproval = XpProvisionRequest.builder()
                 .id(2L)
                 .approvalStatus(ApprovalStatus.APPROVED)
                 .grantedXp(30L)
@@ -149,10 +149,10 @@ class AdminMemberServiceTest {
                 .requester(member)
                 .build();
 
-        when(eventApprovalRepository.countByApprovalStatus(ApprovalStatus.PENDING)).thenReturn(1L);
-        when(eventApprovalRepository.countByApprovalStatus(ApprovalStatus.APPROVED)).thenReturn(1L);
-        when(eventApprovalRepository.countByApprovalStatus(ApprovalStatus.REJECTED)).thenReturn(0L);
-        when(eventApprovalRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(0, 5)))
+        when(xpProvisionRequestRepository.countByApprovalStatus(ApprovalStatus.PENDING)).thenReturn(1L);
+        when(xpProvisionRequestRepository.countByApprovalStatus(ApprovalStatus.APPROVED)).thenReturn(1L);
+        when(xpProvisionRequestRepository.countByApprovalStatus(ApprovalStatus.REJECTED)).thenReturn(0L);
+        when(xpProvisionRequestRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(0, 5)))
                 .thenReturn(new PageImpl<>(List.of(approvedApproval, pendingApproval)));
 
         XpManagementPageResponseDto result = adminMemberService.xpManagementPage(0);
@@ -169,10 +169,10 @@ class AdminMemberServiceTest {
     @Test
     @DisplayName("XP 관리 페이지 조회 - 승인 요청이 없을 때 빈 목록 반환")
     void xpManagementPage_empty() {
-        when(eventApprovalRepository.countByApprovalStatus(ApprovalStatus.PENDING)).thenReturn(0L);
-        when(eventApprovalRepository.countByApprovalStatus(ApprovalStatus.APPROVED)).thenReturn(0L);
-        when(eventApprovalRepository.countByApprovalStatus(ApprovalStatus.REJECTED)).thenReturn(0L);
-        when(eventApprovalRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(0, 5)))
+        when(xpProvisionRequestRepository.countByApprovalStatus(ApprovalStatus.PENDING)).thenReturn(0L);
+        when(xpProvisionRequestRepository.countByApprovalStatus(ApprovalStatus.APPROVED)).thenReturn(0L);
+        when(xpProvisionRequestRepository.countByApprovalStatus(ApprovalStatus.REJECTED)).thenReturn(0L);
+        when(xpProvisionRequestRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(0, 5)))
                 .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 5), 0L));
 
         XpManagementPageResponseDto result = adminMemberService.xpManagementPage(0);
@@ -188,10 +188,10 @@ class AdminMemberServiceTest {
     @Test
     @DisplayName("XP 관리 페이지 조회 - DTO 필드 매핑 검증")
     void xpManagementPage_dtoMapping() {
-        when(eventApprovalRepository.countByApprovalStatus(ApprovalStatus.PENDING)).thenReturn(1L);
-        when(eventApprovalRepository.countByApprovalStatus(ApprovalStatus.APPROVED)).thenReturn(0L);
-        when(eventApprovalRepository.countByApprovalStatus(ApprovalStatus.REJECTED)).thenReturn(0L);
-        when(eventApprovalRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(0, 5)))
+        when(xpProvisionRequestRepository.countByApprovalStatus(ApprovalStatus.PENDING)).thenReturn(1L);
+        when(xpProvisionRequestRepository.countByApprovalStatus(ApprovalStatus.APPROVED)).thenReturn(0L);
+        when(xpProvisionRequestRepository.countByApprovalStatus(ApprovalStatus.REJECTED)).thenReturn(0L);
+        when(xpProvisionRequestRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(0, 5)))
                 .thenReturn(new PageImpl<>(List.of(pendingApproval)));
 
         XpManagementPageResponseDto result = adminMemberService.xpManagementPage(0);
@@ -208,10 +208,10 @@ class AdminMemberServiceTest {
     @Test
     @DisplayName("XP 관리 페이지 조회 - 2페이지 조회 시 currentPage 반환")
     void xpManagementPage_secondPage() {
-        when(eventApprovalRepository.countByApprovalStatus(ApprovalStatus.PENDING)).thenReturn(6L);
-        when(eventApprovalRepository.countByApprovalStatus(ApprovalStatus.APPROVED)).thenReturn(0L);
-        when(eventApprovalRepository.countByApprovalStatus(ApprovalStatus.REJECTED)).thenReturn(0L);
-        when(eventApprovalRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(1, 5)))
+        when(xpProvisionRequestRepository.countByApprovalStatus(ApprovalStatus.PENDING)).thenReturn(6L);
+        when(xpProvisionRequestRepository.countByApprovalStatus(ApprovalStatus.APPROVED)).thenReturn(0L);
+        when(xpProvisionRequestRepository.countByApprovalStatus(ApprovalStatus.REJECTED)).thenReturn(0L);
+        when(xpProvisionRequestRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(1, 5)))
                 .thenReturn(new PageImpl<>(List.of(pendingApproval), PageRequest.of(1, 5), 6L));
 
         XpManagementPageResponseDto result = adminMemberService.xpManagementPage(1);
@@ -261,7 +261,7 @@ class AdminMemberServiceTest {
     void decideProvision_approved() {
         ProvisionApprovalRequestDto dto = mock(ProvisionApprovalRequestDto.class);
         when(dto.getApprovalStatus()).thenReturn(ApprovalStatus.APPROVED);
-        when(eventApprovalRepository.findById(1L)).thenReturn(Optional.of(pendingApproval));
+        when(xpProvisionRequestRepository.findById(1L)).thenReturn(Optional.of(pendingApproval));
 
         adminMemberService.decideProvision(dto, 1L);
 
@@ -274,7 +274,7 @@ class AdminMemberServiceTest {
     void decideProvision_rejected() {
         ProvisionApprovalRequestDto dto = mock(ProvisionApprovalRequestDto.class);
         when(dto.getApprovalStatus()).thenReturn(ApprovalStatus.REJECTED);
-        when(eventApprovalRepository.findById(1L)).thenReturn(Optional.of(pendingApproval));
+        when(xpProvisionRequestRepository.findById(1L)).thenReturn(Optional.of(pendingApproval));
 
         adminMemberService.decideProvision(dto, 1L);
 
@@ -286,7 +286,7 @@ class AdminMemberServiceTest {
     @DisplayName("XP 승인 결정 실패 - 존재하지 않는 요청 ID")
     void decideProvision_approvalNotFound() {
         ProvisionApprovalRequestDto dto = mock(ProvisionApprovalRequestDto.class);
-        when(eventApprovalRepository.findById(99L)).thenReturn(Optional.empty());
+        when(xpProvisionRequestRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> adminMemberService.decideProvision(dto, 99L))
                 .isInstanceOf(BusinessException.class)
@@ -299,7 +299,7 @@ class AdminMemberServiceTest {
     void decideProvision_alreadyDecided() {
         pendingApproval.setApprovalStatus(ApprovalStatus.APPROVED);
         ProvisionApprovalRequestDto dto = mock(ProvisionApprovalRequestDto.class);
-        when(eventApprovalRepository.findById(1L)).thenReturn(Optional.of(pendingApproval));
+        when(xpProvisionRequestRepository.findById(1L)).thenReturn(Optional.of(pendingApproval));
 
         assertThatThrownBy(() -> adminMemberService.decideProvision(dto, 1L))
                 .isInstanceOf(BusinessException.class)

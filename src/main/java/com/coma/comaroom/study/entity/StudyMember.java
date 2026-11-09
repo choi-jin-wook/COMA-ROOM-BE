@@ -7,6 +7,7 @@ import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import lombok.*;
 
+/** 스터디에 등록된 회원을 저장한다. */
 @Entity
 @Table(name = "study_member")
 @Builder
@@ -27,8 +28,4 @@ public class StudyMember extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "study_id")
     private Study study;
-
-    @Column(nullable = false, columnDefinition = "bigint default 0")
-    @Builder.Default
-    private Long earnedXp = 0L;
 }

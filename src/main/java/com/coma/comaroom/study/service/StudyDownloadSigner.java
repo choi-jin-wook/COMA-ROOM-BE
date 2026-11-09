@@ -12,14 +12,17 @@ import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.Base64;
 
+/** 회원·자료·만료 시각을 묶어 다운로드 URL을 서명하고 검증한다. */
 @Component
 public class StudyDownloadSigner {
     private final byte[] secret;
 
+    /** 기존 JWT 비밀키를 HMAC 키로 사용한다. */
     public StudyDownloadSigner(@Value("${jwt.secret}") String secret) {
         this.secret = secret.getBytes(StandardCharsets.UTF_8);
     }
 
+    /** URL에 포함할 패딩 없는 Base64URL HMAC-SHA256 서명을 만든다. */
     public String sign(Long studyId, int week, Long materialId, Long memberId, long expires) {
         String payload = "study-material-download:" + studyId + ":" + week + ":" + materialId
                 + ":" + memberId + ":" + expires;
@@ -33,6 +36,7 @@ public class StudyDownloadSigner {
         }
     }
 
+    /** 만료 여부와 현재 회원에 묶인 서명을 바이트 배열 비교로 확인한다. */
     public void verify(Long studyId, int week, Long materialId, Long memberId, long expires, String signature) {
         if (expires <= Instant.now().getEpochSecond() || signature == null ||
                 !MessageDigest.isEqual(sign(studyId, week, materialId, memberId, expires)

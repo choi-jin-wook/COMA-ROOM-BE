@@ -73,22 +73,12 @@ public class Member extends BaseEntity {
     private List<EventPost> eventPosts = new ArrayList<>();
 
     @OneToMany(mappedBy = "requester", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    private List<EventApproval> eventApprovals = new ArrayList<>();
+    private List<XpProvisionRequest> xpProvisionRequests = new ArrayList<>();
 
     @OneToMany(mappedBy = "participantMember", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<EventParticipant> eventParticipants = new ArrayList<>();
 
     @OneToMany(mappedBy = "studyManager", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Study> studyManagers = new ArrayList<>();
-
-    public static EventApproval requestXpApproval(Member requester, String reason, Long grantedXp) {
-        return EventApproval.builder()
-                .requester(requester)
-                .reason(reason)
-                .grantedXp(grantedXp)
-                .approvalStatus(ApprovalStatus.PENDING)
-                .approvalAt(null)
-                .build();
-    }
 
 }

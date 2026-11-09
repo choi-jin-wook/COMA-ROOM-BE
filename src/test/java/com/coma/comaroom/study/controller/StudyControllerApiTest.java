@@ -1,11 +1,12 @@
 package com.coma.comaroom.study.controller;
 
 import com.coma.comaroom.study.dto.response.*;
-import com.coma.comaroom.study.entity.StudyStatus;
 import com.coma.comaroom.study.service.*;
 import com.coma.comaroom.utils.GlobalExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
@@ -15,6 +16,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+/** 스터디 API의 요청 검증, 상태 코드, 응답 구조를 확인한다. */
 class StudyControllerApiTest {
     private final StudyService studyService = mock(StudyService.class);
     private final StudyWeekService weekService = mock(StudyWeekService.class);
@@ -24,12 +26,13 @@ class StudyControllerApiTest {
 
     @BeforeEach
     void setup() {
+        doCallRealMethod().when(studyService).mine(anyString(), anyString());
         mvc = MockMvcBuilders.standaloneSetup(
                 new StudyController(mock(StudyJoinService.class), weekService, attendanceService),
                 new MemberStudyController(studyService),
                 new StudyManagerController(managerService),
                 new StudyManagerCandidateController(studyService))
-                .setControllerAdvice(new StudyExceptionHandler(), new GlobalExceptionHandler()).build();
+                .setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 
     @Test
@@ -52,21 +55,18 @@ class StudyControllerApiTest {
     }
 
     @Test
-    void invalidStatusMissingStatusAndNonIntegerPageAreBadRequest() throws Exception {
-        mvc.perform(get("/api/member/studies").param("status", "OTHER"))
-                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").isString());
-        mvc.perform(get("/api/member/studies")).andExpect(status().isBadRequest());
-        mvc.perform(get("/api/member/studies").param("status", "ACTIVE").param("page", "abc"))
-                .andExpect(status().isBadRequest());
+    void nonIntegerPageIsBadRequest() throws Exception {
+        mvc.perform(get("/api/member/studies").param("page", "abc"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("STUDY-007"));
     }
 
     @Test
-    void emptyPageUsesItemsAndPaginationContract() throws Exception {
-        when(studyService.mine(StudyStatus.ACTIVE, 0, 20))
-                .thenReturn(new StudyPage<>(List.of(), 0, 20, 0, 0));
-        mvc.perform(get("/api/member/studies").param("status", "ACTIVE"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.data.items").isEmpty())
-                .andExpect(jsonPath("$.data.page").value(0)).andExpect(jsonPath("$.data.size").value(20))
+    void emptyPageUsesSpringPageInsideCommonResponse() throws Exception {
+        when(studyService.mine(0, 20))
+                .thenReturn(new PageImpl<MyStudyResponse>(List.of(), PageRequest.of(0, 20), 0));
+        mvc.perform(get("/api/member/studies"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.content").isEmpty())
+                .andExpect(jsonPath("$.data.number").value(0)).andExpect(jsonPath("$.data.size").value(20))
                 .andExpect(jsonPath("$.data.totalElements").value(0));
     }
 
@@ -88,14 +88,15 @@ class StudyControllerApiTest {
         mvc.perform(multipart("/api/studies/10/weeks").file(new MockMultipartFile(
                 "request", "", "application/json", "{\"weekNumber\":1,\"title\":\"  \"}".getBytes())))
                 .andExpect(status().isBadRequest());
-        mvc.perform(multipart("/api/studies/10/weeks")).andExpect(status().isBadRequest());
+        mvc.perform(multipart("/api/studies/10/weeks")).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("STUDY-007"));
         verifyNoInteractions(weekService);
     }
 
     @Test
     void expirationMustBePositiveInteger() throws Exception {
         mvc.perform(post("/api/studies/10/weeks/1/attendances").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"expirationTime\":0}")).andExpect(status().isBadRequest());
+                .content("{\"eventId\":30,\"expirationTime\":0}")).andExpect(status().isBadRequest());
         mvc.perform(post("/api/studies/10/weeks/1/attendances").contentType(MediaType.APPLICATION_JSON)
                 .content("{}")).andExpect(status().isBadRequest());
         verifyNoInteractions(attendanceService);
