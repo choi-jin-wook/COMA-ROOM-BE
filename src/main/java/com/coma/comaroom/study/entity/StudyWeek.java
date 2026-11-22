@@ -4,6 +4,7 @@ import com.coma.comaroom.utils.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+/** 스터디별 1~16주차 계획의 제목과 선택적 내용을 저장한다. */
 @Entity
 @Table(name = "study_week", uniqueConstraints = @UniqueConstraint(
         name = "uk_study_week", columnNames = {"study_id", "week_number"}))

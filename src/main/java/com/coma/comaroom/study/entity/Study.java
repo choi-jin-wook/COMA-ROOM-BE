@@ -9,8 +9,8 @@ import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.time.OffsetDateTime;
 
+/** 스터디의 기본 정보, 운영 상태, 스터디장과 멤버십을 보관한다. */
 @Entity
 @Table(name = "study")
 @Builder
@@ -19,45 +19,33 @@ import java.time.OffsetDateTime;
 @Getter
 @Setter
 public class Study extends BaseEntity {
+    // 스터디를 식별하는 기본 키다.
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // 스터디의 이름이다.
     @Column(name = "study_name", nullable = false)
     private String studyName;
 
+    // 스터디를 운영하는 스터디장이다(manager_id).
+    // 기존 데이터의 스터디장 참조가 사라져도 스터디 조회는 유지한다.
     @NotFound(action = NotFoundAction.IGNORE)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "manager_id")
     private Member studyManager;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "varchar(16) default 'ACTIVE'")
-    @Builder.Default
-    private StudyStatus status = StudyStatus.ACTIVE;
-
+    // 스터디 소개와 활동 내용이다.
     @Column(length = 2000)
     private String description;
 
-    private Integer maxMembers;
+    // 정기 모임 일정에 대한 설명이다.
     private String scheduleDescription;
-    private OffsetDateTime nextSessionAt;
-    private OffsetDateTime completedAt;
 
-    @Enumerated(EnumType.STRING)
-    private StudyLevel level;
+    // 스터디에서 다루는 주제다.
+    private String topic;
 
-    @ElementCollection
-    @CollectionTable(name = "study_tag", joinColumns = @JoinColumn(name = "study_id"))
-    @Column(name = "tag")
-    @OrderColumn(name = "tag_order")
-    @Builder.Default
-    private List<String> tags = new ArrayList<>();
-
-    // 양방향 매핑이 필요한 경우 추가 (선택 사항)
-    @OneToMany(mappedBy = "study", cascade = CascadeType.ALL)
-    private List<StudyActivity> activities = new ArrayList<>();
-
+    // 스터디에 소속된 회원들의 참여 정보다(study_member 테이블).
     @OneToMany(mappedBy = "study", cascade = CascadeType.ALL)
     private List<StudyMember> studyMembers = new ArrayList<>();
 }

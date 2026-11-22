@@ -8,6 +8,7 @@ import com.coma.comaroom.event.dto.CreateAttendanceCheckResponseDto;
 import com.coma.comaroom.event.dto.request.CreateEventRequest;
 import com.coma.comaroom.event.dto.request.EventRequest;
 import com.coma.comaroom.event.dto.response.AttendanceItemResponseDto;
+import com.coma.comaroom.event.dto.response.EventAttendanceResponse;
 import com.coma.comaroom.event.dto.response.EventResponse;
 import com.coma.comaroom.event.entity.Event;
 import com.coma.comaroom.event.entity.EventParticipant;
@@ -25,7 +26,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -81,11 +84,28 @@ public class AdminEventService {
     // 출석 명단 조회
     @Transactional(readOnly = true)
     public List<AttendanceItemResponseDto> getAttendanceList(Long eventId) {
+
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BusinessException(EventError.EVENT_NOT_FOUND));
 
         return eventParticipateRepository.findByEvent(event).stream()
                 .map(AttendanceItemResponseDto::from)
+                .toList();
+    }
+
+    // 전체 출석 명단 조회
+    @Transactional(readOnly = true)
+    public List<EventAttendanceResponse> getAllAttendanceLists() {
+        List<Event> events = eventRepository.findAllByOrderByEventDateDesc();
+        Map<Long, List<AttendanceItemResponseDto>> attendancesByEvent = eventParticipateRepository.findAll().stream()
+                .collect(Collectors.groupingBy(
+                        participant -> participant.getEvent().getEventId(),
+                        Collectors.mapping(AttendanceItemResponseDto::from, Collectors.toList())));
+
+        return events.stream()
+                .map(event -> new EventAttendanceResponse(
+                        event.getEventId(), event.getTitle(),
+                        attendancesByEvent.getOrDefault(event.getEventId(), List.of())))
                 .toList();
     }
 

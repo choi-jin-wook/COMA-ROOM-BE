@@ -1,9 +1,7 @@
 package com.coma.comaroom.study.dto.response;
 
-import com.coma.comaroom.study.entity.StudyStatus;
-import java.time.OffsetDateTime;
-
+/** 내 스터디 목록에 표시할 역할·일정·성과 정보를 담는다. */
 public record MyStudyResponse(Long studyId, String studyName, String description, String myRole,
-        StudyStatus status, Double progressPercent, long currentMembers, Integer maxMembers,
-        OffsetDateTime nextSessionAt, String scheduleDescription, OffsetDateTime completedAt,
-        Long totalSessions, Long attendedSessions, Long earnedXp) {}
+        Double progressPercent, long currentMembers,
+        String scheduleDescription,
+        Long totalSessions, Long attendedSessions) {}

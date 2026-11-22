@@ -4,10 +4,10 @@ import com.coma.comaroom.BusinessException;
 import com.coma.comaroom.event.EventError;
 import com.coma.comaroom.event.dto.*;
 import com.coma.comaroom.event.entity.ApprovalStatus;
-import com.coma.comaroom.event.entity.EventApproval;
+import com.coma.comaroom.member.entity.XpProvisionRequest;
 import com.coma.comaroom.member.AuthError;
 import com.coma.comaroom.event.entity.EventCategory;
-import com.coma.comaroom.event.repository.EventApprovalRepository;
+import com.coma.comaroom.member.repository.XpProvisionRequestRepository;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.member.dto.response.EventApprovalResponseDto;
 import com.coma.comaroom.member.dto.response.MemberInformationResponseDto;
@@ -29,7 +29,7 @@ import java.util.List;
 @AllArgsConstructor
 public class AdminMemberService {
     private final MemberRepository memberRepository;
-    private final EventApprovalRepository eventApprovalRepository;
+    private final XpProvisionRequestRepository xpProvisionRequestRepository;
     private final EventParticipateRepository eventParticipateRepository;
     private final SecurityUtils securityUtils;
 
@@ -69,11 +69,11 @@ public class AdminMemberService {
 
     @Transactional(readOnly = true)
     public XpManagementPageResponseDto xpManagementPage(int page) {
-        Long pending = eventApprovalRepository.countByApprovalStatus(ApprovalStatus.PENDING);
-        Long approved = eventApprovalRepository.countByApprovalStatus(ApprovalStatus.APPROVED);
-        Long rejected = eventApprovalRepository.countByApprovalStatus(ApprovalStatus.REJECTED);
+        Long pending = xpProvisionRequestRepository.countByApprovalStatus(ApprovalStatus.PENDING);
+        Long approved = xpProvisionRequestRepository.countByApprovalStatus(ApprovalStatus.APPROVED);
+        Long rejected = xpProvisionRequestRepository.countByApprovalStatus(ApprovalStatus.REJECTED);
 
-        Page<EventApproval> approvalPage = eventApprovalRepository
+        Page<XpProvisionRequest> approvalPage = xpProvisionRequestRepository
                 .findAllByOrderByCreatedAtDesc(PageRequest.of(page, PAGE_SIZE));
 
         List<EventApprovalResponseDto> dtoList = approvalPage.getContent().stream()
@@ -106,23 +106,23 @@ public class AdminMemberService {
     }
 
     public void decideProvision(ProvisionApprovalRequestDto provisionApprovalRequestDto, Long requestId) {
-        EventApproval eventApproval = eventApprovalRepository.findById(requestId)
+        XpProvisionRequest xpProvisionRequest = xpProvisionRequestRepository.findById(requestId)
                 .orElseThrow(() -> new BusinessException(EventError.APPROVAL_NOT_FOUND));
 
         // 이미 처리된 요청을 다시 승인하면 XP가 중복 지급되므로 PENDING 상태만 처리 가능
-        if (eventApproval.getApprovalStatus() != ApprovalStatus.PENDING) {
+        if (xpProvisionRequest.getApprovalStatus() != ApprovalStatus.PENDING) {
             throw new BusinessException(EventError.APPROVAL_ALREADY_DECIDED);
         }
 
-        Member requester = eventApproval.getRequester();
+        Member requester = xpProvisionRequest.getRequester();
         if (requester == null) {
             // 탈퇴한 회원의 요청은 처리 불가
             throw new BusinessException(AuthError.MEMBER_NOT_FOUND);
         }
 
-        eventApproval.setApprovalStatus(provisionApprovalRequestDto.getApprovalStatus());
+        xpProvisionRequest.setApprovalStatus(provisionApprovalRequestDto.getApprovalStatus());
         if (provisionApprovalRequestDto.getApprovalStatus() == ApprovalStatus.APPROVED) {
-            requester.setXp(requester.getXp() + eventApproval.getGrantedXp());
+            requester.setXp(requester.getXp() + xpProvisionRequest.getGrantedXp());
         }
     }
 }

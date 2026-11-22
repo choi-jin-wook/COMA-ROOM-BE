@@ -4,7 +4,7 @@ import com.coma.comaroom.BusinessException;
 import com.coma.comaroom.event.EventPostError;
 import com.coma.comaroom.event.dto.request.EventImageUploadUrlRequest;
 import com.coma.comaroom.event.dto.response.EventImageUploadUrlResponse;
-import com.coma.comaroom.study.storage.OciStorageProperties;
+import com.coma.comaroom.storage.OciStorageProperties;
 import com.oracle.bmc.objectstorage.ObjectStorage;
 import com.oracle.bmc.objectstorage.model.CreatePreauthenticatedRequestDetails;
 import com.oracle.bmc.objectstorage.requests.CreatePreauthenticatedRequestRequest;

@@ -3,11 +3,8 @@
 ALTER TABLE study
     ADD COLUMN status VARCHAR(16) NOT NULL DEFAULT 'ACTIVE',
     ADD COLUMN description VARCHAR(2000) NULL,
-    ADD COLUMN max_members INT NULL,
     ADD COLUMN schedule_description VARCHAR(255) NULL,
-    ADD COLUMN next_session_at DATETIME(6) NULL,
-    ADD COLUMN completed_at DATETIME(6) NULL,
-    ADD COLUMN level ENUM('BEGINNER', 'INTERMEDIATE', 'ADVANCED') NULL;
+    ADD COLUMN topic VARCHAR(255) NULL;
 
 ALTER TABLE study_member
     ADD COLUMN earned_xp BIGINT NOT NULL DEFAULT 0;
@@ -18,14 +15,6 @@ SELECT s.id, m.member_id, 0, UTC_TIMESTAMP(6), UTC_TIMESTAMP(6)
 FROM study s JOIN member m ON m.member_id = s.manager_id AND m.status = 'ACTIVE'
 WHERE NOT EXISTS (
     SELECT 1 FROM study_member sm WHERE sm.study_id = s.id AND sm.member_id = m.member_id
-);
-
-CREATE TABLE study_tag (
-    study_id BIGINT NOT NULL,
-    tag_order INT NOT NULL,
-    tag VARCHAR(255),
-    PRIMARY KEY (study_id, tag_order),
-    CONSTRAINT fk_study_tag_study FOREIGN KEY (study_id) REFERENCES study(id)
 );
 
 CREATE TABLE study_week (
@@ -46,7 +35,6 @@ CREATE TABLE study_material (
     id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     plan_id BIGINT NOT NULL,
     file_name VARCHAR(255) NOT NULL,
-    content_type VARCHAR(255) NOT NULL,
     size_bytes BIGINT NOT NULL,
     object_key VARCHAR(512) NOT NULL UNIQUE,
     CONSTRAINT fk_study_material_plan FOREIGN KEY (plan_id) REFERENCES study_week(id)

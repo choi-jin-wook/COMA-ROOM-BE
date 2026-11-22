@@ -10,6 +10,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/** 모집 스터디 조회와 참여 신청의 경계 조건을 확인한다. */
 class StudyJoinServiceTest {
     private final StudyRepository studies = mock(StudyRepository.class);
     private final StudyMemberRepository memberships = mock(StudyMemberRepository.class);
@@ -46,12 +47,9 @@ class StudyJoinServiceTest {
     }
 
     @Test
-    void rejectsFullAndCompletedStudies() {
+    void rejectsStudiesWithoutLeader() {
         Study study = setupStudy();
-        study.setMaxMembers(1);
-        assertThatThrownBy(() -> service.request(1L)).hasMessage(StudyError.STUDY_CLOSED.getMessage());
-        study.setMaxMembers(null);
-        study.setStatus(StudyStatus.COMPLETED);
+        study.setStudyManager(null);
         assertThatThrownBy(() -> service.request(1L)).hasMessage(StudyError.STUDY_CLOSED.getMessage());
         verify(requests, never()).save(any());
     }

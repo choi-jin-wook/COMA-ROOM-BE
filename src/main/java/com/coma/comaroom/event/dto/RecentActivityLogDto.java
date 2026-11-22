@@ -2,7 +2,7 @@ package com.coma.comaroom.event.dto;
 
 
 import com.coma.comaroom.event.entity.ApprovalStatus;
-import com.coma.comaroom.event.entity.EventApproval;
+import com.coma.comaroom.member.entity.XpProvisionRequest;
 import com.coma.comaroom.member.entity.Member;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,7 +26,7 @@ public class RecentActivityLogDto {
     private Long grantedXp;
     private ApprovalStatus status;
 
-    public static RecentActivityLogDto from(EventApproval approval) {
+    public static RecentActivityLogDto from(XpProvisionRequest approval) {
         Member requester = approval.getRequester();
 
         return RecentActivityLogDto.builder()
@@ -40,7 +40,7 @@ public class RecentActivityLogDto {
                 .build();
     }
 
-    public static List<RecentActivityLogDto> listOf(List<EventApproval> approvals) {
+    public static List<RecentActivityLogDto> listOf(List<XpProvisionRequest> approvals) {
         return approvals.stream()
                 .map(RecentActivityLogDto::from)
                 .toList();

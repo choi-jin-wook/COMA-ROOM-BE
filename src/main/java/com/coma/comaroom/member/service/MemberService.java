@@ -7,7 +7,7 @@ import com.coma.comaroom.event.dto.AskXpResponseDto;
 import com.coma.comaroom.event.dto.RecentActivityLogDto;
 import com.coma.comaroom.event.dto.XpManagementMainResponseDto;
 import com.coma.comaroom.event.entity.*;
-import com.coma.comaroom.event.repository.EventApprovalRepository;
+import com.coma.comaroom.member.repository.XpProvisionRequestRepository;
 import com.coma.comaroom.event.repository.EventParticipateRepository;
 import com.coma.comaroom.event.repository.EventRepository;
 import com.coma.comaroom.member.dto.request.LeaderboardResponseDto;
@@ -15,6 +15,7 @@ import com.coma.comaroom.member.dto.request.MyRankingDto;
 import com.coma.comaroom.member.dto.request.RegisterMemberRequestDto;
 import com.coma.comaroom.member.dto.response.*;
 import com.coma.comaroom.member.entity.Member;
+import com.coma.comaroom.member.entity.XpProvisionRequest;
 import com.coma.comaroom.member.repository.MemberRepository;
 import com.coma.comaroom.notice.entity.Notice;
 import com.coma.comaroom.notice.exception.NoticeError;
@@ -45,13 +46,13 @@ public class MemberService {
     private final EventParticipateRepository eventParticipateRepository;
     private final SecurityUtils securityUtils;
     private final VoteRepository voteRepository;
-    private final EventApprovalRepository eventApprovalRepository;
+    private final XpProvisionRequestRepository xpProvisionRequestRepository;
 
     public AskXpResponseDto askProvisionXp(AskXpRequestDto xpPetitionRequestDto) {
         Member currentUser = securityUtils.getCurrentMember();
-        EventApproval eventApproval = EventApproval.requestXpApproval(currentUser, xpPetitionRequestDto.getProvisionReason(), xpPetitionRequestDto.getProvisionAmount());
-        eventApprovalRepository.save(eventApproval);
-        AskXpResponseDto xpPetitionResponseDto = new AskXpResponseDto(eventApproval.getId());
+        XpProvisionRequest xpProvisionRequest = XpProvisionRequest.request(currentUser, xpPetitionRequestDto.getProvisionReason(), xpPetitionRequestDto.getProvisionAmount());
+        xpProvisionRequestRepository.save(xpProvisionRequest);
+        AskXpResponseDto xpPetitionResponseDto = new AskXpResponseDto(xpProvisionRequest.getId());
         return xpPetitionResponseDto;
     }
 
@@ -75,7 +76,7 @@ public class MemberService {
 
         Optional<Event> event = eventRepository.findFirstByEventDateAfterOrderByEventDateAsc(LocalDateTime.now());
 
-        // 사용자 순위
+        // 사용자
         Long rank = memberRepository.findRankByMember(member);
 
         // 출석횟수, 행사 참여
@@ -133,17 +134,17 @@ public class MemberService {
         Member currentMember = securityUtils.getCurrentMember();
         Pageable pageable = PageRequest.of(page.intValue(), 5, Sort.by(Sort.Direction.DESC, "createdAt"));
 
-        Page<EventApproval> resultPage = (status == null)
-                ? eventApprovalRepository.findByRequesterOrderByCreatedAtDesc(currentMember, pageable)
-                : eventApprovalRepository.findByRequesterAndApprovalStatusOrderByCreatedAtDesc(currentMember, status, pageable);
+        Page<XpProvisionRequest> resultPage = (status == null)
+                ? xpProvisionRequestRepository.findByRequesterOrderByCreatedAtDesc(currentMember, pageable)
+                : xpProvisionRequestRepository.findByRequesterAndApprovalStatusOrderByCreatedAtDesc(currentMember, status, pageable);
 
         List<RecentActivityLogDto> recentActivityLogs =
                 RecentActivityLogDto.listOf(resultPage.getContent());
 
         return XpManagementMainResponseDto.of(
-                eventApprovalRepository.countByRequesterAndApprovalStatus(currentMember, ApprovalStatus.APPROVED),
-                eventApprovalRepository.countByRequesterAndApprovalStatus(currentMember, ApprovalStatus.REJECTED),
-                eventApprovalRepository.countByRequesterAndApprovalStatus(currentMember, ApprovalStatus.PENDING),
+                xpProvisionRequestRepository.countByRequesterAndApprovalStatus(currentMember, ApprovalStatus.APPROVED),
+                xpProvisionRequestRepository.countByRequesterAndApprovalStatus(currentMember, ApprovalStatus.REJECTED),
+                xpProvisionRequestRepository.countByRequesterAndApprovalStatus(currentMember, ApprovalStatus.PENDING),
                 recentActivityLogs
         );
     }
@@ -157,7 +158,7 @@ public class MemberService {
                 .findByParticipantMemberOrderByEventParticipantIdDesc(member);
 
         // 2. XP 승인 요청 목록 (수동 지급 XP)
-        List<EventApproval> allApprovals = eventApprovalRepository
+        List<XpProvisionRequest> allApprovals = xpProvisionRequestRepository
                 .findByRequesterOrderByCreatedAtDesc(member);
 
         // 3. XP 분석: 행사(EVENT) vs 출석(나머지 카테고리) vs 기타(APPROVED 승인 요청)

@@ -11,29 +11,32 @@
 
 - 관리자 후보 검색: 활성 회원의 이름·학번 검색, 실제 memberId 제공.
 - 생성: 이름 공백 제거, 빈 이름 거부, 최대 255자, 이름 중복 허용. 활성 회원을 스터디장으로 지정하고 소속을 함께 저장한다.
-- 내 목록: ACTIVE/COMPLETED 필터. 미등록 메타데이터·진행률·출석 통계는 null.
+- 내 목록: 소속 스터디 전체를 조회한다. 미등록 메타데이터·진행률·출석 통계는 null.
 - 내 통계: 실제 소속과 스터디별 저장 XP 집계. 기존 회원의 전체 XP나 이벤트 출석을 스터디 값으로 사용하지 않는다.
-- 모집 목록: 진행 중이며 스터디장이 존재하고 정원이 남은 미소속 스터디.
-- 참여 요청: PENDING 저장. 소속 회원·중복 대기·정원 마감·완료 스터디는 409. 이전 요청이 REJECTED/APPROVED이고 현재 미소속인 경우 기존 요청을 PENDING으로 갱신한다.
+- 모집 목록: 스터디장이 존재하며 현재 회원이 소속되지 않은 스터디.
+- 참여 요청: PENDING 저장. 소속 회원·중복 대기는 409. 이전 요청이 REJECTED/APPROVED이고 현재 미소속인 경우 기존 요청을 PENDING으로 갱신한다.
 - 주차 목록: 1~16주차를 항상 오름차순 제공. 계획이 없으면 planId/title은 null.
 - 주차 상세: 소속 검사 후 계획 조회. 계획이 없으면 404.
 - 주차 생성: 스터디장만 multipart JSON request와 선택 파일 1개로 생성. 파일은 OCI Object Storage에, 계획과 자료 메타데이터는 DB에 저장. DB 롤백 시 업로드 객체 삭제를 시도한다.
 - 자료 다운로드 URL: 해당 스터디·주차의 자료와 현재 소속을 확인한 뒤 5분 유효 URL 발급.
-- 출석 생성: 스터디장·계획 존재 검사. 동일 주차의 유효 세션은 409. expirationTime은 1 이상의 Integer 분 단위.
+- 출석 생성: 스터디장·계획 존재 검사 후 스터디장이 주최한 기존 STUDY 이벤트의 ID를 확인한다. 기존 이벤트 출석 서비스가 Redis에 QR과 유효 시간을 저장한다. expirationTime은 1 이상의 Integer 분 단위다.
 
 계획·참여 요청·출석 생성은 스터디 행 잠금을 사용한다. 주차와 참여 요청에는 DB 유일 제약도 둔다.
-기존 관리자 회원 추가/삭제 및 활동 API는 유지한다.
+스터디 출석 세션에는 주차와 이벤트 참조만 저장하고, QR 식별자와 만료 시각은 저장하지 않는다. 발급된 QR은 기존 이벤트 출석 처리 API에서 사용한다.
+기존 관리자 회원 추가/삭제 API는 유지한다. 활동명은 주차 계획의 `title`로 관리하며, 관리자 활동 추가/삭제 API는 제거했다.
+
+기존 `study_activity` 데이터에는 주차 번호가 없어 자동으로 `study_week`에 대응시킬 수 없다. 배포 전 데이터를 확인하여 각 활동의 주차 번호를 정하고, 해당 주차 계획의 `title`로 수동 이관한다. 이관이 끝나기 전에는 기존 테이블을 삭제하지 않는다. Hibernate `ddl-auto=update`는 사용하지 않는 테이블을 자동 삭제하지 않는다.
 
 ## 자료 저장과 다운로드 기본 정책
 
-자료 본문은 Oracle Cloud Object Storage의 비공개 버킷에 저장한다. DB에는 objectKey, 파일명, Content-Type, 크기만 저장한다. 파일당 최대 1MiB이며 빈 파일은 400이다.
+자료 본문은 Oracle Cloud Object Storage의 비공개 버킷에 저장한다. DB에는 objectKey, 파일명, 크기만 저장한다. 업로드 Content-Type은 OCI 객체 메타데이터에 전달한다. 파일당 최대 1MiB이며 빈 파일은 400이다.
 객체 키는 `studies/{studyId}/weeks/{weekNumber}/{UUID}`로 생성한다.
 업로드 실패 시 DB 저장을 완료하지 않는다. DB 롤백 시 해당 객체 삭제를 시도하며, 삭제 실패는 객체 키와 함께 오류 로그를 남긴다.
 DB와 OCI는 단일 트랜잭션이 아니므로 프로세스 중단이나 삭제 실패로 남은 객체는 운영 확인이 필요하다.
 허용 Content-Type은 PDF, TXT, CSV, PNG, JPEG, ZIP, DOCX, PPTX, XLSX이다.
 형식 검사는 업로드 Content-Type을 기준으로 하며 파일 내용 분석은 수행하지 않는다.
 자료명에서 경로를 제거하고 제어문자·빈 이름·255자 초과 이름을 거부한다.
-multipart 파싱 단계의 크기 초과도 스터디 경로에서는 message가 있는 413 응답으로 반환한다.
+서비스에 전달된 파일의 크기가 1MiB를 넘으면 `StudyError.FILE_TOO_LARGE`로 413을 반환한다. multipart 파싱 단계에서 거부된 요청은 이 검증에 도달하지 않는다.
 
 반환된 URL은 다음 실제 다운로드 엔드포인트를 가리킨다.
 
@@ -49,13 +52,12 @@ OCI 객체가 삭제되었으면 404, 조회 장애는 503을 반환한다. 버�
 
 ## 미확정 계약과 데이터
 
-명세의 제안 API까지 구현한 상태이며, 참여 승인 API·QR 인증 API·XP 지급 기능은 포함하지 않는다.
-스터디 출석 세션 생성은 기존 이벤트 출석과 연결되지 않는다.
+명세의 제안 API까지 구현한 상태이며, 참여 승인 API는 포함하지 않는다. QR 인증과 XP 지급은 기존 이벤트 출석 API가 처리한다.
+스터디 출석 세션 생성은 기존 STUDY 이벤트와 연결된다.
 파일 저장 방식은 Oracle Cloud Object Storage이며, 허용 형식·크기·URL 유효시간은 위 기본 정책을 적용했다.
 출석 유효시간 상한은 아직 추가하지 않았다.
 
-소개·정원·난이도·태그·일정·완료 상태는 영속 필드를 제공하지만 이를 편집하는 API는 이번 명세에 없어 추가하지 않았다.
-earnedXp는 스터디 소속별 저장값을 조회한다. 현재 API에서는 XP를 지급하지 않으므로 신규 소속은 0으로 시작한다.
+주제는 스터디 생성 요청에서 입력할 수 있다. 소개·일정은 영속 필드를 제공하지만 이를 편집하는 API는 이번 명세에 없어 추가하지 않았다.
 전체 세션 수·출석 수·진행률은 산정 계약이 없어 null이다. 주차 계획 등록 수를 출석 진행률로 환산하지 않는다.
 스터디장이 탈퇴한 기존 스터디에서도 남은 소속 회원은 내 목록·주차 조회를 사용할 수 있다.
 
@@ -63,8 +65,10 @@ earnedXp는 스터디 소속별 저장값을 조회한다. 현재 API에서는 X
 
 `docs/sql/study-api.sql`은 기존 MySQL dev 스키마에 적용할 수 있는 수동 마이그레이션이다.
 자동 실행이나 실제 DB 변경은 수행하지 않았다. 스키마가 이미 Hibernate update로 변경되었다면 중복 적용하지 않는다.
-기존 스터디는 ACTIVE, 새 XP 집계 필드는 0으로 초기화하고 누락된 활성 스터디장 소속을 등록한다.
-추가 테이블은 study_tag, study_week, study_material, study_join_request, study_attendance_session이다.
+누락된 활성 스터디장 소속을 등록한다.
+추가 테이블은 study_week, study_material, study_join_request, study_attendance_session이다.
+기존 DB에 `study_material.content_type` 컬럼이 있으면 `docs/sql/study-material-drop-content-type.sql`을 별도로 적용한다. Hibernate `ddl-auto=update`는 이 컬럼을 자동 삭제하지 않는다.
+이전 `study-api.sql`을 이미 적용한 DB는 `docs/sql/study-topic-migration.sql`을 별도로 적용한다. 첫 번째 태그를 주제로 옮긴 뒤 기존 태그 테이블과 불필요한 컬럼을 삭제한다. 새 초기 마이그레이션과 중복 적용하지 않는다.
 DB 마이그레이션은 코드 배포 전에 반영해야 한다.
 이 SQL은 아직 적용하지 않은 초기 마이그레이션 기준으로 `content MEDIUMBLOB` 대신 `object_key VARCHAR(512)`를 생성한다.
 이전 BLOB 스키마를 별도로 적용한 환경은 파일을 OCI로 옮기고 object_key를 채우는 별도 데이터 이관이 필요하다. 기존 BLOB 데이터를 자동 삭제하지 않는다.
@@ -84,7 +88,7 @@ Oracle Object Storage Standard 비공개 버킷을 준비하고 아래 환경변
 
 OCI Compute에서는 Instance Principal을 사용한다. 해당 인스턴스의 Dynamic Group에 대상 버킷 객체의 생성·조회·삭제 권한을 부여해야 한다.
 로컬에서는 CONFIG_FILE 모드를 선택하고 OCI SDK 표준 설정 파일의 API 키 인증을 사용한다. 비밀키를 저장소에 넣지 않는다.
-Spring 설정 키는 `study.storage.oci.region`, `namespace`, `bucket`, `auth`, `config-file`, `profile`이다.
+Spring 설정 키는 공용 `storage.oci.region`, `namespace`, `bucket`, `auth`, `config-file`, `profile`이다.
 OCI 클라이언트는 자료 작업 시 초기화하므로 OCI 설정이 없어도 파일 없는 계획·목록 API는 사용할 수 있다. 미설정 시 자료 저장/조회는 실패하며 DB 저장 방식으로 대체하지 않는다.
 SDK 연결/읽기 타임아웃은 5초/30초다. 객체 스토리지 사용량 제한은 버킷 운영 설정에서 관리한다.
 
@@ -97,7 +101,7 @@ SDK 연결/읽기 타임아웃은 5초/30초다. 객체 스토리지 사용량 �
 기존 서비스·컨트롤러·JWT 테스트도 함께 실행한다.
 
 ```bash
-./gradlew test --tests '*service.*' --tests '*controller.*' --tests '*auth.jwt.*' --tests '*study.repository.*' --tests '*study.storage.*'
+./gradlew test --tests '*service.*' --tests '*controller.*' --tests '*auth.jwt.*' --tests '*study.repository.*' --tests '*storage.*'
 ```
 
 OCI SDK 요청 생성·오류 변환·스트림 종료 및 DB 트랜잭션 완료 콜백에 따른 객체 정리를 mock 기반으로 검증한다.

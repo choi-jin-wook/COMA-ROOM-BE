@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import static org.assertj.core.api.Assertions.*;
 
+/** 자료 다운로드 서명의 생성·검증 조건을 확인한다. */
 class StudyDownloadSignerTest {
     private final StudyDownloadSigner signer = new StudyDownloadSigner("test-signing-secret");
 

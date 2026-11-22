@@ -1,6 +1,6 @@
-package com.coma.comaroom.event.entity;
+package com.coma.comaroom.member.entity;
 
-import com.coma.comaroom.member.entity.Member;
+import com.coma.comaroom.event.entity.ApprovalStatus;
 import com.coma.comaroom.utils.BaseEntity;
 import jakarta.persistence.*;
 import org.hibernate.annotations.NotFound;
@@ -13,11 +13,12 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 @Entity
+@Table(name = "event_approval")
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 @Builder
-public class EventApproval extends BaseEntity {
+public class XpProvisionRequest extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "approval_id")
@@ -33,9 +34,6 @@ public class EventApproval extends BaseEntity {
     @Column(name = "granted_xp")
     private Long grantedXp;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "event_id")
-//    private Event event;
     @Column(name = "reason")
     private String reason;
 
@@ -45,8 +43,8 @@ public class EventApproval extends BaseEntity {
     @JoinColumn(name = "requester_id")
     private Member requester;
 
-    public static EventApproval requestXpApproval(Member requester, String reason, Long grantedXp) {
-        return EventApproval.builder()
+    public static XpProvisionRequest request(Member requester, String reason, Long grantedXp) {
+        return XpProvisionRequest.builder()
                 .requester(requester)
                 .reason(reason)
                 .grantedXp(grantedXp)

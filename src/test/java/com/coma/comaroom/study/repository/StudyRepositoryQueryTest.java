@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
 import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
+/** 내 스터디 및 모집 목록 쿼리의 조회 조건을 확인한다. */
 class StudyRepositoryQueryTest {
     @Test
     void entityMappingsAndRepositoryQueriesAreValidWithoutDatabaseAccess() {

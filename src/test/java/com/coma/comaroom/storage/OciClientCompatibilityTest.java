@@ -1,4 +1,4 @@
-package com.coma.comaroom.study.storage;
+package com.coma.comaroom.storage;
 
 import com.oracle.bmc.auth.SimpleAuthenticationDetailsProvider;
 import com.oracle.bmc.objectstorage.ObjectStorageClient;
@@ -9,6 +9,7 @@ import java.security.KeyPairGenerator;
 import java.util.Base64;
 import static org.assertj.core.api.Assertions.assertThat;
 
+/** OCI 클라이언트 구성과 SDK 호환성을 확인한다. */
 class OciClientCompatibilityTest {
     @Test
     void sdkHttpClientInitializesWithApplicationDependenciesWithoutNetworkCalls() throws Exception {
