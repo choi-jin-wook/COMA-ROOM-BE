@@ -5,6 +5,7 @@ import com.coma.comaroom.event.dto.CreateAttendanceCheckResponseDto;
 import com.coma.comaroom.event.dto.request.CreateEventRequest;
 import com.coma.comaroom.event.dto.request.EventRequest;
 import com.coma.comaroom.event.dto.response.AttendanceItemResponseDto;
+import com.coma.comaroom.event.dto.response.EventAttendanceResponse;
 import com.coma.comaroom.event.dto.response.EventResponse;
 import com.coma.comaroom.event.service.AdminEventService;
 import com.coma.comaroom.utils.Response;
@@ -50,10 +51,17 @@ public class AdminEventController {
     }
 
 
-    // 출석 명단
-    @GetMapping("/{eventId}/attendances")
+    // 이벤트별 출석 명단
+    @GetMapping("/attendances/{eventId}")
     public ResponseEntity<Response<List<AttendanceItemResponseDto>>> getAttendanceList(@PathVariable Long eventId) {
         List<AttendanceItemResponseDto> data = adminEventService.getAttendanceList(eventId);
+        return Response.ok(data, HttpStatus.OK).toResponseEntity();
+    }
+
+    // 모든 이벤트의 출석 명단
+    @GetMapping("/attendances/all")
+    public ResponseEntity<Response<List<EventAttendanceResponse>>> getAllAttendanceLists() {
+        List<EventAttendanceResponse> data = adminEventService.getAllAttendanceLists();
         return Response.ok(data, HttpStatus.OK).toResponseEntity();
     }
 
